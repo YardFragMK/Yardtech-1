@@ -1,5 +1,5 @@
 #include"KeyInput.h"
-#include<SDL.h>
+
 
 
 void KeyInput::Update(bool& running) {

@@ -4,6 +4,7 @@
 #include"Logger.h"
 #include"Time.h"
 #include"KeyInput.h"
+#include"Window.h"
 
 
 
@@ -12,53 +13,32 @@ Engine::~Engine()
 	if (glContext)
 		SDL_GL_DeleteContext(glContext);
 
-	if (window)
-		SDL_DestroyWindow(window);
+	if (window1.getWindow())
+		SDL_DestroyWindow(window1.getWindow());
 	SDL_Quit();
 }
  
 bool Engine::initSystems() {
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		Logger::error(SDL_GetError());
+	if (!window1.windowInit()) {
+		Logger::error("Window olusturulamadi");
 		return false;
 	}
-	Logger::info("SDL video system initalize edildi.");
 
-	
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-
-
-	//---PENCERE---
-
-
-	window = SDL_CreateWindow(
-		"Yardtech 1",
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
-		windowWidth,
-		windowHeight,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-
-	if (!window) {
-		Logger::error(SDL_GetError());
-		 return false;
-	}
-	Logger::info("window olusturuldu.");
-
 	//---OPENGL CONTEXT---
-	glContext = SDL_GL_CreateContext(window);
+	glContext = SDL_GL_CreateContext(window1.getWindow());
 	if (!glContext) {
 		Logger::error(SDL_GetError());
 		return false;
 	}
 	Logger::info("glContext olusturuldu.");
 	// Context ve pencere baglantisi
-	if (SDL_GL_MakeCurrent(window, glContext) != 0) {
+	if (SDL_GL_MakeCurrent(window1.getWindow(), glContext) != 0) {
 		Logger::error(SDL_GetError());
 		return false;
 	} 
@@ -71,8 +51,10 @@ bool Engine::initSystems() {
 }
 void Engine::gameLoop() {
 	while (running) {
-		int currentCounter = SDL_GetPerformanceCounter();
-		float deltaTime = (currentCounter - lastCounter)/SDL_GetPerformanceFrequency();
+		Uint64 currentCounter = SDL_GetPerformanceCounter();
+		float deltaTime =
+			static_cast<float>(currentCounter - lastCounter) /
+			static_cast<float>(SDL_GetPerformanceFrequency());
 		lastCounter = currentCounter;
 		Time::Update(deltaTime);
 		KeyInput::Update(running);

@@ -148,6 +148,7 @@
     <ClCompile Include="engine\KeyInput.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\Time.cpp" />
+    <ClCompile Include="engine\Window.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="engine\KeyInput.h" />
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\Time.h" />
+    <ClInclude Include="engine\Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

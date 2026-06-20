@@ -1,4 +1,5 @@
 #pragma once
+#include"Window.h"
 #include"SDL.h"
 
 class Engine {
@@ -11,9 +12,9 @@ public:
 private:
 	int windowWidth = 1280;
 	int windowHeight = 720;
-	SDL_Window* window = nullptr;
 	SDL_GLContext glContext = nullptr;
 	bool running=true;
-	int lastCounter = 0;
+	Uint64 lastCounter = 0;
+	Window window1;
 
 };
