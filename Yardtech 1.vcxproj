@@ -146,11 +146,13 @@
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
+    <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\Logger.h" />
+    <ClInclude Include="engine\Time.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

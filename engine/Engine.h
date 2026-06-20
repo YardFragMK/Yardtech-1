@@ -15,5 +15,6 @@ private:
 	SDL_Window* window = nullptr;
 	SDL_GLContext glContext = nullptr;
 	bool running=true;
+	int lastCounter = 0;
 
 };

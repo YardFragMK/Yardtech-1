@@ -1,6 +1,7 @@
 #include<iostream>
 #include"Engine.h"
 #include"Logger.h"
+#include"Time.h"
 #include"SDL.h"
 
 Engine::~Engine()
@@ -44,7 +45,7 @@ bool Engine::initSystems() {
 		Logger::error(SDL_GetError());
 		 return false;
 	}
-	Logger::info("window oluşturuldu.");
+	Logger::info("window olusturuldu.");
 
 	//---OPENGL CONTEXT---
 	glContext = SDL_GL_CreateContext(window);
@@ -52,20 +53,25 @@ bool Engine::initSystems() {
 		Logger::error(SDL_GetError());
 		return false;
 	}
-	Logger::info("glContext oluşturuldu.");
+	Logger::info("glContext olusturuldu.");
 	// Context ve pencere baglantisi
 	if (SDL_GL_MakeCurrent(window, glContext) != 0) {
 		Logger::error(SDL_GetError());
 		return false;
 	} 
-	Logger::info("window ve glContext birbirine bağlandı.");
+	Logger::info("window ve glContext birbirine baglandi.");
+
+	lastCounter = SDL_GetPerformanceCounter();
 	Logger::info("Engine initalize edildi.");
 	return true;
 
 }
 void Engine::gameLoop() {
 	while (running) {
-
+		int currentCounter = SDL_GetPerformanceCounter();
+		float deltaTime = (currentCounter - lastCounter)/SDL_GetPerformanceFrequency();
+		lastCounter = currentCounter;
+		Time::Update(deltaTime);
 		input();
 		SDL_Delay(1);//update(); renderer();
 	}
