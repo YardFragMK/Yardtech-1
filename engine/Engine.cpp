@@ -1,8 +1,11 @@
 #include<iostream>
+#include<SDL.h>
 #include"Engine.h"
 #include"Logger.h"
 #include"Time.h"
-#include"SDL.h"
+#include"KeyInput.h"
+
+
 
 Engine::~Engine()
 {
@@ -72,18 +75,7 @@ void Engine::gameLoop() {
 		float deltaTime = (currentCounter - lastCounter)/SDL_GetPerformanceFrequency();
 		lastCounter = currentCounter;
 		Time::Update(deltaTime);
-		input();
+		Input::Update(running);
 		SDL_Delay(1);//update(); renderer();
 	}
-}
-void Engine::input() {
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		switch (event.type) {
-		case SDL_QUIT:
-			running = false;
-			break;
-		}
-	}
-
 }

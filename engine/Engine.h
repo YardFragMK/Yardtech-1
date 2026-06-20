@@ -7,7 +7,6 @@ public:
 	~Engine();
 	bool initSystems();
 	void gameLoop();
-	void input();
 
 private:
 	int windowWidth = 1280;
