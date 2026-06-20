@@ -2,7 +2,7 @@
 #include<SDL.h>
 
 
-void Input::Update(bool& running) {
+void KeyInput::Update(bool& running) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {

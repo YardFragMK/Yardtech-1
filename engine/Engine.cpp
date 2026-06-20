@@ -75,7 +75,7 @@ void Engine::gameLoop() {
 		float deltaTime = (currentCounter - lastCounter)/SDL_GetPerformanceFrequency();
 		lastCounter = currentCounter;
 		Time::Update(deltaTime);
-		Input::Update(running);
+		KeyInput::Update(running);
 		SDL_Delay(1);//update(); renderer();
 	}
 }
