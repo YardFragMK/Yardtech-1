@@ -2,7 +2,7 @@
 #include<string>
 class Logger {
 public:
-	void info(std::string itext);
-	void warning(std::string wtext);
-	void error(std::string etext);
+	static void info(std::string itext);
+	static void warning(std::string wtext);
+	static void error(std::string etext);
 };

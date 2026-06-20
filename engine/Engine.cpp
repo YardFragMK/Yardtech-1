@@ -14,11 +14,11 @@ Engine::~Engine()
 }
  
 bool Engine::initSystems() {
-	Logger logger;
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		logger.error(SDL_GetError());
+		Logger::error(SDL_GetError());
 		return false;
 	}
+	Logger::info("SDL video system initalize edildi.");
 
 	
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -41,21 +41,25 @@ bool Engine::initSystems() {
 		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
 	if (!window) {
-		 logger.error(SDL_GetError());
+		Logger::error(SDL_GetError());
 		 return false;
 	}
+	Logger::info("window oluşturuldu.");
 
 	//---OPENGL CONTEXT---
 	glContext = SDL_GL_CreateContext(window);
 	if (!glContext) {
-		logger.error(SDL_GetError());
+		Logger::error(SDL_GetError());
 		return false;
 	}
+	Logger::info("glContext oluşturuldu.");
 	// Context ve pencere baglantisi
 	if (SDL_GL_MakeCurrent(window, glContext) != 0) {
-		logger.error(SDL_GetError());
+		Logger::error(SDL_GetError());
 		return false;
 	} 
+	Logger::info("window ve glContext birbirine bağlandı.");
+	Logger::info("Engine initalize edildi.");
 	return true;
 
 }
