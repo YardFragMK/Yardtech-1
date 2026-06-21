@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SOLUTUION_DIR)extern/SDL2/include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTUION_DIR)extern/SDL2/include;$(SOLUTUION_DIR)extern/glad/include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -150,6 +150,7 @@
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\Window.cpp" />
+    <ClCompile Include="extern\glad\src\glad.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

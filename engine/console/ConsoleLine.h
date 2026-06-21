@@ -3,5 +3,4 @@
 class ConsoleLine {
 public:
 	std::string text;
-
 };

@@ -1,3 +1,4 @@
+#include<glad/glad.h>
 #include<iostream>
 #include<SDL.h>
 #include"Engine.h"
@@ -51,6 +52,12 @@ bool Engine::initSystems() {
 
 	lastCounter = SDL_GetPerformanceCounter();
 	Logger::info("Engine initalize edildi.");
+
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+		Logger::error("Glad yüklenemedi");
+		return 1;
+	}
+
 	return true;
 
 }
