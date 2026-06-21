@@ -1,5 +1,5 @@
 #include"KeyInput.h"
-
+#include"console/Console.h"
 
 
 void KeyInput::Update(bool& running) {
@@ -9,6 +9,13 @@ void KeyInput::Update(bool& running) {
 		case SDL_QUIT:
 			running = false;
 			break;
+		case SDL_KEYDOWN:
+			if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
+				Console::Toggle();
+			}
 		}
+		
+
+		
 	}
 }

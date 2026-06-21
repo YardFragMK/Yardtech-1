@@ -5,6 +5,7 @@
 #include"Time.h"
 #include"KeyInput.h"
 #include"Window.h"
+#include"console/Console.h"
 
 
 
@@ -19,10 +20,14 @@ Engine::~Engine()
 }
  
 bool Engine::initSystems() {
+	Console::Init();
+	Logger::info("Console initalize edildi");
+
 	if (!window1.windowInit()) {
 		Logger::error("Window olusturulamadi");
 		return false;
 	}
+
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
