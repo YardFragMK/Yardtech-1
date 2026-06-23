@@ -38,33 +38,38 @@ bool Engine::initSystems() {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	//---OPENGL CONTEXT---
+	//OPENGL CONTEXT
 	glContext = SDL_GL_CreateContext(window1.getWindow());
 	if (!glContext) {
 		Logger::error(SDL_GetError());
 		return false;
 	}
 	Logger::info("glContext olusturuldu.");
-	// Context ve pencere baglantisi
+
+	// CONTEXT AND WINDOW
 	if (SDL_GL_MakeCurrent(window1.getWindow(), glContext) != 0) {
 		Logger::error(SDL_GetError());
 		return false;
 	} 
 	Logger::info("window ve glContext birbirine baglandi.");
 
-	lastCounter = SDL_GetPerformanceCounter();
-	Logger::info("Engine initalize edildi.");
 
+	//GLAD
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
 		Logger::error("Glad yüklenemedi");
 		return false;
 	}
+	Logger::info("glad initialize edildi.");
+
+	//RENDERER
 	if (!Renderer::Init()){
 		Logger::error("Renderer initialize edilemedi.");
 		return false;
 	}
 	Logger::info("Renderer initialize edildi.");
 
+	lastCounter = SDL_GetPerformanceCounter();
+	Logger::info("Engine initalize edildi.");
 	return true;
 
 }
