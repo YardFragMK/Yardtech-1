@@ -7,6 +7,7 @@
 #include"KeyInput.h"
 #include"Window.h"
 #include"console/Console.h"
+#include"renderer/Renderer.h"
 
 
 
@@ -58,6 +59,11 @@ bool Engine::initSystems() {
 		Logger::error("Glad yüklenemedi");
 		return false;
 	}
+	if (!Renderer::Init()){
+		Logger::error("Renderer initialize edilemedi.");
+		return false;
+	}
+	Logger::info("Renderer initialize edildi.");
 
 	return true;
 
@@ -71,6 +77,20 @@ void Engine::gameLoop() {
 		lastCounter = currentCounter;
 		Time::Update(deltaTime);
 		KeyInput::Update(running);
-		SDL_Delay(1);//update(); renderer();
+		Renderer::BeginFrame();
+
+		/*
+		BSP Render
+		Entity Render
+		HUD Render
+		Console Render
+		*/
+
+		Renderer::EndFrame();
+
+		SDL_GL_SwapWindow(
+			window1.getWindow());
+
+		SDL_Delay(1);
 	}
 }
