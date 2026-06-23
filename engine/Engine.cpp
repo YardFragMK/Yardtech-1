@@ -12,11 +12,12 @@
 
 Engine::~Engine()
 {
-	if (glContext)
+	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
-
-	if (window1.getWindow())
+	}
+	if (window1.getWindow()) {
 		SDL_DestroyWindow(window1.getWindow());
+	}
 	SDL_Quit();
 }
  
@@ -55,7 +56,7 @@ bool Engine::initSystems() {
 
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
 		Logger::error("Glad yüklenemedi");
-		return 1;
+		return false;
 	}
 
 	return true;

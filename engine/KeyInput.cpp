@@ -13,6 +13,7 @@ void KeyInput::Update(bool& running) {
 			if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
 				Console::Toggle();
 			}
+			break;
 		}
 		
 
