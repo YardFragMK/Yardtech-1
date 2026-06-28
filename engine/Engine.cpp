@@ -69,6 +69,7 @@ bool Engine::initSystems() {
 	Logger::info("Renderer initialize edildi.");
 
 	lastCounter = SDL_GetPerformanceCounter();
+
 	Logger::info("Engine initalize edildi.");
 	return true;
 
@@ -80,6 +81,7 @@ void Engine::gameLoop() {
 			static_cast<float>(currentCounter - lastCounter) /
 			static_cast<float>(SDL_GetPerformanceFrequency());
 		lastCounter = currentCounter;
+
 		Time::Update(deltaTime);
 		KeyInput::Update(running);
 		Renderer::BeginFrame();
@@ -93,8 +95,7 @@ void Engine::gameLoop() {
 
 		Renderer::EndFrame();
 
-		SDL_GL_SwapWindow(
-			window1.getWindow());
+		SDL_GL_SwapWindow(window1.getWindow());
 
 		SDL_Delay(1);
 	}
