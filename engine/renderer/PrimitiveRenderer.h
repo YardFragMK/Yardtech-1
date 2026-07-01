@@ -1,5 +1,5 @@
 #pragma once
-
+#include <glm/glm.hpp>
 #include "Shader.h"
 #include "Mesh.h"
 
@@ -24,4 +24,5 @@ private:
     static Mesh s_quad;
     static int s_screenWidth;
     static int s_screenHeight;
+    static glm::mat4 s_projection;
 };

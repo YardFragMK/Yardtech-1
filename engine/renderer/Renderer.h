@@ -9,5 +9,5 @@ public:
 	static void EndFrame();
 	static void Shutdown();
 private:
-	static Mesh s_quad;
+
 };
