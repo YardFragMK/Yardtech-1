@@ -1,4 +1,5 @@
 #pragma once
+#include "Shader.h"
 
 class Renderer {
 public:
@@ -7,5 +8,5 @@ public:
 	static void EndFrame();
 	static void Shutdown();
 private:
-
+	static Shader s_testShader;
 };
