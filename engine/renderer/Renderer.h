@@ -1,5 +1,6 @@
 #pragma once
-#include "Shader.h"
+#include "PrimitiveRenderer.h"
+#include "Mesh.h"
 
 class Renderer {
 public:
@@ -8,5 +9,5 @@ public:
 	static void EndFrame();
 	static void Shutdown();
 private:
-	static Shader s_testShader;
+	static Mesh s_quad;
 };
