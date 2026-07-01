@@ -1,5 +1,6 @@
 #include<iostream>
 #include"Shader.h"
+#include <glm/gtc/type_ptr.hpp>
 
 Shader::~Shader() {
     if (m_program) {
@@ -80,4 +81,70 @@ bool Shader::CheckProgram(GLuint program) {
         return false;
     }
     return true;
+}
+GLint Shader::GetUniformLocation(
+    const std::string& name)
+{
+    return glGetUniformLocation(
+        m_program,
+        name.c_str());
+}
+
+void Shader::SetInt(
+    const std::string& name,
+    int value)
+{
+    glUniform1i(
+        GetUniformLocation(name),
+        value);
+}
+
+void Shader::SetFloat(
+    const std::string& name,
+    float value)
+{
+    glUniform1f(
+        GetUniformLocation(name),
+        value);
+}
+
+void Shader::SetVec2(
+    const std::string& name,
+    const glm::vec2& value)
+{
+    glUniform2fv(
+        GetUniformLocation(name),
+        1,
+        glm::value_ptr(value));
+}
+
+void Shader::SetVec3(
+    const std::string& name,
+    const glm::vec3& value)
+{
+    glUniform3fv(
+        GetUniformLocation(name),
+        1,
+        glm::value_ptr(value));
+}
+
+void Shader::SetVec4(
+    const std::string& name,
+    const glm::vec4& value)
+{
+    glUniform4fv(
+        GetUniformLocation(name),
+        1,
+        glm::value_ptr(value));
+}
+
+void Shader::SetMat4(
+    const std::string& name,
+    const glm::mat4& value)
+{
+    glUniformMatrix4fv(
+        GetUniformLocation(name),
+        1,
+        GL_FALSE,
+        glm::value_ptr(value));
 }

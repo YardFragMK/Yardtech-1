@@ -1,4 +1,6 @@
 #include "PrimitiveRenderer.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 Shader PrimitiveRenderer::s_shader;
 Mesh PrimitiveRenderer::s_quad;
