@@ -7,6 +7,13 @@ SDL_Window* Window::getWindow() const {
 }
 
 bool Window::windowInit() {
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		Logger::error(SDL_GetError());
 		return false;

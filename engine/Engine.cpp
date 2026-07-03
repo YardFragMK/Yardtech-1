@@ -23,20 +23,15 @@ Engine::~Engine()
 }
  
 bool Engine::initSystems() {
+
 	Console::Init();
 	Logger::info("Console initalize edildi");
 
+	//WINDOW
 	if (!window1.windowInit()) {
 		Logger::error("Window olusturulamadi");
 		return false;
 	}
-
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	//OPENGL CONTEXT
 	glContext = SDL_GL_CreateContext(window1.getWindow());
@@ -52,7 +47,6 @@ bool Engine::initSystems() {
 		return false;
 	} 
 	Logger::info("window ve glContext birbirine baglandi.");
-
 
 	//GLAD
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
@@ -76,6 +70,7 @@ bool Engine::initSystems() {
 }
 void Engine::gameLoop() {
 	while (running) {
+		//DELTATIME
 		Uint64 currentCounter = SDL_GetPerformanceCounter();
 		float deltaTime =
 			static_cast<float>(currentCounter - lastCounter) /
