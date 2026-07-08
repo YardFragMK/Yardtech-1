@@ -1,5 +1,5 @@
 #pragma once
-
+#include"../Logger.h"
 #include<vector>
 #include<string>
 #include"ConsoleLine.h"

@@ -13,10 +13,10 @@ void Console::Init() {
 void Console::Toggle() {
 	s_open = !s_open;
 	if (s_open) {
-		std::cout << "[Console opened] " << std::endl;
+		Logger::info("[Console opened] ");
 	}
 	else {
-		std::cout << "[Console closed] " << std::endl;
+		Logger::info("[Console closed] ");
 	}
 }
 

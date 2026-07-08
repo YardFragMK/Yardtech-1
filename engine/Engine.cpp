@@ -11,8 +11,7 @@
 
 
 
-Engine::~Engine()
-{
+Engine::~Engine(){
 	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
 	}
@@ -27,13 +26,17 @@ bool Engine::initSystems() {
 	Console::Init();
 	Logger::info("Console initalize edildi");
 
-	//WINDOW
+	//=========================================================
+	//Window
+	//=========================================================
 	if (!window1.windowInit()) {
 		Logger::error("Window olusturulamadi");
 		return false;
 	}
 
-	//OPENGL CONTEXT
+	//=========================================================
+	//Opengl Context
+	//=========================================================
 	glContext = SDL_GL_CreateContext(window1.getWindow());
 	if (!glContext) {
 		Logger::error(SDL_GetError());
@@ -41,21 +44,27 @@ bool Engine::initSystems() {
 	}
 	Logger::info("glContext olusturuldu.");
 
-	// CONTEXT AND WINDOW
+	//=========================================================
+	// Context and Window
+	//=========================================================
 	if (SDL_GL_MakeCurrent(window1.getWindow(), glContext) != 0) {
 		Logger::error(SDL_GetError());
 		return false;
 	} 
 	Logger::info("window ve glContext birbirine baglandi.");
 
-	//GLAD
+	//=========================================================
+	//Glad
+	//=========================================================
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
 		Logger::error("Glad yüklenemedi");
 		return false;
 	}
 	Logger::info("glad initialize edildi.");
 
-	//RENDERER
+	//=========================================================
+	//Renderer
+	//=========================================================
 	if (!Renderer::Init()){
 		Logger::error("Renderer initialize edilemedi.");
 		return false;
@@ -68,6 +77,10 @@ bool Engine::initSystems() {
 	return true;
 
 }
+
+//=========================================================
+//Game Loop
+//=========================================================
 void Engine::gameLoop() {
 	while (running) {
 		//DELTATIME
