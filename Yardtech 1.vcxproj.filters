@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="engine\Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,22 +36,10 @@
     <ClCompile Include="extern\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="engine\console\CVar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\console\CVarSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="engine\renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="engine\renderer\Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\renderer\Mesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\renderer\PrimitiveRenderer.cpp">
+    <ClCompile Include="engine\Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,27 +65,11 @@
     <ClInclude Include="engine\console\ConsoleLine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="engine\console\CVar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\console\CVarSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="engine\renderer\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="engine\renderer\Shader.h">
+    <ClInclude Include="ui\Intro.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="engine\renderer\Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\renderer\PrimitiveRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\shaders\ui.vert" />
-    <None Include="assets\shaders\ui.frag" />
   </ItemGroup>
 </Project>

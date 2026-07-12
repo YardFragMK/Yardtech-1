@@ -1,10 +1,9 @@
 #pragma once
-#include "PrimitiveRenderer.h"
-#include "Mesh.h"
+
 
 class Renderer {
 public:
-	static bool Init();
+	static bool Init(int w, int h);
 	static void BeginFrame();
 	static void EndFrame();
 	static void Shutdown();

@@ -11,7 +11,9 @@
 
 
 
+
 Engine::~Engine(){
+	Renderer::Shutdown();
 	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
 	}
@@ -27,7 +29,7 @@ bool Engine::initSystems() {
 	Logger::info("Console initalize edildi");
 
 	//=========================================================
-	//Window
+	//Window Init
 	//=========================================================
 	if (!window1.windowInit()) {
 		Logger::error("Window olusturulamadi");
@@ -54,7 +56,7 @@ bool Engine::initSystems() {
 	Logger::info("window ve glContext birbirine baglandi.");
 
 	//=========================================================
-	//Glad
+	//Glad Init
 	//=========================================================
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
 		Logger::error("Glad yüklenemedi");
@@ -63,13 +65,15 @@ bool Engine::initSystems() {
 	Logger::info("glad initialize edildi.");
 
 	//=========================================================
-	//Renderer
+	//Renderer Init
 	//=========================================================
-	if (!Renderer::Init()){
+	if (!Renderer::Init(1280, 720)){
 		Logger::error("Renderer initialize edilemedi.");
 		return false;
 	}
 	Logger::info("Renderer initialize edildi.");
+
+
 
 	lastCounter = SDL_GetPerformanceCounter();
 
