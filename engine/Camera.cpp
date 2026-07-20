@@ -1,7 +1,7 @@
 #include"Camera.h"
 
 glm::vec3 Camera::Forward() const {
-	glm::vec3 forward;
+	glm::vec3 forward{ 0.0f };
 	forward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	forward.y = sin(glm::radians(pitch));
 	forward.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));

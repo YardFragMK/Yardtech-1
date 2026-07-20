@@ -1,43 +1,56 @@
-#include"KeyInput.h"
-#include"Camera.h"
-#include"console/Console.h"
+#include "KeyInput.h"
+#include "Camera.h"
+#include "console/Console.h"
 
-void KeyInput::Update(bool& running, Camera& camera, float deltaTime) {
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		switch (event.type) {
-		case SDL_QUIT:
-			running = false; 
-			break;
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.scancode) {
-			case SDL_SCANCODE_ESCAPE:
-				running = false;
-				break;
-			case SDL_SCANCODE_GRAVE:
-				Console::Toggle(); break;
+void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
+{
+    SDL_Event event;
 
-			case SDL_SCANCODE_W:
-				camera.MoveForward(deltaTime); break;
-			
-			case SDL_SCANCODE_A:
-				camera.MoveLeft(deltaTime); break;
+    while (SDL_PollEvent(&event)){
+        if (event.type == SDL_MOUSEMOTION){
+            camera.ProcessMouseMovement(
+                (float)event.motion.xrel,
+                (float)event.motion.yrel
+            );
+        }
 
-			case SDL_SCANCODE_S:
-				camera.MoveBackward(deltaTime); break;
+        if (event.type == SDL_QUIT){
+            running = false;
+        }
 
-			case SDL_SCANCODE_D:
-				camera.MoveRight(deltaTime); break;
-			case SDL_MOUSEMOTION:
-				camera.ProcessMouseMovement(static_cast<float>(event.motion.xrel),
-											static_cast<float>(event.motion.yrel)); break;
-			}
+        if (event.type == SDL_KEYDOWN){
+            if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
+                running = false;
+            }
+
+            if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE){
+                Console::Toggle();
+            }
+        }
+    }
 
 
-			break;
-		}
-	
-	}
+    // Klavye durumunu her frame kontrol et
+    const Uint8* keys = SDL_GetKeyboardState(nullptr);
+
+
+    if (keys[SDL_SCANCODE_W])
+    {
+        camera.MoveForward(deltaTime);
+    }
+
+    if (keys[SDL_SCANCODE_S])
+    {
+        camera.MoveBackward(deltaTime);
+    }
+
+    if (keys[SDL_SCANCODE_A])
+    {
+        camera.MoveLeft(deltaTime);
+    }
+
+    if (keys[SDL_SCANCODE_D])
+    {
+        camera.MoveRight(deltaTime);
+    }
 }
-
-

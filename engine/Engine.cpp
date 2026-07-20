@@ -1,4 +1,5 @@
 #include<iostream>
+//#include<glad/glad.h>
 #include<SDL.h>
 #include"Engine.h"
 #include"Logger.h"
@@ -11,7 +12,6 @@
 
 
 Engine::~Engine(){
-	Renderer::Shutdown();
 	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
 	}
@@ -56,15 +56,24 @@ bool Engine::initSystems() {
 	} 
 	Logger::info("window ve glContext birbirine baglandi.");
 
+	/*
+	//=========================================================
+	//GLAD
+	//=========================================================
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+		Logger::error("Glad yüklenemedi");
+		return false;
+	}
+	Logger::info("glad initialize edildi.");
+	*/
 	//=========================================================
 	//Renderer Init
 	//=========================================================
-	if (!Renderer::Init(windowWidth, windowHeight)){
+	if (!renderer.Init(windowWidth, windowHeight)){
 		Logger::error("Renderer initialize edilemedi.");
 		return false;
 	}
 	Logger::info("Renderer initialize edildi.");
-
 
 
 	lastCounter = SDL_GetPerformanceCounter();
@@ -94,12 +103,10 @@ void Engine::gameLoop() {
 			<< camera.position.y << " "
 			<< camera.position.z
 			<< std::endl;
-		SDL_Delay(1);
-		Renderer::BeginFrame();
+		renderer.BeginFrame(camera);
+		renderer.DrawTestTriangle();
 
-
-
-		Renderer::EndFrame();
+			
 
 		SDL_GL_SwapWindow(window1.getWindow());
 

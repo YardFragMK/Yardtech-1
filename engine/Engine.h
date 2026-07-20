@@ -2,6 +2,7 @@
 #include"Window.h"
 #include"SDL.h"
 #include"Camera.h"
+#include"renderer/Renderer.h"
 
 class Engine {
 public:
@@ -10,6 +11,7 @@ public:
 	bool initSystems();
 	void gameLoop();
 	Camera camera;
+	Renderer renderer;
 
 private:
 	int windowWidth = 1280;
