@@ -7,6 +7,8 @@
 #include"Window.h"
 #include"console/Console.h"
 #include"renderer/Renderer.h"
+#include"Camera.h"
+
 
 Engine::~Engine(){
 	Renderer::Shutdown();
@@ -66,8 +68,9 @@ bool Engine::initSystems() {
 
 
 	lastCounter = SDL_GetPerformanceCounter();
-
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	Logger::info("Engine initalize edildi.");
+
 	return true;
 
 }
@@ -85,20 +88,21 @@ void Engine::gameLoop() {
 		lastCounter = currentCounter;
 
 		Time::Update(deltaTime);
-		KeyInput::Update(running);
+		KeyInput::Update(running, camera, deltaTime);
+		std::cout
+			<< camera.position.x << " "
+			<< camera.position.y << " "
+			<< camera.position.z
+			<< std::endl;
+		SDL_Delay(1);
 		Renderer::BeginFrame();
 
-		/*
-		BSP Render
-		Entity Render
-		HUD Render
-		Console Render
-		*/
+
 
 		Renderer::EndFrame();
 
 		SDL_GL_SwapWindow(window1.getWindow());
 
-		SDL_Delay(1);
+
 	}
 }

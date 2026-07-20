@@ -145,6 +145,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\KeyInput.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\console\Console.h" />
     <ClInclude Include="engine\console\ConsoleLine.h" />
     <ClInclude Include="engine\Engine.h" />

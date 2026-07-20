@@ -1,6 +1,7 @@
 #pragma once
 #include"Window.h"
 #include"SDL.h"
+#include"Camera.h"
 
 class Engine {
 public:
@@ -8,6 +9,7 @@ public:
 	~Engine();
 	bool initSystems();
 	void gameLoop();
+	Camera camera;
 
 private:
 	int windowWidth = 1280;
