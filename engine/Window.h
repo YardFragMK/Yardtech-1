@@ -1,6 +1,7 @@
 #pragma once
 #include<SDL.h>
 #include"Logger.h" 
+
 class Window {
 public:
 	bool windowInit();

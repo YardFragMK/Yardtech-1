@@ -1,6 +1,5 @@
 #pragma once
 
-
 class Renderer {
 public:
 	static bool Init(int w, int h);

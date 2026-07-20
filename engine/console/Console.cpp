@@ -1,13 +1,12 @@
 #include"Console.h"
 #include<iostream>
 
-
 bool Console::s_open = false;
 std::vector<ConsoleLine>Console::s_Lines;
 
 void Console::Init() {
 	Print("Yardtech Console");
-	Print("Verion 1.0");
+	Print("Verion 1.1 alpha");
 }
 
 void Console::Toggle() {

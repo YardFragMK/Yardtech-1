@@ -1,7 +1,6 @@
 #include"KeyInput.h"
 #include"console/Console.h"
 
-
 void KeyInput::Update(bool& running) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {

@@ -1,6 +1,5 @@
 #pragma once
 
-
 class Time {
 public:
 	static void Update(float deltaTime);

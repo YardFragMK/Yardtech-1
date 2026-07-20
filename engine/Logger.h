@@ -1,5 +1,6 @@
 #pragma once
 #include<string>
+
 class Logger {
 public:
 	static void info(std::string itext);

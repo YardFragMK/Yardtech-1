@@ -33,9 +33,6 @@
     <ClCompile Include="engine\console\Console.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="extern\glad\src\glad.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="engine\renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -1,4 +1,3 @@
-#include<glad/glad.h>
 #include<iostream>
 #include<SDL.h>
 #include"Engine.h"
@@ -8,9 +7,6 @@
 #include"Window.h"
 #include"console/Console.h"
 #include"renderer/Renderer.h"
-
-
-
 
 Engine::~Engine(){
 	Renderer::Shutdown();
@@ -23,6 +19,9 @@ Engine::~Engine(){
 	SDL_Quit();
 }
  
+//=========================================================
+//Engine 
+//=========================================================
 bool Engine::initSystems() {
 
 	Console::Init();
@@ -47,7 +46,7 @@ bool Engine::initSystems() {
 	Logger::info("glContext olusturuldu.");
 
 	//=========================================================
-	// Context and Window
+	//Context and Window
 	//=========================================================
 	if (SDL_GL_MakeCurrent(window1.getWindow(), glContext) != 0) {
 		Logger::error(SDL_GetError());
@@ -56,18 +55,9 @@ bool Engine::initSystems() {
 	Logger::info("window ve glContext birbirine baglandi.");
 
 	//=========================================================
-	//Glad Init
-	//=========================================================
-	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-		Logger::error("Glad yüklenemedi");
-		return false;
-	}
-	Logger::info("glad initialize edildi.");
-
-	//=========================================================
 	//Renderer Init
 	//=========================================================
-	if (!Renderer::Init(1280, 720)){
+	if (!Renderer::Init(windowWidth, windowHeight)){
 		Logger::error("Renderer initialize edilemedi.");
 		return false;
 	}
