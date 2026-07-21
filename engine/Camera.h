@@ -11,6 +11,7 @@ public:
 	float mouseSensitivity = 0.1f;
 
 	glm::vec3 Forward() const; //Kameranın baktığı yön
+	glm::vec3 FlatForward() const;
 	glm::vec3 Right() const;
 
 	void MoveForward(float deltaTime);

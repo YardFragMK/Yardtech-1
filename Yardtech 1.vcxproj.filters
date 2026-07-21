@@ -45,6 +45,9 @@
     <ClCompile Include="extern\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="engine\console\CVar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Engine.h">
@@ -65,9 +68,6 @@
     <ClInclude Include="engine\console\Console.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="engine\console\ConsoleLine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="engine\renderer\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -75,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="engine\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\console\CVar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

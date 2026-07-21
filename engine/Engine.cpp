@@ -98,11 +98,7 @@ void Engine::gameLoop() {
 
 		Time::Update(deltaTime);
 		KeyInput::Update(running, camera, deltaTime);
-		std::cout
-			<< camera.position.x << " "
-			<< camera.position.y << " "
-			<< camera.position.z
-			<< std::endl;
+
 		renderer.BeginFrame(camera);
 		renderer.DrawTestTriangle();
 

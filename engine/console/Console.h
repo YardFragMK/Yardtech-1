@@ -2,7 +2,7 @@
 #include"../Logger.h"
 #include<vector>
 #include<string>
-#include"ConsoleLine.h"
+#include<SDL.h>
 
 class Console {
 public:
@@ -10,10 +10,11 @@ public:
 	static void Toggle();
 	static void Shutdown();
 	static bool IsOpen();
-	static void Print(const std::string& text);
-	static const std::vector<ConsoleLine>& GetLines();
+	static void Read();
+	static void HandleEvent(const SDL_Event& event);
 
 private:
+	static void ExecuteCommand();
 	static bool s_open;
-	static std::vector<ConsoleLine>s_Lines;
+	static std::string s_input;
 };
