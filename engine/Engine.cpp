@@ -66,6 +66,7 @@ bool Engine::initSystems() {
 	}
 	Logger::info("glad initialize edildi.");
 	*/
+
 	//=========================================================
 	//Renderer Init
 	//=========================================================
@@ -101,7 +102,8 @@ void Engine::gameLoop() {
 
 		renderer.BeginFrame(camera);
 		renderer.DrawTestTriangle();
-
+		camera.Update(deltaTime);
+		glm::mat4 view = camera.GetViewMatrix();
 			
 
 		SDL_GL_SwapWindow(window1.getWindow());

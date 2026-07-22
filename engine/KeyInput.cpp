@@ -10,14 +10,9 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
     while (SDL_PollEvent(&event)){
         Console::HandleEvent(event);
 
-        if (!Console::IsOpen())
-        {
-            if (event.type == SDL_MOUSEMOTION)
-            {
-                camera.ProcessMouseMovement(
-                    (float)event.motion.xrel,
-                    (float)event.motion.yrel
-                );
+        if (!Console::IsOpen()) {
+            if (event.type == SDL_MOUSEMOTION) {
+                camera.ProcessMouseMovement((float)event.motion.xrel, (float)event.motion.yrel);
             }
         }
 
@@ -44,29 +39,25 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
     const Uint8* keys = SDL_GetKeyboardState(nullptr);
 
 
-    if (keys[SDL_SCANCODE_W])
-    {
+    if (keys[SDL_SCANCODE_W]){
         if (Console::IsOpen())
             return;
         camera.MoveForward(deltaTime);
     }
 
-    if (keys[SDL_SCANCODE_S])
-    {
+    if (keys[SDL_SCANCODE_S]){
         if (Console::IsOpen())
             return;
         camera.MoveBackward(deltaTime);
     }
 
-    if (keys[SDL_SCANCODE_A])
-    {
+    if (keys[SDL_SCANCODE_A]){
         if (Console::IsOpen())
             return;
         camera.MoveLeft(deltaTime);
     }
 
-    if (keys[SDL_SCANCODE_D])
-    {
+    if (keys[SDL_SCANCODE_D]){
         if (Console::IsOpen())
             return;
         camera.MoveRight(deltaTime);

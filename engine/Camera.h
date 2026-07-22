@@ -13,6 +13,7 @@ public:
 	glm::vec3 Forward() const; //Kameranın baktığı yön
 	glm::vec3 FlatForward() const;
 	glm::vec3 Right() const;
+	glm::vec3 Up() const;
 
 	void MoveForward(float deltaTime);
 	void MoveBackward(float deltaTime);
@@ -20,6 +21,14 @@ public:
 	void MoveLeft(float deltaTime);
 
 	void ProcessMouseMovement(float xOffset, float yOffset);
+	void Update(float deltaTime); // her frame çağrılacak
 
 	glm::mat4 GetViewMatrix() const;
+	float roll = 0.0f;
+	float targetRoll = 0.0f;
+	float maxRoll = 5.0f;        // derece cinsinden max eğim
+	float rollLerpSpeed = 8.0f; // ne kadar hızlı düzelsin/eğilsin
+
+
+
 };

@@ -6,7 +6,8 @@ bool Console::s_open = false;
 std::string Console::s_input;
 
 void Console::Init() {
-
+    std::cout << "Yardtech-1 version: alpha 0.1\n";
+    std::cout << "=============================\n\n";
 }
 
 void Console::Toggle() {
@@ -14,12 +15,12 @@ void Console::Toggle() {
 	if (s_open) {
         SDL_SetRelativeMouseMode(SDL_FALSE);
 		SDL_StartTextInput();
-		Logger::info("[Console opened] ");
+		Logger::info("[Console opened]");
 	}
 	else {
         SDL_SetRelativeMouseMode(SDL_TRUE);
 		SDL_StopTextInput();
-		Logger::info("[Console closed] ");
+		Logger::info("[Console closed]");
 	}
 }
 
@@ -31,28 +32,26 @@ bool Console::IsOpen() {
 	return s_open;
 }
 
-void Console::HandleEvent(const SDL_Event& event){
-    if (!s_open)
+void Console::HandleEvent(const SDL_Event& event) {
+    if (!s_open) {
         return;
+    }
 
-    if (event.type == SDL_TEXTINPUT){
+    if (event.type == SDL_TEXTINPUT) {
         s_input += event.text.text;
         std::cout << s_input << std::endl;
     }
 
-    if (event.type == SDL_KEYDOWN){
-        switch (event.key.keysym.scancode)
-        {
+    if (event.type == SDL_KEYDOWN) {
+        switch (event.key.keysym.scancode) {
         case SDL_SCANCODE_BACKSPACE:
-
-            if (!s_input.empty())
+            if (!s_input.empty()) {
                 s_input.pop_back();
-
+            }
             std::cout << s_input << std::endl;
             break;
 
         case SDL_SCANCODE_RETURN:
-
             ExecuteCommand();
             s_input.clear();
             break;
