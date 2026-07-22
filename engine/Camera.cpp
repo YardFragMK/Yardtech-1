@@ -1,6 +1,8 @@
 #include"Camera.h"
 #include"console/CVar.h"
 
+Camera g_Camera;
+
 glm::vec3 Camera::FlatForward() const {
 	glm::vec3 forward{ 0.0f };
 	forward.x = cos(glm::radians(yaw));

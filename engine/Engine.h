@@ -10,7 +10,6 @@ public:
 	~Engine();
 	bool initSystems();
 	void gameLoop();
-	Camera camera;
 	Renderer renderer;
 
 private:

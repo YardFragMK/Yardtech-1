@@ -98,12 +98,12 @@ void Engine::gameLoop() {
 		lastCounter = currentCounter;
 
 		Time::Update(deltaTime);
-		KeyInput::Update(running, camera, deltaTime);
+		KeyInput::Update(running, g_Camera, deltaTime);
 
-		renderer.BeginFrame(camera);
+		renderer.BeginFrame(g_Camera);
 		renderer.DrawTestTriangle();
-		camera.Update(deltaTime);
-		glm::mat4 view = camera.GetViewMatrix();
+		g_Camera.Update(deltaTime);
+		glm::mat4 view = g_Camera.GetViewMatrix();
 			
 
 		SDL_GL_SwapWindow(window1.getWindow());

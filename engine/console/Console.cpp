@@ -1,5 +1,7 @@
 #include"Console.h"
 #include"CVar.h"
+#include<sstream>
+#include<sstream>
 #include<iostream>
 
 bool Console::s_open = false;
@@ -59,14 +61,35 @@ void Console::HandleEvent(const SDL_Event& event) {
     }
 }
 
-void Console::ExecuteCommand(){
-    if (s_input == "nvs_cheats"){
+void Console::ExecuteCommand() {
+    std::istringstream iss(s_input);
+    std::string cmd;
+    iss >> cmd;
+
+    if (cmd == "nvs_cheats") {
         g_CVar.nvs_cheatsF();
     }
-    else if (s_input == "cm_noclip"){ 
+    else if (cmd == "cm_noclip") {
         g_CVar.cm_noclipF();
     }
-    else{
+    else if (cmd == "cm_speed") {
+        float value;
+        if (iss >> value) g_CVar.cm_speedF(value);
+        else std::cout << "Usage: cm_speed <value>\n";
+    }
+    else if (cmd == "cm_sensitivity") {
+        float value;
+        if (iss >> value) g_CVar.cm_sensitivityF(value);
+    }
+    else if (cmd == "cm_rollmax") {
+        float value;
+        if (iss >> value) g_CVar.cm_rollmaxF(value);
+    }
+    else if (cmd == "cm_rollspeed") {
+        float value;
+        if (iss >> value) g_CVar.cm_rollspeedF(value);
+    }
+    else {
         std::cout << "Unknown command\n";
     }
 }
