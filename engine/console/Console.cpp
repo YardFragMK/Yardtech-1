@@ -89,6 +89,11 @@ void Console::ExecuteCommand() {
         float value;
         if (iss >> value) g_CVar.cm_rollspeedF(value);
     }
+    else if (cmd == "nvs_developer") {
+        int value;
+        if (iss >> value) g_CVar.nvs_developerF(value);
+        else std::cout << "Usage: nvs_developer <0/1>\n";
+    }
     else {
         std::cout << "Unknown command\n";
     }
