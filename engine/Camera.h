@@ -7,7 +7,7 @@ public:
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
 	float yaw = -90.0f; //sağ-sol
 	float pitch = 0.0f; //yukarı-aşağı
-	float moveSpeed = 5.0f;
+	float moveSpeed = 100.0f;
 	float mouseSensitivity = 0.1f;
 
 	glm::vec3 Forward() const; //Kameranın baktığı yön

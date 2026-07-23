@@ -47,5 +47,6 @@ void CVar::cm_rollspeedF(float cm_rollspeed) {
 }
 void CVar::nvs_developerF(int developer) {
 	nvs_developer = developer;
+	std::cout << "nvs_developer set to " << nvs_developer << std::endl;
 }
 

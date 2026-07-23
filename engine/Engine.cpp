@@ -100,9 +100,9 @@ void Engine::gameLoop() {
 		Time::Update(deltaTime);
 		KeyInput::Update(running, g_Camera, deltaTime);
 
+		g_Camera.Update(deltaTime);
 		renderer.BeginFrame(g_Camera);
 		renderer.DrawTestTriangle();
-		g_Camera.Update(deltaTime);
 		glm::mat4 view = g_Camera.GetViewMatrix();
 			
 

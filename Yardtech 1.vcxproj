@@ -145,6 +145,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\bsp\BspLoader.cpp" />
+    <ClCompile Include="engine\bsp\WadLoader.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
@@ -158,6 +160,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\bsp\BspLoader.h" />
+    <ClInclude Include="engine\bsp\WadLoader.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\console\Console.h" />
     <ClInclude Include="engine\console\CVar.h" />
