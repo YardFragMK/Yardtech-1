@@ -2,10 +2,10 @@
 #include<algorithm>
 #include<iostream>
 
-// ─────────────────────────────────────────────
+//=========================================================
 // 3 duzlemin kesisim noktasini bulur (Cramer's rule / lineer sistem cozumu).
 // Duzlemler paralel/dejenere ise false doner.
-// ─────────────────────────────────────────────
+//=========================================================
 bool BrushMeshBuilder::IntersectPlanes(const BrushFace& a, const BrushFace& b, const BrushFace& c, glm::vec3& outPoint) {
     const glm::vec3& n1 = a.normal;
     const glm::vec3& n2 = b.normal;
@@ -25,10 +25,10 @@ bool BrushMeshBuilder::IntersectPlanes(const BrushFace& a, const BrushFace& b, c
     return true;
 }
 
-// ─────────────────────────────────────────────
+//=========================================================
 // Bir noktanin brush'in TUM duzlemlerinin "ic" tarafinda olup olmadigini kontrol eder.
 // Half-space testi: dot(normal, point) - dist <= epsilon ise ic taraftadir.
-// ─────────────────────────────────────────────
+//=========================================================
 bool BrushMeshBuilder::IsPointInsideBrush(const glm::vec3& point, const Brush& brush, float epsilon) {
     for (const auto& face : brush.faces) {
         float d = glm::dot(face.normal, point) - face.dist;
@@ -39,10 +39,10 @@ bool BrushMeshBuilder::IsPointInsideBrush(const glm::vec3& point, const Brush& b
     return true;
 }
 
-// ─────────────────────────────────────────────
+//=========================================================
 // Bir yuzeyin vertex'lerini, o yuzeyin normali etrafinda aci sirasina gore siralar.
 // Bu, convex polygon'un dogru sirayla (TRIANGLE_FAN icin) cizilmesini saglar.
-// ─────────────────────────────────────────────
+//=========================================================
 void BrushMeshBuilder::SortVerticesAroundNormal(std::vector<glm::vec3>& points, const glm::vec3& normal) {
     if (points.size() < 3) return;
 
@@ -68,9 +68,9 @@ void BrushMeshBuilder::SortVerticesAroundNormal(std::vector<glm::vec3>& points, 
         });
 }
 
-// ─────────────────────────────────────────────
+//=========================================================
 // Valve 220 UV hesaplama: dunya-uzayi noktasini texture eksenlerine izdusurur.
-// ─────────────────────────────────────────────
+//=========================================================
 glm::vec2 BrushMeshBuilder::CalcUV(const glm::vec3& p, const BrushFace& face, int texW, int texH) {
     float u = glm::dot(p, face.uAxis) / std::max(face.scaleX, 0.0001f) + face.uOffset;
     float v = glm::dot(p, face.vAxis) / std::max(face.scaleY, 0.0001f) + face.vOffset;
@@ -81,9 +81,9 @@ glm::vec2 BrushMeshBuilder::CalcUV(const glm::vec3& p, const BrushFace& face, in
     return glm::vec2(u, v);
 }
 
-// ─────────────────────────────────────────────
+//=========================================================
 // Ana fonksiyon: brush'i mesh'e cevirir
-// ─────────────────────────────────────────────
+//=========================================================
 bool BrushMeshBuilder::Build(const Brush& brush, BrushMesh& outMesh) {
     outMesh.faces.clear();
 
