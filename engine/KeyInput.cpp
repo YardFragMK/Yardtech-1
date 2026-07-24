@@ -3,7 +3,7 @@
 #include "console/Console.h"
 #include<iostream>
 
-void KeyInput::Update(bool& running, Camera& camera, DynamicLightManager& dynamicLights, float deltaTime)
+void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 {
     SDL_Event event;
 
@@ -29,15 +29,6 @@ void KeyInput::Update(bool& running, Camera& camera, DynamicLightManager& dynami
                 Console::Toggle();
             }
 
-            // Test amacli: F tusuna basinca kameranin onunde bir patlama olustur
-            if (event.key.keysym.scancode == SDL_SCANCODE_F) {
-                if (!Console::IsOpen()) {
-                    glm::vec3 explosionPos = camera.position + camera.Forward() * 100.0f;
-                    dynamicLights.AddExplosion(explosionPos);
-                    std::cout << "Patlama olusturuldu: ("
-                        << explosionPos.x << ", " << explosionPos.y << ", " << explosionPos.z << ")" << std::endl;
-                }
-            }
         }
     }
 

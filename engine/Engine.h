@@ -3,8 +3,7 @@
 #include"SDL.h"
 #include"Camera.h"
 #include"renderer/Renderer.h"
-#include"map/BVH.h"
-#include"map/DynamicLightManager.h"
+
 
 class Engine {
 public:
@@ -13,8 +12,7 @@ public:
 	bool initSystems();
 	void gameLoop();
 	Renderer renderer;
-	BVH worldBVH;
-	DynamicLightManager dynamicLights;
+
 
 private:
 	int windowWidth = 1280;
