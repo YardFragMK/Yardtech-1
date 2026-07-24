@@ -4,7 +4,7 @@ class CVar {
 public:
 	bool cm_noclip = true;
 	bool nvs_cheats = false;
-	int nvs_developer = 0;
+	int nvs_developer = 1;
 
 
 	void cm_noclipF();

@@ -112,7 +112,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm</AdditionalIncludeDirectories>
@@ -145,14 +145,17 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="engine\bsp\BspLoader.cpp" />
-    <ClCompile Include="engine\bsp\WadLoader.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\KeyInput.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
+    <ClCompile Include="engine\map\BrushMesh.cpp" />
+    <ClCompile Include="engine\map\BVH.cpp" />
+    <ClCompile Include="engine\map\DynamicLightManager.cpp" />
+    <ClCompile Include="engine\map\MapParser.cpp" />
+    <ClCompile Include="engine\map\VertexLighting.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\Window.cpp" />
@@ -160,18 +163,24 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engine\bsp\BspLoader.h" />
-    <ClInclude Include="engine\bsp\WadLoader.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\console\Console.h" />
     <ClInclude Include="engine\console\CVar.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\KeyInput.h" />
     <ClInclude Include="engine\Logger.h" />
+    <ClInclude Include="engine\map\BrushMesh.h" />
+    <ClInclude Include="engine\map\BVH.h" />
+    <ClInclude Include="engine\map\DynamicLight.h" />
+    <ClInclude Include="engine\map\DynamicLightManager.h" />
+    <ClInclude Include="engine\map\FrustumExtract.h" />
+    <ClInclude Include="engine\map\MapParser.h" />
+    <ClInclude Include="engine\map\MapTypes.h" />
+    <ClInclude Include="engine\map\VertexLighting.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="engine\Window.h" />
-    <ClInclude Include="ui\Intro.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

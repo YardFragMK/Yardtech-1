@@ -3,11 +3,11 @@
 #include "console/Console.h"
 #include<iostream>
 
-void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
+void KeyInput::Update(bool& running, Camera& camera, DynamicLightManager& dynamicLights, float deltaTime)
 {
     SDL_Event event;
 
-    while (SDL_PollEvent(&event)){
+    while (SDL_PollEvent(&event)) {
         Console::HandleEvent(event);
 
         if (!Console::IsOpen()) {
@@ -16,50 +16,40 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
             }
         }
 
-        if (event.type == SDL_QUIT){
+        if (event.type == SDL_QUIT) {
             running = false;
         }
 
-        if (event.type == SDL_KEYDOWN){
-            if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
+        if (event.type == SDL_KEYDOWN) {
+            if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
                 running = false;
             }
 
-            if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE){
+            if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
                 Console::Toggle();
             }
-            if (event.key.keysym.scancode == SDL_SCANCODE_N) {
-                //noclip == !noclip;
+
+            // Test amacli: F tusuna basinca kameranin onunde bir patlama olustur
+            if (event.key.keysym.scancode == SDL_SCANCODE_F) {
+                if (!Console::IsOpen()) {
+                    glm::vec3 explosionPos = camera.position + camera.Forward() * 100.0f;
+                    dynamicLights.AddExplosion(explosionPos);
+                    std::cout << "Patlama olusturuldu: ("
+                        << explosionPos.x << ", " << explosionPos.y << ", " << explosionPos.z << ")" << std::endl;
+                }
             }
         }
     }
 
 
-    // Klavye durumunu her frame kontrol et
+    if (Console::IsOpen()) {
+        return; // konsol acikken hareket tamamen atlanir
+    }
+
     const Uint8* keys = SDL_GetKeyboardState(nullptr);
 
-
-    if (keys[SDL_SCANCODE_W]){
-        if (Console::IsOpen())
-            return;
-        camera.MoveForward(deltaTime);
-    }
-
-    if (keys[SDL_SCANCODE_S]){
-        if (Console::IsOpen())
-            return;
-        camera.MoveBackward(deltaTime);
-    }
-
-    if (keys[SDL_SCANCODE_A]){
-        if (Console::IsOpen())
-            return;
-        camera.MoveLeft(deltaTime);
-    }
-
-    if (keys[SDL_SCANCODE_D]){
-        if (Console::IsOpen())
-            return;
-        camera.MoveRight(deltaTime);
-    }
+    if (keys[SDL_SCANCODE_W]) camera.MoveForward(deltaTime);
+    if (keys[SDL_SCANCODE_S]) camera.MoveBackward(deltaTime);
+    if (keys[SDL_SCANCODE_A]) camera.MoveLeft(deltaTime);
+    if (keys[SDL_SCANCODE_D]) camera.MoveRight(deltaTime);
 }

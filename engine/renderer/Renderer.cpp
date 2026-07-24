@@ -5,6 +5,7 @@ bool Renderer::Init(int width, int height) {
 	SetupProjection(width, height);
 	return true;
 }
+
 void Renderer::SetupProjection(int width, int height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -19,6 +20,7 @@ void Renderer::SetupProjection(int width, int height) {
 	glLoadMatrixf(glm::value_ptr(projection));
 	glMatrixMode(GL_MODELVIEW);
 }
+
 void Renderer::BeginFrame(const Camera& camera) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

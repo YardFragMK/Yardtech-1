@@ -7,12 +7,12 @@ CVar g_CVar;
 void CVar::cm_noclipF() {
 	if (nvs_cheats == true) {
 		cm_noclip = !cm_noclip;
-		std::cout << "cm_noclip " << cm_noclip << std::endl;
+		std::cout << "cm_noclip set to " << cm_noclip << std::endl;
 	}
 }
 void CVar::nvs_cheatsF() {
 	nvs_cheats = !nvs_cheats;
-	std::cout << "nvs_cheats " << nvs_cheats << std::endl;
+	std::cout << "nvs_cheats set to " << nvs_cheats << std::endl;
 }
 void CVar::cm_speedF(float cm_speed) {
 	if (nvs_developer == 1) {

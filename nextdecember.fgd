@@ -1,0 +1,91 @@
+//=====================================================
+// Next December - Game Definition File
+// TrenchBroom icin ozel entity tanimlari
+//=====================================================
+
+//=====================================================
+// WORLDSPAWN - haritanin ana entity'si (otomatik olusur, elle eklenmez)
+//=====================================================
+@SolidClass = worldspawn : "Harita geometrisinin ana konteyneri"
+[
+    message(string) : "Harita adi / yukleme mesaji"
+    skyname(string) : "Skybox ismi" : "sky"
+]
+
+//=====================================================
+// LIGHT - statik nokta isigi (VertexLighting sistemi tarafindan okunur)
+//=====================================================
+@PointClass size(-8 -8 -8, 8 8 8) color(255 255 200) = light : "Statik nokta isik kaynagi"
+[
+    light(integer) : "Parlaklik (varsayilan 300)" : 300
+    _color(color255) : "Isik rengi (R G B, 0-255)" : "255 255 255"
+]
+
+@PointClass size(-8 -8 -8, 8 8 8) color(255 200 150) = light_flame : "Titreyen alev isigi (statik, meshale gibi)"
+[
+    light(integer) : "Parlaklik" : 200
+    _color(color255) : "Isik rengi" : "255 180 80"
+]
+
+//=====================================================
+// SPAWN NOKTALARI
+//=====================================================
+@PointClass size(-16 -16 -24, 16 16 32) color(0 255 0) = info_player_start : "Oyuncunun oyunun basinda dogacagi nokta"
+[
+    angle(integer) : "Bakis yonu (derece, 0-360)" : 0
+]
+
+@PointClass size(-16 -16 -24, 16 16 32) color(0 200 0) = info_player_deathmatch : "Deathmatch spawn noktasi"
+[
+    angle(integer) : "Bakis yonu (derece, 0-360)" : 0
+]
+
+//=====================================================
+// KAPILAR
+//=====================================================
+@SolidClass color(0 100 255) = func_door : "Hareketli kapi brush'i"
+[
+    speed(integer) : "Acilma hizi (birim/saniye)" : 100
+    wait(integer) : "Acik kalma suresi (saniye)" : 3
+    lip(integer) : "Kapaninca birakilan bosluk (birim)" : 0
+    targetname(target_source) : "Bu kapiyi tetikleyecek entity'nin ismi"
+]
+
+@SolidClass color(0 150 255) = func_door_rotating : "Doner kapi brush'i"
+[
+    speed(integer) : "Acilma hizi (derece/saniye)" : 90
+    wait(integer) : "Acik kalma suresi (saniye)" : 3
+    distance(integer) : "Acilma acisi (derece)" : 90
+]
+
+//=====================================================
+// CANAVARLAR / NPC'LER
+//=====================================================
+@PointClass size(-16 -16 0, 16 16 64) color(255 0 0) = monster_grunt : "Temel dusman NPC"
+[
+    health(integer) : "Can puani" : 100
+    targetname(target_source) : "Bu NPC'nin ismi (tetikleyiciler icin)"
+]
+
+@PointClass size(-16 -16 0, 16 16 72) color(200 0 0) = monster_soldier : "Silahli dusman NPC"
+[
+    health(integer) : "Can puani" : 80
+]
+
+//=====================================================
+// TETIKLEYICILER (opsiyonel, ileride kullanilabilir)
+//=====================================================
+@SolidClass color(255 255 0) = trigger_multiple : "Coklu tetiklenebilir hacim"
+[
+    target(target_destination) : "Tetiklenecek entity'nin ismi"
+    delay(integer) : "Tetiklenme gecikmesi (saniye)" : 0
+]
+
+//=====================================================
+// DINAMIK ISIK TEST NOKTALARI (opsiyonel, DynamicLightManager icin)
+//=====================================================
+@PointClass size(-8 -8 -8, 8 8 8) color(255 100 0) = info_torch_spawn : "Runtime'da Torch tipi dinamik isik olusturulacak nokta"
+[
+    radius(integer) : "Etki mesafesi" : 150
+    _color(color255) : "Isik rengi" : "255 200 128"
+]
