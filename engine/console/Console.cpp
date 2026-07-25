@@ -1,8 +1,8 @@
 #include"Console.h"
 #include"CVar.h"
 #include<sstream>
-#include<sstream>
 #include<iostream>
+#include"../Camera.h"
 
 bool Console::s_open = false;
 std::string Console::s_input;
@@ -93,6 +93,17 @@ void Console::ExecuteCommand() {
         int value;
         if (iss >> value) g_CVar.nvs_developerF(value);
         else std::cout << "Usage: nvs_developer <0/1>\n";
+    }
+    else if (cmd == "help") {
+        std::cout << "nvs_cheats " << g_CVar.nvs_cheats << std::endl;
+        std::cout << "cm_noclip " << g_CVar.cm_noclip << std::endl;
+        std::cout << "cm_sensitivity " << g_Camera.mouseSensitivity << std::endl;
+        std::cout << "nvs_developer " << g_CVar.nvs_developer << std::endl;
+        if (g_CVar.nvs_developer == 1) {
+            std::cout << "cm_speed " << g_Camera.moveSpeed << std::endl;
+            std::cout << "cm_rollmax " << g_Camera.maxRoll << std::endl;
+            std::cout << "cm_rollspeed " << g_Camera.rollLerpSpeed << std::endl;
+        }
     }
     else {
         std::cout << "Unknown command\n";

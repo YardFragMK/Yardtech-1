@@ -3,7 +3,7 @@
 class CVar {
 public:
 	bool cm_noclip = true;
-	bool nvs_cheats = false;
+	bool nvs_cheats = true;
 	int nvs_developer = 1;
 
 
