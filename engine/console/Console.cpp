@@ -19,7 +19,7 @@ float Console::s_targetHeight = 0.0f;
 float Console::s_slideSpeed = 2000.0f;
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.1");
+    Log("Yardtech-1 version: alpha 0.2");
     Log("=============================");
 }
 
@@ -170,7 +170,7 @@ void Console::Render(int windowWidth, int windowHeight) {
         return; // tamamen kapali, cizecek bir sey yok
     }
 
-    // ── 2D ortografik moda gec ──
+    // 2D ortografik moda gec
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -187,8 +187,8 @@ void Console::Render(int windowWidth, int windowHeight) {
 
     float h = s_currentHeight;
 
-    // ── Arka plan kutusu (yari saydam koyu gri) ──
-    glColor4f(0.05f, 0.05f, 0.08f, 0.85f);
+    // Arka plan kutusu
+    glColor4f(0.08f, 0.01f, 0.01f, 0.85f);
     glBegin(GL_QUADS);
     glVertex2f(0.0f, 0.0f);
     glVertex2f((float)windowWidth, 0.0f);
@@ -196,14 +196,14 @@ void Console::Render(int windowWidth, int windowHeight) {
     glVertex2f(0.0f, h);
     glEnd();
 
-    // ── Alt kenarda ince bir cizgi (ayrac) ──
-    glColor4f(0.4f, 0.4f, 0.5f, 1.0f);
+    // Alt kenarda ince bir cizgi (ayrac)
+    glColor4f(0.5f, 0.4f, 0.4f, 1.0f);
     glBegin(GL_LINES);
     glVertex2f(0.0f, h);
     glVertex2f((float)windowWidth, h);
     glEnd();
 
-    // ── Metin (sadece yeterince acikken ciz, kayma sirasinda tasma olmasin) ──
+    // Metin (sadece yeterince acikken ciz, kayma sirasinda tasma olmasin)
     if (h > 20.0f) {
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
