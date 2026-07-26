@@ -1,13 +1,17 @@
-#include<iostream>
 #include"Logger.h"
+#include<windows.h>
 
 void Logger::info(std::string itext) {
-	std::cout << "[INFO] " << itext << std::endl;
+	std::string line = "[INFO] " + itext+ "\n";
+	OutputDebugStringA(line.c_str());
+
 }
 void Logger::warning(std::string wtext) {
-	std::cout << "[WARNING] " << wtext << std::endl;
+	std::string line = "[WARNING] " + wtext + "\n";
+	OutputDebugStringA(line.c_str());
 }
 
 void Logger::error(std::string etext) {
-	std::cout << "[ERROR] " << etext << std::endl;
+	std::string line = "[ERROR] " + etext + "\n";
+	OutputDebugStringA(line.c_str());
 }

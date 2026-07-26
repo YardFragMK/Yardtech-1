@@ -26,7 +26,7 @@ public:
 	glm::mat4 GetViewMatrix() const;
 	float roll = 0.0f;
 	float targetRoll = 0.0f;
-	float maxRoll = 5.0f;        // derece cinsinden max eğim
+	float maxRoll = 10.0f;        // derece cinsinden max eğim
 	float rollLerpSpeed = 8.0f; // ne kadar hızlı düzelsin/eğilsin
 
 	

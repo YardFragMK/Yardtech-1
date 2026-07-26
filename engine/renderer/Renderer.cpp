@@ -24,6 +24,7 @@ void Renderer::SetupProjection(int width, int height) {
 void Renderer::BeginFrame(const Camera& camera) {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glLoadIdentity();
 	glm::mat4 view = camera.GetViewMatrix();
 	glLoadMatrixf(glm::value_ptr(view));

@@ -100,10 +100,13 @@ void Engine::gameLoop() {
 
 		Time::Update(deltaTime);
 		KeyInput::Update(running, g_Camera, deltaTime);
+		Console::Update(deltaTime);
 
 		g_Camera.Update(deltaTime);
 		renderer.BeginFrame(g_Camera);
 		renderer.DrawTestTriangle();
+
+		Console::Render(windowWidth, windowHeight);
 
 		SDL_GL_SwapWindow(window1.getWindow());
 

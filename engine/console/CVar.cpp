@@ -1,52 +1,63 @@
 #include"CVar.h"
 #include"../Camera.h"
-#include<iostream>
+#include"Console.h"
 
 CVar g_CVar;
 
 void CVar::cm_noclipF() {
 	if (nvs_cheats == true) {
 		cm_noclip = !cm_noclip;
-		std::cout << "cm_noclip set to " << cm_noclip << std::endl;
+		Console::Log("cm_noclip set to " + std::to_string(cm_noclip));
 	}
 }
 void CVar::nvs_cheatsF() {
 	nvs_cheats = !nvs_cheats;
-	std::cout << "nvs_cheats set to " << nvs_cheats << std::endl;
+	Console::Log("nvs_cheats set to " + std::to_string(nvs_cheats));
 }
-void CVar::cm_speedF(float cm_speed) {
+void CVar::cm_speedF(float cm_speed) const {
 	if (nvs_developer == 1) {
 		g_Camera.moveSpeed = cm_speed;
-		std::cout << "cm_speed set to " << cm_speed << std::endl;
+		Console::Log("cm_speed set to " + std::to_string(cm_speed));
 	}
 	else {
-		std::cout << "cm_speed: developer mode required\n";
+		Console::Log("cm_speed: developer mode required");
 	}
 }
-void CVar::cm_sensitivityF(float cm_sensitivity) {
+void CVar::cm_sensitivityF(float cm_sensitivity) const {
 	g_Camera.mouseSensitivity = cm_sensitivity;
-	std::cout << "cm_sensitivity set to " << cm_sensitivity << std::endl;
+	Console::Log("cm_sensitivity set to " + std::to_string(cm_sensitivity));
 }
-void CVar::cm_rollmaxF(float cm_rollmax) {
+void CVar::cm_rollmaxF(float cm_rollmax) const {
 	if (nvs_developer == 1) {
 		g_Camera.maxRoll = cm_rollmax;
-		std::cout << "cm_rollmax set to " << cm_rollmax << std::endl;
+		Console::Log("cm_rollmax set to " + std::to_string(cm_rollmax));
 	}
 	else {
-		std::cout << "cm_rollmax: developer mode required\n";
+		Console::Log("cm_rollmax: developer mode required");
 	}
 }
-void CVar::cm_rollspeedF(float cm_rollspeed) {
+void CVar::cm_rollspeedF(float cm_rollspeed) const {
 	if (nvs_developer == 1) {
 		g_Camera.rollLerpSpeed = cm_rollspeed;
-		std::cout << "cm_rollspeed set to " << cm_rollspeed << std::endl;
+		Console::Log("cm_rollspeed set to " + std::to_string(cm_rollspeed));
 	}
 	else {
-		std::cout << "cm_rollspeed: developer mode required\n";
+		Console::Log("cm_rollspeed: developer mode required");
 	}
 }
 void CVar::nvs_developerF(int developer) {
 	nvs_developer = developer;
-	std::cout << "nvs_developer set to " << nvs_developer << std::endl;
+	Console::Log("nvs_developer set to " + std::to_string(nvs_developer));
 }
 
+void CVar::helpF() const {
+	Console::Log("nvs_cheats " + std::to_string(nvs_cheats));
+	Console::Log("cm_noclip " + std::to_string(cm_noclip));
+	Console::Log("cm_sensitivity " + std::to_string(g_Camera.mouseSensitivity));
+	Console::Log("nvs_developer " + std::to_string(nvs_developer));
+	if (nvs_developer == 1) {
+		Console::Log("cm_speed " + std::to_string(g_Camera.moveSpeed));
+		Console::Log("cm_rollmax " + std::to_string(g_Camera.maxRoll));
+		Console::Log("cm_rollspeed " + std::to_string(g_Camera.rollLerpSpeed));
+	}
+}
