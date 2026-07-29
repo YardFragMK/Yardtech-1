@@ -145,6 +145,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\BSPReader.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
@@ -155,10 +156,13 @@
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\Window.cpp" />
     <ClCompile Include="extern\glad\src\glad.c" />
-    <ClCompile Include="game\EntityBase.cpp" />
+    <ClCompile Include="game\src\EntityParser.cpp" />
+    <ClCompile Include="game\src\Player.cpp" />
+    <ClCompile Include="game\src\PolyBreakable.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\BSPReader.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\console\Console.h" />
     <ClInclude Include="engine\console\CVar.h" />
@@ -168,7 +172,14 @@
     <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="engine\Window.h" />
-    <ClInclude Include="game\EntityBase.h" />
+    <ClInclude Include="game\src\EntityParser.h" />
+    <ClInclude Include="game\src\e_ItemBase.h" />
+    <ClInclude Include="game\src\e_NPCBase.h" />
+    <ClInclude Include="game\src\e_PolyBase.h" />
+    <ClInclude Include="game\src\e_TriggerBase.h" />
+    <ClInclude Include="game\src\Player.h" />
+    <ClInclude Include="game\src\PolyBreakable.h" />
+    <ClInclude Include="game\src\Weapons.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

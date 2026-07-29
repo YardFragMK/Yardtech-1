@@ -60,7 +60,16 @@
     <ClCompile Include="engine\Camera.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
-    <ClCompile Include="game\EntityBase.cpp">
+    <ClCompile Include="game\src\PolyBreakable.cpp">
+      <Filter>Source Files\game src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\BSPReader.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="game\src\EntityParser.cpp">
+      <Filter>Source Files\game src</Filter>
+    </ClCompile>
+    <ClCompile Include="game\src\Player.cpp">
       <Filter>Source Files\game src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,7 +101,31 @@
     <ClInclude Include="engine\Window.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
-    <ClInclude Include="game\EntityBase.h">
+    <ClInclude Include="game\src\e_TriggerBase.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\e_PolyBase.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\e_NPCBase.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\e_ItemBase.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\PolyBreakable.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\BSPReader.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\EntityParser.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\Player.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\Weapons.h">
       <Filter>Header Files\game src</Filter>
     </ClInclude>
   </ItemGroup>

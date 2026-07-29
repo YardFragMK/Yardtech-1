@@ -13,7 +13,6 @@ public:
 	void gameLoop();
 	Renderer renderer;
 
-
 private:
 	int windowWidth = 1280;
 	int windowHeight = 720;
@@ -21,5 +20,4 @@ private:
 	bool running=true;
 	Uint64 lastCounter = 0;
 	Window window1;
-
 };

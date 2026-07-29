@@ -1,8 +1,9 @@
 #include "KeyInput.h"
 #include "Camera.h"
 #include "console/Console.h"
+#include"../game/src/Player.h"
 #include<iostream>
-
+Player player;
 void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 {
     SDL_Event event;
@@ -29,6 +30,9 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
                 Console::Toggle();
             }
 
+        }
+        if (event.type == SDL_MOUSEBUTTONUP) { //Güncellenecek
+            player.attack();
         }
     }
 
