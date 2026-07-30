@@ -7,6 +7,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include"../Camera.h"
+#include"../BSPReader.h"
 
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "../../extern/stb/stb_easy_font.h"
@@ -107,6 +108,11 @@ void Console::ExecuteCommand() {
     }
     else if (cmd == "help") {
         g_CVar.helpF();
+    }
+    else if (cmd == "map") {
+        std::string value;
+        Console::Log("Bsp yukleniyor");
+        if (iss >> value) ReadEntityLump(value);
     }
     else {
         Log("Unknown command");

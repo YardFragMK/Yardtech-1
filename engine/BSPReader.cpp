@@ -23,5 +23,6 @@ std::string ReadEntityLump(const std::string& bspPath){
     file.seekg(entLump.offset, std::ios::beg);
     file.read(entityData.data(), entLump.length);
 
+    Console::Log(bspPath + " Yuklendi");
     return entityData; // "{ \"key\" \"value\" ... } { ... } ..."
 }

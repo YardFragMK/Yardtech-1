@@ -82,7 +82,7 @@ bool Engine::initSystems() {
 	lastCounter = SDL_GetPerformanceCounter();
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	Logger::info("Engine initalize edildi.");
-	ReadEntityLump("nvs1/test.bsp");
+
 	return true;
 
 }
