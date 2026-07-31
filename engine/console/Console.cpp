@@ -79,44 +79,70 @@ void Console::ExecuteCommand() {
     iss >> cmd;
 
     if (cmd == "nvs_cheats") {
-        g_CVar.nvs_cheatsF();
+        int value;
+        if (iss >> value) { 
+            if(value == 1 || value == 0) g_CVar.nvs_cheatsF(value);
+            else Log("Usage: nvs_cheats <0/1>");
+        }
+        else Log("Usage: nvs_cheats <0/1>");
     }
+
     else if (cmd == "cm_noclip") {
-        g_CVar.cm_noclipF();
+        int value;
+        if (iss >> value) { 
+            if (value == 1 || value == 0) g_CVar.cm_noclipF(value);
+            else Log("Usage: cm_noclip <0/1>");
+        }
+        else Log("Usage: cm_noclip <0/1>");
     }
+
     else if (cmd == "cm_speed") {
         float value;
         if (iss >> value) g_CVar.cm_speedF(value);
         else Log("Usage: cm_speed <value>");
     }
+
     else if (cmd == "cm_sensitivity") {
         float value;
         if (iss >> value) g_CVar.cm_sensitivityF(value);
+        else Log("Usage: cm_sensitivity <value>");
     }
+
     else if (cmd == "cm_rollmax") {
         float value;
         if (iss >> value) g_CVar.cm_rollmaxF(value);
+        else Log("Usage: cm_rollmax <value>");
     }
+
     else if (cmd == "cm_rollspeed") {
         float value;
         if (iss >> value) g_CVar.cm_rollspeedF(value);
+        else Log("Usage: cm_rollspeed <value>");
     }
+
     else if (cmd == "nvs_developer") {
         int value;
-        if (iss >> value) g_CVar.nvs_developerF(value);
+        if (iss >> value) {
+            if (value == 1 || value == 0) g_CVar.nvs_developerF(value);
+            else Log("Usage: nvs_developer <0/1>");
+        }
         else Log("Usage: nvs_developer <0/1>");
     }
+
     else if (cmd == "help") {
         g_CVar.helpF();
     }
+
     else if (cmd == "map") {
         std::string value;
-        Console::Log("Bsp yukleniyor");
         if (iss >> value) ReadEntityLump(value);
+        else Log("Usage: map <path>");
     }
+
     else {
         Log("Unknown command");
     }
+
 }
 
 void Console::Log(const std::string& line) {

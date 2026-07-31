@@ -4,14 +4,14 @@
 
 CVar g_CVar;
 
-void CVar::cm_noclipF() {
+void CVar::cm_noclipF(int cm_noclipValue) {
 	if (nvs_cheats == true) {
-		cm_noclip = !cm_noclip;
+		cm_noclip = cm_noclipValue;
 		Console::Log("cm_noclip set to " + std::to_string(cm_noclip));
 	}
 }
-void CVar::nvs_cheatsF() {
-	nvs_cheats = !nvs_cheats;
+void CVar::nvs_cheatsF(int nvs_cheatsValue) {
+	nvs_cheats = nvs_cheatsValue;
 	Console::Log("nvs_cheats set to " + std::to_string(nvs_cheats));
 }
 void CVar::cm_speedF(float cm_speed) const {

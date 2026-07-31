@@ -7,8 +7,8 @@ public:
 	int nvs_developer = 1;
 
 
-	void cm_noclipF();
-	void nvs_cheatsF();
+	void cm_noclipF(int cm_noclipValue);
+	void nvs_cheatsF(int nvs_cheatsValue);
 	void cm_speedF(float cm_speed) const;
 	void cm_sensitivityF(float cm_sensitivity) const;
 	void cm_rollmaxF(float cm_rollmax) const;

@@ -23,7 +23,7 @@ glm::vec3 Camera::Right() const {
 }
 
 void Camera::MoveForward(float deltaTime) { 
-	if (g_CVar.cm_noclip == true) {
+	if (g_CVar.cm_noclip == 1) {
 		position += Forward() * moveSpeed * deltaTime;
 	}
 	else {
@@ -31,7 +31,7 @@ void Camera::MoveForward(float deltaTime) {
 	}
 }
 void Camera::MoveBackward(float deltaTime){
-	if (g_CVar.cm_noclip == true) {
+	if (g_CVar.cm_noclip == 1) {
 		position -= Forward() * moveSpeed * deltaTime;
 	}
 	else {
