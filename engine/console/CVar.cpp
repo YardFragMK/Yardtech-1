@@ -52,9 +52,9 @@ void CVar::nvs_developerF(int developer) {
 
 void CVar::helpF() const {
 	Console::Log("nvs_cheats " + std::to_string(nvs_cheats));
-	Console::Log("cm_noclip " + std::to_string(cm_noclip));
-	Console::Log("cm_sensitivity " + std::to_string(g_Camera.mouseSensitivity));
 	Console::Log("nvs_developer " + std::to_string(nvs_developer));
+	Console::Log("cm_noclip " + std::to_string(cm_noclip));
+	Console::Log("cm_sensitivity " + std::to_string(g_Camera.mouseSensitivity));   
 	if (nvs_developer == 1) {
 		Console::Log("cm_speed " + std::to_string(g_Camera.moveSpeed));
 		Console::Log("cm_rollmax " + std::to_string(g_Camera.maxRoll));

@@ -4,6 +4,7 @@
 
 enum Weapon {
 	PISTOL=0,
+	SHOTGUN=1
 };
 
 class Player {
@@ -16,7 +17,8 @@ public:
 	int CurrentWeapon = PISTOL;
 
 	void takeDamage(int enemyDamage);
-	void attack();
+	void attack(int attacknumber);
 private:
 	Pistol pistol;
+	Shotgun shotgun;
 };

@@ -23,9 +23,20 @@ void Player::takeDamage(int enemyDamage) {
     }
 
 }
-void Player::attack() {
+void Player::attack(int attacknumber) {
     Console::Log("Ates edildi");
-    if (CurrentWeapon = PISTOL) {
-        pistol.Shoot();
+    if (attacknumber == 1) {
+        if (CurrentWeapon = PISTOL) {
+            pistol.Shoot();
+        }
+        if (CurrentWeapon = SHOTGUN) {
+            shotgun.Shoot(1);
+        }
     }
+    else if (attacknumber == 2) {
+        if (CurrentWeapon = SHOTGUN) {
+            shotgun.Shoot(2);
+        }
+    }
+
 }
