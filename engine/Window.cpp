@@ -19,7 +19,7 @@ bool Window::windowInit() {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	window = SDL_CreateWindow(
-		"Yardtech 1",
+		"Goblet of Blood Yardtech-1",
 		SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED,
 		windowWidth,
