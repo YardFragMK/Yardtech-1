@@ -186,6 +186,13 @@
     <ClInclude Include="game\src\Player.h" />
     <ClInclude Include="game\src\PolyBreakable.h" />
     <ClInclude Include="game\src\Weapons.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Yardtech 1.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="x64\Release\GB1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
