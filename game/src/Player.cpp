@@ -20,12 +20,13 @@ void Player::takeDamage(int enemyDamage) {
     }
     if (Health < 0) {
         Health = 0;
+        death();
     }
 
 }
 void Player::attack(int attacknumber) {
-    Console::Log("Ates edildi");
     if (attacknumber == 1) {
+        Console::Log("1. saldiri yontemi kullanildi");
         if (CurrentWeapon = PISTOL) {
             pistol.Shoot();
         }
@@ -34,9 +35,16 @@ void Player::attack(int attacknumber) {
         }
     }
     else if (attacknumber == 2) {
+        Console::Log("2. saldiri yontemi kullanildi");
         if (CurrentWeapon = SHOTGUN) {
             shotgun.Shoot(2);
         }
     }
 
+}
+
+void Player::death() {
+    // [] Kamera durdurulacak ve yere düşecek
+    // [] Klavye ve mouse girdisi durduralacak
+    // [] Ekrana yazı yazdırılacak
 }

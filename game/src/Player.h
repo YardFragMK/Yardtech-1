@@ -18,6 +18,7 @@ public:
 
 	void takeDamage(int enemyDamage);
 	void attack(int attacknumber);
+	void death();
 private:
 	Pistol pistol;
 	Shotgun shotgun;
