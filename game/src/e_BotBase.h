@@ -1,6 +1,6 @@
 #pragma once
 
-class e_NPCBase {
+class e_BotBase {
 public:
 	virtual void Spawn();
 	virtual void Live(); //Botun ana düşünme fonksiyonu

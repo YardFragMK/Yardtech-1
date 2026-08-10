@@ -107,7 +107,7 @@
     <ClInclude Include="game\src\e_PolyBase.h">
       <Filter>Header Files\game src</Filter>
     </ClInclude>
-    <ClInclude Include="game\src\e_NPCBase.h">
+    <ClInclude Include="game\src\e_BotBase.h">
       <Filter>Header Files\game src</Filter>
     </ClInclude>
     <ClInclude Include="game\src\e_ItemBase.h">

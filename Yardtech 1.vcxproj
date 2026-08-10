@@ -180,7 +180,7 @@
     <ClInclude Include="engine\Window.h" />
     <ClInclude Include="game\src\EntityParser.h" />
     <ClInclude Include="game\src\e_ItemBase.h" />
-    <ClInclude Include="game\src\e_NPCBase.h" />
+    <ClInclude Include="game\src\e_BotBase.h" />
     <ClInclude Include="game\src\e_PolyBase.h" />
     <ClInclude Include="game\src\e_TriggerBase.h" />
     <ClInclude Include="game\src\Player.h" />
