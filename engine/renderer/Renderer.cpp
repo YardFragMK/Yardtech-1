@@ -43,7 +43,7 @@ void Renderer::BeginFrame(const Camera& camera) {
 
 
 
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.8f, 0.1f, 1.0f, 0.8f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glLoadIdentity();
@@ -88,9 +88,9 @@ void Renderer::EndFrame(){
 
 void Renderer::DrawTestTriangle() {
 	glBegin(GL_TRIANGLES);
-	glTexCoord2f(0.0f,0.0f); glVertex3f(-1.0f,-1.0,-5.0);
-	glTexCoord2f(1.0f,0.0f); glVertex3f(1.0f, -1.0, -5.0);
-	glTexCoord2f(0.5f,1.0f); glVertex3f(0.0f, 1.0, -5.0);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0, -5.0);
+		glTexCoord2f(1.0f,0.0f); glVertex3f(1.0f, -1.0, -5.0);
+		glTexCoord2f(0.5f,1.0f); glVertex3f(0.0f, 1.0, -5.0);
 	glEnd();
 }
 

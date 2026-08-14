@@ -13,8 +13,8 @@ public:
 	void gameLoop();
 
 private:
-	int windowWidth = 1280;
-	int windowHeight = 720;
+	int windowWidth = 1920;
+	int windowHeight = 1080;
 	SDL_GLContext glContext = nullptr;
 	bool running=true;
 	Uint64 lastCounter = 0;
