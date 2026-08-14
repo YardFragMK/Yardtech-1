@@ -11,7 +11,6 @@ public:
 	~Engine();
 	bool initSystems();
 	void gameLoop();
-	Renderer renderer;
 
 private:
 	int windowWidth = 1280;
@@ -21,3 +20,5 @@ private:
 	Uint64 lastCounter = 0;
 	Window window1;
 };
+
+extern 	Renderer renderer;

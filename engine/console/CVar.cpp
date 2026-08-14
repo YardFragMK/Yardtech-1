@@ -1,6 +1,7 @@
 #include"CVar.h"
 #include"../Camera.h"
 #include"Console.h"
+#include"../Engine.h"
 
 CVar g_CVar;
 
@@ -60,4 +61,8 @@ void CVar::helpF() const {
 		Console::Log("cm_rollmax " + std::to_string(g_Camera.maxRoll));
 		Console::Log("cm_rollspeed " + std::to_string(g_Camera.rollLerpSpeed));
 	}
+}
+
+void CVar::r_retromode(int r_retromodeValue) {
+	renderer.SetRetroMode(r_retromodeValue);
 }

@@ -138,6 +138,13 @@ void Console::ExecuteCommand() {
         if (iss >> value) ReadEntityLump(value);
         else Log("Usage: map <path>");
     }
+    
+    else if (cmd == "r_retromode") {
+        int value;
+        if (iss >> value) {
+            if (value == 1 || value == 0) g_CVar.r_retromode(value);
+        }
+    }
 
     else {
         Log("Unknown command");

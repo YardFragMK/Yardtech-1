@@ -15,6 +15,7 @@ public:
 	void cm_rollspeedF(float cm_rollspeed) const;
 	void nvs_developerF(int developer);
 	void helpF() const;
+	void r_retromode(int r_retromodeValue);
 };
 
 extern CVar g_CVar;

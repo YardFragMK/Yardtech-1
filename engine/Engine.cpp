@@ -11,7 +11,7 @@
 #include"Camera.h"
 #include"BSPReader.h"
 
-
+Renderer renderer;
 
 Engine::~Engine(){
 	if (glContext) {
@@ -106,7 +106,7 @@ void Engine::gameLoop() {
 		g_Camera.Update(deltaTime);
 		renderer.BeginFrame(g_Camera);
 		renderer.DrawTestTriangle();
-
+		renderer.EndFrame();
 		Console::Render(windowWidth, windowHeight);
 
 		SDL_GL_SwapWindow(window1.getWindow());
