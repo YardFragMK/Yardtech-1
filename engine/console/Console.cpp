@@ -143,7 +143,9 @@ void Console::ExecuteCommand() {
         int value;
         if (iss >> value) {
             if (value == 1 || value == 0) g_CVar.r_retromode(value);
+            else Log("Usage: r_retromode <0/1>");
         }
+        else Log("Usage: r_retromode <0/1>");
     }
 
     else {

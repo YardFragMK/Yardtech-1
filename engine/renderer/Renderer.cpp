@@ -96,7 +96,12 @@ void Renderer::DrawTestTriangle() {
 
 void Renderer::SetRetroMode(bool enable) {
 	m_retroMode = enable;
-	Console::Log("retromod aktif");
+	if (m_retroMode == true) {
+		Console::Log("retromode has launched");
+	}
+	else if (m_retroMode == false) {
+		Console::Log("retromode has been shut down");
+	}
 }
 
 
