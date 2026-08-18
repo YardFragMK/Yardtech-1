@@ -10,6 +10,8 @@
 #include"renderer/Renderer.h"
 #include"Camera.h"
 #include"BSPReader.h"
+#include"BSPMap.h"
+#include"BSPFormat.h"
 
 Renderer renderer;
 
@@ -83,6 +85,11 @@ bool Engine::initSystems() {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	Logger::info("Engine initalize edildi.");
 
+	if (!g_Map.Load("nvs1/map/cs_assault.bsp", {"", "map/", "wads/", "textures/"})) {
+		Logger::error("BSP yuklenemedi.");
+		// return false;
+	}
+
 	return true;
 
 }
@@ -105,7 +112,11 @@ void Engine::gameLoop() {
 
 		g_Camera.Update(deltaTime);
 		renderer.BeginFrame(g_Camera);
-		renderer.DrawTestTriangle();
+	
+		g_Map.RenderWorld();
+		g_Map.RenderBrushEntities();
+	
+		//renderer.DrawTestTriangle();
 		renderer.EndFrame();
 		Console::Render(windowWidth, windowHeight);
 

@@ -24,7 +24,7 @@ void Renderer::ApplyProjection(int width, int height) {
 		glm::radians(75.0f), //FOV
 		(float)width / (float)height,
 		0.1f,   //near plane
-		1000.0f  //far plane
+		10000.0f  //far plane
 	);
 
 	glLoadMatrixf(glm::value_ptr(projection));
@@ -43,7 +43,7 @@ void Renderer::BeginFrame(const Camera& camera) {
 
 
 
-	glClearColor(0.8f, 0.1f, 1.0f, 0.8f);
+	glClearColor(0.08f, 0.01f, 0.01f, 0.85f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glLoadIdentity();

@@ -72,6 +72,12 @@
     <ClCompile Include="game\src\Player.cpp">
       <Filter>Source Files\game src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\WadFile.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\BSPMap.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -130,6 +136,15 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\WadFile.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\BSPFormat.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\BSPMap.h">
+      <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

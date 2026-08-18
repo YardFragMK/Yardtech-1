@@ -3,7 +3,7 @@
 #include"SDL.h"
 #include"Camera.h"
 #include"renderer/Renderer.h"
-
+#include"BSPMap.h"
 
 class Engine {
 public:
@@ -19,6 +19,7 @@ private:
 	bool running=true;
 	Uint64 lastCounter = 0;
 	Window window1;
+	BSPMap g_Map;
 };
 
 extern 	Renderer renderer;

@@ -151,6 +151,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\BSPMap.cpp" />
     <ClCompile Include="engine\BSPReader.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
     <ClCompile Include="engine\Time.cpp" />
+    <ClCompile Include="engine\WadFile.cpp" />
     <ClCompile Include="engine\Window.cpp" />
     <ClCompile Include="extern\glad\src\glad.c" />
     <ClCompile Include="game\src\EntityParser.cpp" />
@@ -168,6 +170,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\BSPFormat.h" />
+    <ClInclude Include="engine\BSPMap.h" />
     <ClInclude Include="engine\BSPReader.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\console\Console.h" />
@@ -177,6 +181,7 @@
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\Time.h" />
+    <ClInclude Include="engine\WadFile.h" />
     <ClInclude Include="engine\Window.h" />
     <ClInclude Include="game\src\EntityParser.h" />
     <ClInclude Include="game\src\e_ItemBase.h" />
