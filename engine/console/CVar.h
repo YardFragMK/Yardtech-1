@@ -7,6 +7,7 @@ public:
 	int nvs_developer = 1;
 	float nvs_gravity = 800.0f;   // unit/s^2, HL varsayilanina yakin
 	float nvs_jumpforce = 300.0f; // unit/s, ziplama baslangic dikey hizi
+	//bool itemRGD = true;
 
 
 	void cm_noclipF(int cm_noclipValue);

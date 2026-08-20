@@ -12,8 +12,9 @@
 #include"BSPReader.h"
 #include"BSPMap.h"
 #include"BSPFormat.h"
-#include "Frustum.h"
-#include "console/CVar.h"
+#include"Frustum.h"
+#include"console/CVar.h"
+#include"../game/src/Player.h"
 
 Renderer renderer;
 
@@ -132,6 +133,15 @@ void Engine::gameLoop() {
 				if (keys[SDL_SCANCODE_SPACE] && g_Camera.onGround) {
 					g_Camera.verticalVelocity = g_CVar.nvs_jumpforce;
 					g_Camera.onGround = false;
+				}
+
+				// --- CTRL ile sert iniş ve eğilme ---
+				if ((keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL]) &&
+					!g_Camera.onGround && g_Player.RGDitem) {
+					g_Camera.verticalVelocity = -g_CVar.nvs_jumpforce * 4.0f;
+				}
+				else {
+					
 				}
 
 				// --- yercekimi entegrasyonu ---

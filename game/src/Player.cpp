@@ -1,5 +1,6 @@
 #include"Player.h"
 
+Player g_Player;
 void Player::takeDamage(int enemyDamage) {
     if (Armor > 0){
         int armorDamage = enemyDamage * 70 / 100;

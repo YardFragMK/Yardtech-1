@@ -2,8 +2,9 @@
 #include "Camera.h"
 #include "console/Console.h"
 #include"../game/src/Player.h"
+#include"../game/src/Player.h"
 #include<iostream>
-Player player;
+
 void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 {
     SDL_Event event;
@@ -35,12 +36,12 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
             if (event.type == SDL_MOUSEBUTTONDOWN) {
                 if (event.button.button == SDL_BUTTON_LEFT) {
                     // Sol tuşa BASILDI
-                    player.attack(1);
+                    g_Player.attack(1);
                 }
 
                 if (event.button.button == SDL_BUTTON_RIGHT) {
                     // Sağ tuşa BASILDI
-                    player.attack(2);
+                    g_Player.attack(2);
                 }
             }
             if (event.type == SDL_MOUSEBUTTONUP) {

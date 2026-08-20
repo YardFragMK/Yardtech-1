@@ -15,6 +15,7 @@ public:
 	int Armor = 0;
 	int Damage;
 	int CurrentWeapon = PISTOL;
+	bool RGDitem = true;
 
 	void takeDamage(int enemyDamage);
 	void attack(int attacknumber);
@@ -23,3 +24,4 @@ private:
 	Pistol pistol;
 	Shotgun shotgun;
 };
+extern Player g_Player;
