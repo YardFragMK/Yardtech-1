@@ -4,10 +4,10 @@
 
 class Camera {
 public:
-	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 position = glm::vec3(0.0f, 43.0f, 0.0f);
 	float yaw = -90.0f; //sağ-sol
 	float pitch = 0.0f; //yukarı-aşağı
-	float moveSpeed = 100.0f;
+	float moveSpeed = 150.0f;
 	float mouseSensitivity = 0.1f;
 
 	glm::vec3 Forward() const; //Kameranın baktığı yön
@@ -26,7 +26,7 @@ public:
 	glm::mat4 GetViewMatrix() const;
 	float roll = 0.0f;
 	float targetRoll = 0.0f;
-	float maxRoll = 10.0f;        // derece cinsinden max eğim
+	float maxRoll = 7.0f;        // derece cinsinden max eğim
 	float rollLerpSpeed = 8.0f; // ne kadar hızlı düzelsin/eğilsin
 
 	

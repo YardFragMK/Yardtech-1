@@ -12,6 +12,8 @@
 #include"BSPReader.h"
 #include"BSPMap.h"
 #include"BSPFormat.h"
+#include "Frustum.h"
+#include "console/CVar.h"
 
 Renderer renderer;
 
@@ -107,14 +109,28 @@ void Engine::gameLoop() {
 		lastCounter = currentCounter;
 
 		Time::Update(deltaTime);
+		glm::vec3 oldPos = g_Camera.position;
 		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
 
 		g_Camera.Update(deltaTime);
+
+		// --- collision (noclip kapaliyken) ---
+		if (!g_CVar.cm_noclip) {
+			glm::vec3 newPos = g_Camera.position;
+			if (newPos != oldPos) {
+				g_Camera.position = g_Map.SlideMove(oldPos, newPos, 1);
+			}
+		}
+
 		renderer.BeginFrame(g_Camera);
+
+		Frustum frustum = Frustum::FromViewProjection(
+			renderer.GetProjectionMatrix() * renderer.GetViewMatrix()
+		);
 	
-		g_Map.RenderWorld();
-		g_Map.RenderBrushEntities();
+		g_Map.RenderWorld(frustum);
+		g_Map.RenderBrushEntities(frustum);
 	
 		//renderer.DrawTestTriangle();
 		renderer.EndFrame();

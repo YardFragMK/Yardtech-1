@@ -157,6 +157,7 @@
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
+    <ClCompile Include="engine\Frustum.cpp" />
     <ClCompile Include="engine\KeyInput.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="engine\console\Console.h" />
     <ClInclude Include="engine\console\CVar.h" />
     <ClInclude Include="engine\Engine.h" />
+    <ClInclude Include="engine\Frustum.h" />
     <ClInclude Include="engine\KeyInput.h" />
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />

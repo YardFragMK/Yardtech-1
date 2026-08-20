@@ -27,6 +27,8 @@ void Renderer::ApplyProjection(int width, int height) {
 		10000.0f  //far plane
 	);
 
+	m_lastProjection = projection;
+
 	glLoadMatrixf(glm::value_ptr(projection));
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -49,6 +51,7 @@ void Renderer::BeginFrame(const Camera& camera) {
 	glLoadIdentity();
 
 	glm::mat4 view = camera.GetViewMatrix();
+	m_lastView = view;
 	glLoadMatrixf(glm::value_ptr(view));
 }
 

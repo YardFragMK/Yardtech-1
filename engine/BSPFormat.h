@@ -76,3 +76,17 @@ struct BSPModel_t {
 };
 
 #pragma pack(pop)
+
+struct BSPClipNode_t {
+    int32_t planenum;
+    int16_t children[2]; // negatifse content (leaf), pozitifse baska bir clipnode index'i
+};
+
+enum BSPContents {
+    CONTENTS_EMPTY = -1,
+    CONTENTS_SOLID = -2,
+    CONTENTS_WATER = -3,
+    CONTENTS_SLIME = -4,
+    CONTENTS_LAVA = -5,
+    CONTENTS_SKY = -6,
+};
