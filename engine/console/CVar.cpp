@@ -55,7 +55,9 @@ void CVar::helpF() const {
 	Console::Log("nvs_cheats " + std::to_string(nvs_cheats));
 	Console::Log("nvs_developer " + std::to_string(nvs_developer));
 	Console::Log("cm_noclip " + std::to_string(cm_noclip));
-	Console::Log("cm_sensitivity " + std::to_string(g_Camera.mouseSensitivity));   
+	Console::Log("cm_sensitivity " + std::to_string(g_Camera.mouseSensitivity));
+	Console::Log("nvs_gravity " + std::to_string(nvs_gravity));       
+	Console::Log("nvs_jumpforce " + std::to_string(nvs_jumpforce));  
 	if (nvs_developer == 1) {
 		Console::Log("cm_speed " + std::to_string(g_Camera.moveSpeed));
 		Console::Log("cm_rollmax " + std::to_string(g_Camera.maxRoll));
@@ -65,4 +67,18 @@ void CVar::helpF() const {
 
 void CVar::r_retromode(int r_retromodeValue) {
 	renderer.SetRetroMode(r_retromodeValue);
+}
+
+void CVar::nvs_gravityF(float value) {
+	if (nvs_cheats == true) {
+		nvs_gravity = value;
+		Console::Log("nvs_gravity set to " + std::to_string(nvs_gravity));
+	}
+}
+
+void CVar::nvs_jumpforceF(float value) {
+	if (nvs_cheats == true) {
+		nvs_jumpforce = value;
+		Console::Log("nvs_jumpforce set to " + std::to_string(nvs_jumpforce));
+	}
 }

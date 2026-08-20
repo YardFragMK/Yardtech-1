@@ -148,6 +148,20 @@ void Console::ExecuteCommand() {
         else Log("Usage: r_retromode <0/1>");
     }
 
+    else if (cmd == "nvs_gravity") {
+        int value;
+        if (iss >> value) {
+            g_CVar.nvs_gravityF(value);
+        }
+    }
+
+    else if (cmd == "nvs_jumpforce") {
+        int value;
+        if (iss >> value) {
+            g_CVar.nvs_jumpforceF(value);
+        }
+    }
+
     else {
         Log("Unknown command");
     }

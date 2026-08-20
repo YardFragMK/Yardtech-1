@@ -117,10 +117,42 @@ void Engine::gameLoop() {
 
 		// --- collision (noclip kapaliyken) ---
 		if (!g_CVar.cm_noclip) {
+			if (!Console::IsOpen()) {
+				// --- yer kontrolu: eski pozisyondan asagi kisa bir trace ---
+				glm::vec3 groundCheckEnd = oldPos - glm::vec3(0.0f, 2.0f, 0.0f);
+				TraceResult groundTrace = g_Map.TraceLine(oldPos, groundCheckEnd, 1);
+				g_Camera.onGround = (groundTrace.fraction < 1.0f);
+
+				if (g_Camera.onGround && g_Camera.verticalVelocity <= 0.0f) {
+					g_Camera.verticalVelocity = 0.0f;
+				}
+
+				// --- ziplama ---
+				const Uint8* keys = SDL_GetKeyboardState(nullptr);
+				if (keys[SDL_SCANCODE_SPACE] && g_Camera.onGround) {
+					g_Camera.verticalVelocity = g_CVar.nvs_jumpforce;
+					g_Camera.onGround = false;
+				}
+
+				// --- yercekimi entegrasyonu ---
+				g_Camera.verticalVelocity -= g_CVar.nvs_gravity * deltaTime;
+				g_Camera.position.y += g_Camera.verticalVelocity * deltaTime;
+			}
+
 			glm::vec3 newPos = g_Camera.position;
 			if (newPos != oldPos) {
-				g_Camera.position = g_Map.SlideMove(oldPos, newPos, 1);
+				glm::vec3 resolvedPos = g_Map.SlideMove(oldPos, newPos, 1);
+				g_Camera.position = resolvedPos;
+
+				// dikeyde carpisma oldu (tavan/zemin) -> verticalVelocity'yi sifirla,
+				// yoksa bir sonraki frame hala eski (birikmis) hizla hareket etmeye calisir
+				if (std::abs(resolvedPos.y - newPos.y) > 0.01f) {
+					g_Camera.verticalVelocity = 0.0f;
+				}
 			}
+		}
+		else {
+			g_Camera.verticalVelocity = 0.0f; // noclip: ucus modu, yercekimi yok
 		}
 
 		renderer.BeginFrame(g_Camera);

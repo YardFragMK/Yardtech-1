@@ -4,11 +4,13 @@
 
 class Camera {
 public:
-	glm::vec3 position = glm::vec3(0.0f, 43.0f, 0.0f);
+	glm::vec3 position = glm::vec3(0.0f, 60.0f, 0.0f);
 	float yaw = -90.0f; //sağ-sol
 	float pitch = 0.0f; //yukarı-aşağı
 	float moveSpeed = 150.0f;
 	float mouseSensitivity = 0.1f;
+	float verticalVelocity = 0.0f;
+	bool onGround = false;
 
 	glm::vec3 Forward() const; //Kameranın baktığı yön
 	glm::vec3 FlatForward() const;
