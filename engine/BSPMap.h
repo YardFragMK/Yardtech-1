@@ -53,6 +53,9 @@ public:
     // start->end arasi hareketi dener; carpisirsa duvar boyunca kayar (slide).
     // Engine-space (Y-up) alir/dondurur.
     glm::vec3 SlideMove(const glm::vec3& start, const glm::vec3& end, int hullIndex = 1) const;
+    static glm::vec3 ParseOriginToEngineSpace(const std::string& originStr);
+    // enginePos noktasi, verilen hull ile solid mi? (nokta-icerik testi, trace degil)
+    bool IsPointSolid(const glm::vec3& enginePos, int hullIndex) const;
 
 private:
     std::string m_bspDir;
@@ -100,7 +103,7 @@ private:
         outMaxs = glm::vec3(bspMaxs[0], bspMaxs[2], -bspMins[1]);
     }
 
-    static glm::vec3 ParseOriginToEngineSpace(const std::string& originStr);
+
     static int ParseBrushModelIndex(const std::string& modelStr);
 
     void BuildTextures(const std::vector<uint8_t>& textureLumpRaw);

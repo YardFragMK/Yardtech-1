@@ -64,7 +64,8 @@ void Camera::ProcessMouseMovement(float xOffset, float yOffset) {
 }
 
 glm::mat4 Camera::GetViewMatrix() const {
-	 return glm::lookAt(position, position + Forward(), Up());
+	glm::vec3 eyePos = GetEyePosition();
+	return glm::lookAt(eyePos, eyePos + Forward(), Up());
 }
 
 glm::vec3 Camera::Up() const {
@@ -84,4 +85,8 @@ void Camera::Update(float deltaTime) {
 	// Bir sonraki frame için sıfırla; eğer o frame'de tekrar
 	// MoveRight/MoveLeft çağrılırsa targetRoll tekrar set edilecek.
 	targetRoll = 0.0f;
+
+	float targetEyeHeight = isCrouching ? eyeHeightCrouching : eyeHeightStanding;
+	eyeHeightOffset = glm::mix(eyeHeightOffset, targetEyeHeight,
+		glm::clamp(eyeHeightLerpSpeed * deltaTime, 0.0f, 1.0f));
 }

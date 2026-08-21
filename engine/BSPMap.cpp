@@ -76,6 +76,15 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
     Console::Log(bspPath + " yuklendi: " + std::to_string(m_models.size()) + " model, " +
         std::to_string(m_faces.size()) + " face, " +
         std::to_string(m_worldCells.size()) + " world grid hucresi");
+
+    // --- hull tanisi ---
+    if (!m_models.empty()) {
+        Console::Log("Model0 headnodes: hull0=" + std::to_string(m_models[0].headnode[0])
+            + " hull1=" + std::to_string(m_models[0].headnode[1])
+            + " hull2=" + std::to_string(m_models[0].headnode[2])
+            + " hull3=" + std::to_string(m_models[0].headnode[3])
+            + " (clipnode sayisi=" + std::to_string(m_clipnodes.size()) + ")");
+    }
     return true;
 }
 
@@ -618,4 +627,14 @@ glm::vec3 BSPMap::SlideMove(const glm::vec3& start, const glm::vec3& end, int hu
     }
 
     return current;
+}
+
+bool BSPMap::IsPointSolid(const glm::vec3& enginePos, int hullIndex) const {
+    if (m_models.empty() || m_clipnodes.empty() || m_planes.empty()) return false;
+    if (hullIndex < 0 || hullIndex > 3) hullIndex = 1;
+
+    int headnode = m_models[0].headnode[hullIndex];
+    glm::vec3 bspPos = ConvertToBSP(enginePos);
+    int contents = HullPointContents(headnode, bspPos);
+    return contents == CONTENTS_SOLID;
 }

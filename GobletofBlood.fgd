@@ -1,0 +1,62 @@
+//=========================================================
+// Motor FGD - temel entity seti
+//=========================================================
+
+@SolidClass = worldspawn : "Dunya (harita geneli)"
+[
+	message(string) : "Harita Adi / Aciklama"
+	wad(string) : "Wad Dosyalari"
+]
+
+@PointClass size(-16 -16 -36, 16 16 36) color(0 255 0) = player_start : "Oyuncu Baslangic Noktasi"
+[
+	angle(integer) : "Bakis Acisi (Yaw)" : 0
+]
+
+@PointClass size(-8 -8 -8, 8 8 8) color(255 255 0) = light : "Isik Kaynagi"
+[
+	_light(color255) : "Parlaklik (R G B Yogunluk)" : "255 255 255 200"
+	style(choices) : "Davranis" : 0 =
+	[
+		0 : "Sabit"
+		1 : "Titrek (hizli)"
+		2 : "Yavas, guclu nabiz"
+	]
+]
+
+@SolidClass = poly_breakable : "Kirilabilir Geometri"
+[
+	material(choices) : "Malzeme Tipi" : 0 =
+	[
+		0 : "Cam"
+		1 : "Ahsap"
+		2 : "Metal"
+		3 : "Et"
+		4 : "Beton Blok"
+		5 : "Tavan Paneli"
+		6 : "Bilgisayar"
+		7 : "Kirilmaz Cam"
+		8 : "Tas"
+	]
+	health(integer) : "Dayaniklilik" : 15
+	gibmodel(string) : "Ozel Parca Modeli"
+	explosion(choices) : "Patlama?" : 0 =
+	[
+		0 : "Yok"
+		1 : "Kucuk"
+	]
+]
+
+@SolidClass = poly_door : "Hareketli Kapi"
+[
+	speed(integer) : "Hiz" : 100
+	wait(integer) : "Kapanmadan Once Bekleme (sn)" : 4
+	lip(integer) : "Lip (acildiginda kalan pay)" : 0
+	targetname(target_source) : "Isim"
+	health(integer) : "Dayaniklilik (vurulabilir icin)" : 0
+]
+
+@SolidClass = poly_wall : "Statik Duvar/Blok (hareketsiz brush entity)"
+[
+	targetname(target_source) : "Isim"
+]
