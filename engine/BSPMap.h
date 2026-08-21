@@ -56,7 +56,7 @@ public:
     static glm::vec3 ParseOriginToEngineSpace(const std::string& originStr);
     // enginePos noktasi, verilen hull ile solid mi? (nokta-icerik testi, trace degil)
     bool IsPointSolid(const glm::vec3& enginePos, int hullIndex) const;
-
+    void LoadMap();
 private:
     std::string m_bspDir;
 

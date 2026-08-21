@@ -81,6 +81,9 @@
     <ClCompile Include="engine\Frustum.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\MapLoader.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -150,6 +153,9 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\Frustum.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\MapLoader.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

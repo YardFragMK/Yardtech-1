@@ -8,6 +8,7 @@
 #include <GL/glu.h>
 #include"../Camera.h"
 #include"../BSPReader.h"
+#include"../MapLoader.h"
 
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "../../extern/stb/stb_easy_font.h"
@@ -135,8 +136,12 @@ void Console::ExecuteCommand() {
 
     else if (cmd == "map") {
         std::string value;
-        if (iss >> value) ReadEntityLump(value);
+        if (iss >> value) { 
+            ReadEntityLump(value);
+            LoadMap(value);
+        }
         else Log("Usage: map <path>");
+        
     }
     
     else if (cmd == "r_retromode") {

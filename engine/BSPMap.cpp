@@ -7,6 +7,7 @@
 #include <cfloat>
 #include <cmath>
 #include <algorithm>
+#include "Engine.h"
 
 template<typename T>
 static std::vector<T> ReadLump(std::ifstream& file, const BSPLump& lump) {
@@ -637,4 +638,36 @@ bool BSPMap::IsPointSolid(const glm::vec3& enginePos, int hullIndex) const {
     glm::vec3 bspPos = ConvertToBSP(enginePos);
     int contents = HullPointContents(headnode, bspPos);
     return contents == CONTENTS_SOLID;
+}
+
+void BSPMap::LoadMap() {
+    if (!g_Map.Load("nvs1/map/cs_assault.bsp", { "", "map/", "wads/", "textures/" })) {
+        Logger::error("BSP yuklenemedi.");
+        // return false;
+    }
+
+
+    // --- player_start'tan spawn ---
+    {
+        bool foundStart = false;
+        for (const Entity& ent : g_Map.GetEntities()) {
+            if (ent.Is(EntityClassnames::PlayerStart)) {
+                if (const std::string* originStr = ent.Get(EntityKeys::Origin)) {
+                    glm::vec3 spawnPos = BSPMap::ParseOriginToEngineSpace(*originStr);
+                    spawnPos.y += 36.0f; // player_start origin genelde ayak hizasinda; goz hizasina tasi
+                    g_Camera.position = spawnPos;
+                    foundStart = true;
+                }
+
+                if (const std::string* angleStr = ent.Get(EntityKeys::Angle)) {
+                    float angle = std::atof(angleStr->c_str());
+                    g_Camera.yaw = angle; // GoldSrc'de angle = derece cinsinden yaw
+                }
+                break;
+            }
+        }
+        if (!foundStart) {
+            Logger::error("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
+        }
+    }
 }

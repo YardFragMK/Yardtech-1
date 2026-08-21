@@ -19,6 +19,7 @@
 #include "../game/src/EntityParser.h"
 
 Renderer renderer;
+BSPMap g_Map;
 
 Engine::~Engine(){
 	if (glContext) {
@@ -89,36 +90,6 @@ bool Engine::initSystems() {
 	lastCounter = SDL_GetPerformanceCounter();
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	Logger::info("Engine initalize edildi.");
-
-	if (!g_Map.Load("nvs1/map/awp_knark-compile.bsp", {"", "map/", "wads/", "textures/"})) {
-		Logger::error("BSP yuklenemedi.");
-		// return false;
-	}
-
-
-	// --- player_start'tan spawn ---
-	{
-		bool foundStart = false;
-		for (const Entity& ent : g_Map.GetEntities()) {
-			if (ent.Is(EntityClassnames::PlayerStart)) {
-				if (const std::string* originStr = ent.Get(EntityKeys::Origin)) {
-					glm::vec3 spawnPos = BSPMap::ParseOriginToEngineSpace(*originStr);
-					spawnPos.y += 36.0f; // player_start origin genelde ayak hizasinda; goz hizasina tasi
-					g_Camera.position = spawnPos;
-					foundStart = true;
-				}
-
-				if (const std::string* angleStr = ent.Get(EntityKeys::Angle)) {
-					float angle = std::atof(angleStr->c_str());
-					g_Camera.yaw = angle; // GoldSrc'de angle = derece cinsinden yaw
-				}
-				break;
-			}
-		}
-		if (!foundStart) {
-			Logger::error("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
-		}
-	}
 
 	return true;
 
