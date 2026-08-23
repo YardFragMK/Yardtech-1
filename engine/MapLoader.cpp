@@ -5,10 +5,9 @@
 #include "console/Console.h"
 #include "../game/src/EntityParser.h"
 #include <cstdlib>
-#include"Engine.h"
 
 bool LoadMap(const std::string& bspPath) {
-    if (!g_Map.Load("nvs1/map/" + bspPath, {"", "map/", "wads/", "textures/"})) {
+    if (!g_Map.Load("nvs1/map/" + bspPath + ".bsp", {"", "map/", "wads/", "textures/"})) {
         Logger::error("BSP yuklenemedi: " + bspPath);
         return false;
     }
@@ -33,7 +32,7 @@ bool LoadMap(const std::string& bspPath) {
     }
 
     if (!foundStart) {
-        Logger::error("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
+        Logger::warning("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
     }
 
     // crouch/velocity gibi player state'ini yeni haritaya gore sifirla

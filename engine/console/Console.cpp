@@ -137,7 +137,7 @@ void Console::ExecuteCommand() {
     else if (cmd == "map") {
         std::string value;
         if (iss >> value) { 
-            ReadEntityLump(value);
+            ReadEntityLump("nvs1/map/" + value + ".bsp");
             LoadMap(value);
         }
         else Log("Usage: map <path>");

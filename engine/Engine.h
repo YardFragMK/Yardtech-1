@@ -12,7 +12,6 @@ public:
 	bool initSystems();
 	void gameLoop();
 	void LoadMap();
-	
 
 private:
 	int windowWidth = 1920;
@@ -21,8 +20,8 @@ private:
 	bool running=true;
 	Uint64 lastCounter = 0;
 	Window window1;
+	void RenderFrame();
 
 };
 
 extern 	Renderer renderer;
-extern BSPMap g_Map;

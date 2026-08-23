@@ -6,7 +6,7 @@
 std::string ReadEntityLump(const std::string& bspPath){
     std::ifstream file(bspPath, std::ios::binary);
     if (!file) {
-        Console::Log("WARNING-> bsp acilamadi");
+        Console::Log("WARNING-> bsp acilamadi: " + bspPath + " NO:2");
         return "";
     }
 
@@ -23,6 +23,6 @@ std::string ReadEntityLump(const std::string& bspPath){
     file.seekg(entLump.offset, std::ios::beg);
     file.read(entityData.data(), entLump.length);
 
-    Console::Log(bspPath + " Yuklendi");
+    Console::Log(bspPath + " Okunuyor");
     return entityData; // "{ \"key\" \"value\" ... } { ... } ..."
 }

@@ -9,6 +9,36 @@
 #include <algorithm>
 #include "Engine.h"
 
+void BSPMap::Reset() {
+    // GL texture'lari sil (miptex'ler)
+    for (GLuint tex : m_textureIdByMiptex) {
+        if (tex != 0) glDeleteTextures(1, &tex);
+    }
+
+    // WadFile'lar kendi texture'larini yonetiyor ama onlarin da GL kaynaklarini
+    // WadFile destructor'i silmiyor su an (bilinen bir eksik) -- burada ekstra
+    // temizlik yapmiyoruz, WadFile'a kendi Unload'unu eklemek ayri bir is.
+
+    m_bspDir.clear();
+    m_vertices.clear();
+    m_edges.clear();
+    m_surfedges.clear();
+    m_faces.clear();
+    m_texinfos.clear();
+    m_models.clear();
+    m_entityText.clear();
+    m_entities.clear();
+    m_planes.clear();
+    m_clipnodes.clear();
+    m_textureIdByMiptex.clear();
+    m_textureSizeByMiptex.clear();
+    m_wads.clear();
+    m_renderFacesByModel.clear();
+    m_worldCells.clear();
+    m_modelAABBMins.clear();
+    m_modelAABBMaxs.clear();
+}
+
 template<typename T>
 static std::vector<T> ReadLump(std::ifstream& file, const BSPLump& lump) {
     std::vector<T> out(lump.length / sizeof(T));
@@ -20,9 +50,11 @@ static std::vector<T> ReadLump(std::ifstream& file, const BSPLump& lump) {
 }
 
 bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wadSearchDirs) {
+    Reset();
+
     std::ifstream file(bspPath, std::ios::binary);
     if (!file) {
-        Console::Log("WARNING-> bsp acilamadi: " + bspPath);
+        Console::Log("WARNING-> bsp acilamadi: " + bspPath + "NO:1");
         return false;
     }
 

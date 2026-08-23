@@ -2,8 +2,9 @@
 #include "Camera.h"
 #include "console/Console.h"
 #include"../game/src/Player.h"
-#include"../game/src/Player.h"
 #include<iostream>
+#include"console/CVar.h"
+#include"Engine.h"
 
 void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 {

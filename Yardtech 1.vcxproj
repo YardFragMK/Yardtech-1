@@ -161,6 +161,7 @@
     <ClCompile Include="engine\KeyInput.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\MapLoader.cpp" />
+    <ClCompile Include="engine\PlayerMovement.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\WadFile.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="engine\KeyInput.h" />
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\MapLoader.h" />
+    <ClInclude Include="engine\PlayerMovement.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="engine\WadFile.h" />

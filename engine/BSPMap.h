@@ -120,4 +120,7 @@ private:
     const glm::vec3& p1, const glm::vec3& p2, TraceResult& trace) const; // BSP-space
     // Tek bir hull agacina (headnode) karsi trace. start/end engine-space, sonuc da engine-space.
     TraceResult TraceHull(int headnode, const glm::vec3& start, const glm::vec3& end) const;
+    void Reset();
 };
+
+extern BSPMap g_Map;
