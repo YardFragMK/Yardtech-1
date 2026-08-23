@@ -18,6 +18,7 @@ struct BSPRenderFace {
     GLuint glTexture = 0;
     GLuint glLightmap = 0; 
     bool isMasked = false;
+    bool isSky = false;
 };
 
 struct WorldGridCell {
@@ -55,6 +56,7 @@ public:
     static glm::vec3 ParseOriginToEngineSpace(const std::string& originStr);
     bool IsPointSolid(const glm::vec3& enginePos, int hullIndex) const;
     void LoadMap();
+    const std::string& GetSkyName() const { return m_skyName; }
 
 private:
     std::string m_bspDir;
@@ -86,6 +88,7 @@ private:
 
     std::vector<glm::vec3> m_modelAABBMins;
     std::vector<glm::vec3> m_modelAABBMaxs;
+    std::string m_skyName;
 
     static glm::vec3 ConvertCoord(const float p[3]) {
         return glm::vec3(p[0], p[2], -p[1]);

@@ -18,6 +18,7 @@
 #include"../game/src/Player.h"
 #include "../game/src/EntityParser.h"
 #include "PlayerMovement.h"
+#include "Skybox.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -129,6 +130,7 @@ void Engine::gameLoop() {
 
 void Engine::RenderFrame() {
 	renderer.BeginFrame(g_Camera);
+	g_Skybox.Render(g_Camera.position);
 
 	Frustum frustum = Frustum::FromViewProjection(
 		renderer.GetProjectionMatrix() * renderer.GetViewMatrix()

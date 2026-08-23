@@ -8,6 +8,7 @@
 #include <cmath>
 #include <algorithm>
 #include "Engine.h"
+#include "Skybox.h"
 
 static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height) {
     GLuint tex = 0;
@@ -52,6 +53,7 @@ void BSPMap::Reset() {
     m_worldCells.clear();
     m_modelAABBMins.clear();
     m_modelAABBMaxs.clear();
+    m_skyName.clear();
 }
 
 template<typename T>
@@ -90,6 +92,14 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
     }
 
     m_entities = ParseEntities(m_entityText);
+    for (const Entity& ent : m_entities) {
+        if (ent.Is(EntityClassnames::Worldspawn)) {
+            if (const std::string* sky = ent.Get("skyname")) {
+                m_skyName = *sky;
+            }
+            break;
+        }
+    }
     m_vertices = ReadLump<BSPVertex_t>(file, header.lumps[LUMP_VERTEXES]);
     m_edges = ReadLump<BSPEdge_t>(file, header.lumps[LUMP_EDGES]);
     m_surfedges = ReadLump<BSPSurfEdge_t>(file, header.lumps[LUMP_SURFEDGES]);
@@ -326,6 +336,7 @@ void BSPMap::BuildRenderFaces() {
             BSPRenderFace rf;
             rf.glTexture = glTex;
             rf.positions = rawPositions;
+            rf.isSky = (ti.flags & 1) != 0;
             rf.isMasked = (ti.miptex < static_cast<int>(m_isMaskedByMiptex.size()))
                 && m_isMaskedByMiptex[ti.miptex];
 
@@ -395,6 +406,7 @@ void BSPMap::BuildRenderFaces() {
 
 static void DrawRenderFace(const BSPRenderFace& rf) {
     if (rf.positions.size() < 3) return;
+    if (rf.isSky) return;
 
     bool hasLightmap = (rf.glTexture != 0 && rf.glLightmap != 0 && glActiveTexture_ && glMultiTexCoord2f_);
 
@@ -795,31 +807,4 @@ bool BSPMap::IsPointSolid(const glm::vec3& enginePos, int hullIndex) const {
     glm::vec3 bspPos = ConvertToBSP(enginePos);
     int contents = HullPointContents(headnode, bspPos);
     return contents == CONTENTS_SOLID;
-}
-
-void BSPMap::LoadMap() {
-    if (!g_Map.Load("nvs1/map/cs_assault.bsp", { "", "map/", "wads/", "textures/" })) {
-        Logger::error("BSP yuklenemedi.");
-    }
-
-    bool foundStart = false;
-    for (const Entity& ent : g_Map.GetEntities()) {
-        if (ent.Is(EntityClassnames::PlayerStart)) {
-            if (const std::string* originStr = ent.Get(EntityKeys::Origin)) {
-                glm::vec3 spawnPos = BSPMap::ParseOriginToEngineSpace(*originStr);
-                spawnPos.y += 36.0f;
-                g_Camera.position = spawnPos;
-                foundStart = true;
-            }
-
-            if (const std::string* angleStr = ent.Get(EntityKeys::Angle)) {
-                float angle = std::atof(angleStr->c_str());
-                g_Camera.yaw = angle;
-            }
-            break;
-        }
-    }
-    if (!foundStart) {
-        Logger::error("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
-    }
 }

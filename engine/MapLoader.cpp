@@ -5,12 +5,14 @@
 #include "console/Console.h"
 #include "../game/src/EntityParser.h"
 #include <cstdlib>
+#include "Skybox.h"
 
 bool LoadMap(const std::string& bspPath) {
     if (!g_Map.Load("nvs1/map/" + bspPath + ".bsp", {"", "map/", "wads/", "textures/"})) {
         Logger::error("BSP yuklenemedi: " + bspPath);
         return false;
     }
+    g_Skybox.Load(g_Map.GetSkyName());
 
     // --- player_start'tan spawn ---
     bool foundStart = false;
