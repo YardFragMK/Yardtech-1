@@ -21,7 +21,7 @@ float Console::s_targetHeight = 0.0f;
 float Console::s_slideSpeed = 2000.0f;
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.30");
+    Log("Yardtech-1 version: alpha 0.37");
     Log("=============================");
 }
 

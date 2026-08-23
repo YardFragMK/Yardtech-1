@@ -17,7 +17,7 @@ public:
 	void cm_rollmaxF(float cm_rollmax) const;
 	void cm_rollspeedF(float cm_rollspeed) const;
 	void nvs_developerF(int developer);
-	void nvs_gravityF(float value);     // <-- yeni
+	void nvs_gravityF(float value);   
 	void nvs_jumpforceF(float value);
 	void helpF() const;
 	void r_retromode(int r_retromodeValue);

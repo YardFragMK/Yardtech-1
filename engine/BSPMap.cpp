@@ -9,15 +9,28 @@
 #include <algorithm>
 #include "Engine.h"
 
+static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height) {
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+
 void BSPMap::Reset() {
-    // GL texture'lari sil (miptex'ler)
     for (GLuint tex : m_textureIdByMiptex) {
         if (tex != 0) glDeleteTextures(1, &tex);
     }
-
-    // WadFile'lar kendi texture'larini yonetiyor ama onlarin da GL kaynaklarini
-    // WadFile destructor'i silmiyor su an (bilinen bir eksik) -- burada ekstra
-    // temizlik yapmiyoruz, WadFile'a kendi Unload'unu eklemek ayri bir is.
 
     m_bspDir.clear();
     m_vertices.clear();
@@ -32,6 +45,8 @@ void BSPMap::Reset() {
     m_clipnodes.clear();
     m_textureIdByMiptex.clear();
     m_textureSizeByMiptex.clear();
+    m_isMaskedByMiptex.clear();
+    m_lightingData.clear();
     m_wads.clear();
     m_renderFacesByModel.clear();
     m_worldCells.clear();
@@ -94,10 +109,19 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
         }
     }
 
+    // --- lighting raw data: BuildRenderFaces'tan ONCE okunmasi sart ---
+    {
+        const BSPLump& l = header.lumps[LUMP_LIGHTING];
+        m_lightingData.resize(l.length);
+        if (l.length > 0) {
+            file.seekg(l.offset, std::ios::beg);
+            file.read(reinterpret_cast<char*>(m_lightingData.data()), l.length);
+        }
+    }
+
     LoadExternalWads(wadSearchDirs);
     BuildTextures(texLumpRaw);
 
-    // model AABB'lerini onceden cikar (RenderBrushEntities culling icin)
     m_modelAABBMins.resize(m_models.size());
     m_modelAABBMaxs.resize(m_models.size());
     for (size_t i = 0; i < m_models.size(); i++) {
@@ -108,9 +132,9 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
 
     Console::Log(bspPath + " yuklendi: " + std::to_string(m_models.size()) + " model, " +
         std::to_string(m_faces.size()) + " face, " +
-        std::to_string(m_worldCells.size()) + " world grid hucresi");
+        std::to_string(m_worldCells.size()) + " world grid hucresi, " +
+        std::to_string(m_lightingData.size()) + " lighting byte");
 
-    // --- hull tanisi ---
     if (!m_models.empty()) {
         Console::Log("Model0 headnodes: hull0=" + std::to_string(m_models[0].headnode[0])
             + " hull1=" + std::to_string(m_models[0].headnode[1])
@@ -167,6 +191,7 @@ void BSPMap::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
 
     m_textureIdByMiptex.assign(nummiptex, 0);
     m_textureSizeByMiptex.assign(nummiptex, glm::ivec2(1, 1));
+    m_isMaskedByMiptex.assign(nummiptex, false);
 
     const int32_t* offsets = reinterpret_cast<const int32_t*>(texLumpRaw.data() + sizeof(int32_t));
 
@@ -190,19 +215,25 @@ void BSPMap::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
             const uint8_t* palette = paletteCountPos + sizeof(uint16_t);
 
             bool colorKey = !name.empty() && name[0] == '{';
+            m_isMaskedByMiptex[i] = colorKey;
             auto rgba = DecodeIndexedToRGBA(mip0, mt.width, mt.height, palette, colorKey);
             m_textureIdByMiptex[i] = CreateGLTextureFromRGBA(rgba, mt.width, mt.height);
         }
         else {
             GLuint found = 0;
+            bool foundMasked = false;
             for (const auto& wad : m_wads) {
                 found = wad.GetTexture(name);
-                if (found != 0) break;
+                if (found != 0) {
+                    foundMasked = wad.IsMasked(name);
+                    break;
+                }
             }
             if (found == 0) {
                 Console::Log("WARNING-> texture bulunamadi: " + name);
             }
             m_textureIdByMiptex[i] = found;
+            m_isMaskedByMiptex[i] = foundMasked;
         }
     }
 }
@@ -226,7 +257,6 @@ int BSPMap::GetOrCreateCell(const glm::vec3& faceCenter, std::unordered_map<long
     int cy = static_cast<int>(std::floor(faceCenter.y / GRID_CELL_SIZE));
     int cz = static_cast<int>(std::floor(faceCenter.z / GRID_CELL_SIZE));
 
-    // 3 int'i tek 64-bit anahtara paketle (harita boyutu icin yeterli aralik)
     long long key =
         (static_cast<long long>(cx + 100000) << 42) ^
         (static_cast<long long>(cy + 100000) << 21) ^
@@ -249,6 +279,7 @@ int BSPMap::GetOrCreateCell(const glm::vec3& faceCenter, std::unordered_map<long
 
 void BSPMap::BuildRenderFaces() {
     std::unordered_map<long long, int> cellIndexMap;
+    bool lightingAvailable = !m_lightingData.empty();
 
     for (size_t m = 0; m < m_models.size(); m++) {
         const BSPModel_t& model = m_models[m];
@@ -262,25 +293,80 @@ void BSPMap::BuildRenderFaces() {
             GLuint glTex = m_textureIdByMiptex[ti.miptex];
             glm::ivec2 texSize = m_textureSizeByMiptex[ti.miptex];
 
-            BSPRenderFace rf;
-            rf.glTexture = glTex;
+            std::vector<glm::vec3> rawPositions;
+            std::vector<double> rawS, rawT; // double: VHLT ile ayni hassasiyette extent hesabi icin
+            double minS = DBL_MAX, maxS = -DBL_MAX, minT = DBL_MAX, maxT = -DBL_MAX;
 
             for (int16_t e = 0; e < face.numedges; e++) {
                 BSPSurfEdge_t se = m_surfedges[face.firstedge + e];
                 uint16_t vertIndex = (se >= 0) ? m_edges[se].v[0] : m_edges[-se].v[1];
                 const float* raw = m_vertices[vertIndex].point;
 
-                float s = raw[0] * ti.vecs[0][0] + raw[1] * ti.vecs[0][1] + raw[2] * ti.vecs[0][2] + ti.vecs[0][3];
-                float t = raw[0] * ti.vecs[1][0] + raw[1] * ti.vecs[1][1] + raw[2] * ti.vecs[1][2] + ti.vecs[1][3];
+                double s = static_cast<double>(raw[0]) * ti.vecs[0][0]
+                    + static_cast<double>(raw[1]) * ti.vecs[0][1]
+                    + static_cast<double>(raw[2]) * ti.vecs[0][2]
+                    + ti.vecs[0][3];
+                double t = static_cast<double>(raw[0]) * ti.vecs[1][0]
+                    + static_cast<double>(raw[1]) * ti.vecs[1][1]
+                    + static_cast<double>(raw[2]) * ti.vecs[1][2]
+                    + ti.vecs[1][3];
 
-                rf.positions.push_back(ConvertCoord(raw));
-                rf.texcoords.push_back(glm::vec2(s / texSize.x, t / texSize.y));
+                rawPositions.push_back(ConvertCoord(raw));
+                rawS.push_back(s);
+                rawT.push_back(t);
+
+                if (s < minS) minS = s;
+                if (s > maxS) maxS = s;
+                if (t < minT) minT = t;
+                if (t > maxT) maxT = t;
             }
 
-            if (rf.positions.size() < 3) continue;
+            if (rawPositions.size() < 3) continue;
+
+            BSPRenderFace rf;
+            rf.glTexture = glTex;
+            rf.positions = rawPositions;
+            rf.isMasked = (ti.miptex < static_cast<int>(m_isMaskedByMiptex.size()))
+                && m_isMaskedByMiptex[ti.miptex];
+
+            for (size_t vi = 0; vi < rawPositions.size(); vi++) {
+                rf.texcoords.push_back(glm::vec2(
+                    static_cast<float>(rawS[vi] / texSize.x),
+                    static_cast<float>(rawT[vi] / texSize.y)
+                ));
+            }
+
+            // --- lightmap: GoldSrc/Quake extent hesabi, luxel = 16 unit ---
+            // Eksik texture'larda (glTex==0) lightmap eklemiyoruz: magenta fallback rengi
+            // lightmap ile carpilirsa yuzey uzerinde kayan renkli lekeler olusabiliyor.
+            bool hasLight = lightingAvailable && glTex != 0 && face.styles[0] != 255 && face.lightofs >= 0;
+            if (hasLight) {
+                int bminS = static_cast<int>(std::floor(minS / 16.0));
+                int bmaxS = static_cast<int>(std::ceil(maxS / 16.0));
+                int bminT = static_cast<int>(std::floor(minT / 16.0));
+                int bmaxT = static_cast<int>(std::ceil(maxT / 16.0));
+
+                double texMinS = bminS * 16.0;
+                double texMinT = bminT * 16.0;
+                int lightW = (bmaxS - bminS) + 1;
+                int lightH = (bmaxT - bminT) + 1;
+
+                size_t dataSize = static_cast<size_t>(lightW) * lightH * 3;
+                if (lightW > 0 && lightH > 0 &&
+                    static_cast<size_t>(face.lightofs) + dataSize <= m_lightingData.size())
+                {
+                    const uint8_t* lmData = m_lightingData.data() + face.lightofs;
+                    rf.glLightmap = CreateGLLightmapTexture(lmData, lightW, lightH);
+
+                    for (size_t vi = 0; vi < rawPositions.size(); vi++) {
+                        float lu = static_cast<float>((rawS[vi] - texMinS + 8.0) / (lightW * 16.0));
+                        float lv = static_cast<float>((rawT[vi] - texMinT + 8.0) / (lightH * 16.0));
+                        rf.lightUVs.push_back(glm::vec2(lu, lv));
+                    }
+                }
+            }
 
             if (m == 0) {
-                // worldspawn: grid hucresine bucket'la
                 glm::vec3 faceCenter(0.0f);
                 for (const auto& p : rf.positions) faceCenter += p;
                 faceCenter /= static_cast<float>(rf.positions.size());
@@ -310,24 +396,76 @@ void BSPMap::BuildRenderFaces() {
 static void DrawRenderFace(const BSPRenderFace& rf) {
     if (rf.positions.size() < 3) return;
 
+    bool hasLightmap = (rf.glTexture != 0 && rf.glLightmap != 0 && glActiveTexture_ && glMultiTexCoord2f_);
+
+    // unit 1: lightmap (varsa) - overbright: GL_COMBINE + RGB_SCALE=2.0
+    if (glActiveTexture_) {
+        glActiveTexture_(GL_TEXTURE1);
+        if (hasLightmap) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, rf.glLightmap);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
+            glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, 2.0f);
+        }
+        else {
+            glDisable(GL_TEXTURE_2D);
+        }
+        glActiveTexture_(GL_TEXTURE0);
+    }
+
+    // unit 0: diffuse
     if (rf.glTexture != 0) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, rf.glTexture);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
     else {
         glDisable(GL_TEXTURE_2D);
         glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
     }
 
+    bool useAlphaTest = rf.isMasked && rf.glTexture != 0;
+    if (useAlphaTest) {
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.5f);
+    }
+
     glBegin(GL_POLYGON);
     for (size_t i = 0; i < rf.positions.size(); i++) {
-        glTexCoord2f(rf.texcoords[i].x, rf.texcoords[i].y);
+        if (glMultiTexCoord2f_) {
+            glMultiTexCoord2f_(GL_TEXTURE0, rf.texcoords[i].x, rf.texcoords[i].y);
+            if (hasLightmap) {
+                glMultiTexCoord2f_(GL_TEXTURE1, rf.lightUVs[i].x, rf.lightUVs[i].y);
+            }
+        }
+        else {
+            glTexCoord2f(rf.texcoords[i].x, rf.texcoords[i].y);
+        }
         glVertex3f(rf.positions[i].x, rf.positions[i].y, rf.positions[i].z);
     }
     glEnd();
 
+    if (useAlphaTest) {
+        glDisable(GL_ALPHA_TEST);
+    }
+
     if (rf.glTexture == 0) {
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+}
+
+// GL_TEXTURE1'i (lightmap unit) temiz durumda birak - yoksa sonraki cizimlere
+// (console, HUD, retro overlay, diger model'ler) sizar.
+static void ResetLightmapUnit() {
+    if (glActiveTexture_) {
+        glActiveTexture_(GL_TEXTURE1);
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glActiveTexture_(GL_TEXTURE0);
     }
 }
 
@@ -339,6 +477,7 @@ void BSPMap::RenderWorld() const {
         }
     }
     glDisable(GL_TEXTURE_2D);
+    ResetLightmapUnit();
 }
 
 void BSPMap::RenderWorld(const Frustum& frustum) const {
@@ -350,6 +489,7 @@ void BSPMap::RenderWorld(const Frustum& frustum) const {
         }
     }
     glDisable(GL_TEXTURE_2D);
+    ResetLightmapUnit();
 }
 
 void BSPMap::RenderModel(int modelIndex) const {
@@ -361,6 +501,7 @@ void BSPMap::RenderModel(int modelIndex) const {
         DrawRenderFace(rf);
     }
     glDisable(GL_TEXTURE_2D);
+    ResetLightmapUnit();
 }
 
 int BSPMap::ParseBrushModelIndex(const std::string& modelStr) {
@@ -410,7 +551,6 @@ void BSPMap::RenderBrushEntities(const Frustum& frustum) const {
             origin = ParseOriginToEngineSpace(*originKey);
         }
 
-        // model'in lokal AABB'sine origin'i ekleyip dunya-uzayi AABB'sini bul
         glm::vec3 worldMins = m_modelAABBMins[modelIndex] + origin;
         glm::vec3 worldMaxs = m_modelAABBMaxs[modelIndex] + origin;
 
@@ -438,7 +578,7 @@ int BSPMap::HullPointContents(int num, const glm::vec3& p) const {
 
         num = (d < 0.0f) ? node.children[1] : node.children[0];
     }
-    return num; // CONTENTS_* (negatif)
+    return num;
 }
 
 bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
@@ -498,7 +638,6 @@ bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
         trace.planeNormal = -glm::vec3(plane.normal[0], plane.normal[1], plane.normal[2]);
     }
 
-    // epsilon kaymasi telafisi: carpisma noktasindan geri cekilerek gercek yuzeyi bul
     while (HullPointContents(rootNode, mid) == CONTENTS_SOLID) {
         frac -= 0.1f;
         if (frac < 0.0f) {
@@ -546,14 +685,12 @@ TraceResult BSPMap::TraceLine(const glm::vec3& start, const glm::vec3& end, int 
     }
     if (hullIndex < 0 || hullIndex > 3) hullIndex = 1;
 
-    // --- worldspawn (model 0) ---
     {
         int headnode = m_models[0].headnode[hullIndex];
         TraceResult t = TraceHull(headnode, start, end);
         if (t.fraction < best.fraction) best = t;
     }
 
-    // --- brush entity'ler (func_wall, func_door, vb.) ---
     for (const Entity& ent : m_entities) {
         const std::string* modelKey = ent.Get(EntityKeys::Model);
         if (!modelKey) continue;
@@ -561,7 +698,6 @@ TraceResult BSPMap::TraceLine(const glm::vec3& start, const glm::vec3& end, int 
         int modelIndex = ParseBrushModelIndex(*modelKey);
         if (modelIndex <= 0 || modelIndex >= static_cast<int>(m_models.size())) continue;
 
-        // Gorsel olarak var ama collision'i olmamasi gereken tipik entity'leri atla.
         const std::string* cn = ent.Get(EntityKeys::Classname);
         if (cn) {
             if (*cn == "func_illusionary") continue;
@@ -573,8 +709,6 @@ TraceResult BSPMap::TraceLine(const glm::vec3& start, const glm::vec3& end, int 
             origin = ParseOriginToEngineSpace(*originKey);
         }
 
-        // Model'in hull'u kendi lokal (origin uygulanmamis) uzayinda tanimli,
-        // o yuzden start/end'i origin kadar geri kaydirip test ediyoruz.
         glm::vec3 localStart = start - origin;
         glm::vec3 localEnd = end - origin;
 
@@ -582,7 +716,7 @@ TraceResult BSPMap::TraceLine(const glm::vec3& start, const glm::vec3& end, int 
         TraceResult t = TraceHull(headnode, localStart, localEnd);
 
         if (t.fraction < best.fraction) {
-            t.endPos += origin; // sonucu tekrar dunya uzayina tasi
+            t.endPos += origin;
             best = t;
         }
     }
@@ -594,7 +728,6 @@ static glm::vec3 ClipVelocity(const glm::vec3& in, const glm::vec3& normal, floa
     float backoff = glm::dot(in, normal) * overbounce;
     glm::vec3 out = in - normal * backoff;
 
-    // kucuk kalintilari sifirla, titremeyi (jitter) onler
     if (glm::length(out) < 0.001f) return glm::vec3(0.0f);
     return out;
 }
@@ -605,13 +738,11 @@ glm::vec3 BSPMap::SlideMove(const glm::vec3& start, const glm::vec3& end, int hu
 
     if (glm::length(remaining) < 0.0001f) return start;
 
-    // Cok uzun tek-frame hareketlerinde nadir sayisal kacaklari azaltmak icin
-    // hareketi 64 unit'lik alt-adimlara bol.
     const float MAX_STEP = 64.0f;
     float totalLen = glm::length(remaining);
     int subSteps = static_cast<int>(std::ceil(totalLen / MAX_STEP));
     if (subSteps < 1) subSteps = 1;
-    if (subSteps > 8) subSteps = 8; // guvenlik siniri
+    if (subSteps > 8) subSteps = 8;
 
     glm::vec3 stepVec = remaining / static_cast<float>(subSteps);
 
@@ -634,24 +765,18 @@ glm::vec3 BSPMap::SlideMove(const glm::vec3& start, const glm::vec3& end, int hu
                 break;
             }
 
-            // trace'in ulastigi noktaya kadar git
             glm::vec3 newCurrent = trace.endPos;
-
-            // bu bump'ta gidilemeyen kisim
             glm::vec3 unresolved = target - newCurrent;
             current = newCurrent;
 
             planeNormals.push_back(trace.planeNormal);
 
-            // kalan hareketi, simdiye kadar carpilan TUM duzlemlere gore clip et
             glm::vec3 clipped = unresolved;
             for (const auto& n : planeNormals) {
                 clipped = ClipVelocity(clipped, n, 1.0f);
             }
             stepRemaining = clipped;
 
-            // clip sonrasi hareket, orijinal yone ters donduyse (koseye sikismis)
-            // dur, daha fazla ilerlemeye calisma
             if (glm::dot(stepRemaining, stepVec) < 0.0f) {
                 stepRemaining = glm::vec3(0.0f);
                 break;
@@ -675,31 +800,26 @@ bool BSPMap::IsPointSolid(const glm::vec3& enginePos, int hullIndex) const {
 void BSPMap::LoadMap() {
     if (!g_Map.Load("nvs1/map/cs_assault.bsp", { "", "map/", "wads/", "textures/" })) {
         Logger::error("BSP yuklenemedi.");
-        // return false;
     }
 
-
-    // --- player_start'tan spawn ---
-    {
-        bool foundStart = false;
-        for (const Entity& ent : g_Map.GetEntities()) {
-            if (ent.Is(EntityClassnames::PlayerStart)) {
-                if (const std::string* originStr = ent.Get(EntityKeys::Origin)) {
-                    glm::vec3 spawnPos = BSPMap::ParseOriginToEngineSpace(*originStr);
-                    spawnPos.y += 36.0f; // player_start origin genelde ayak hizasinda; goz hizasina tasi
-                    g_Camera.position = spawnPos;
-                    foundStart = true;
-                }
-
-                if (const std::string* angleStr = ent.Get(EntityKeys::Angle)) {
-                    float angle = std::atof(angleStr->c_str());
-                    g_Camera.yaw = angle; // GoldSrc'de angle = derece cinsinden yaw
-                }
-                break;
+    bool foundStart = false;
+    for (const Entity& ent : g_Map.GetEntities()) {
+        if (ent.Is(EntityClassnames::PlayerStart)) {
+            if (const std::string* originStr = ent.Get(EntityKeys::Origin)) {
+                glm::vec3 spawnPos = BSPMap::ParseOriginToEngineSpace(*originStr);
+                spawnPos.y += 36.0f;
+                g_Camera.position = spawnPos;
+                foundStart = true;
             }
+
+            if (const std::string* angleStr = ent.Get(EntityKeys::Angle)) {
+                float angle = std::atof(angleStr->c_str());
+                g_Camera.yaw = angle;
+            }
+            break;
         }
-        if (!foundStart) {
-            Logger::error("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
-        }
+    }
+    if (!foundStart) {
+        Logger::error("player_start bulunamadi, varsayilan konumdan spawn ediliyor.");
     }
 }

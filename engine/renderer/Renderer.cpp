@@ -1,10 +1,12 @@
 #include "Renderer.h"
+#include "../GLExtensions.h"
 
 bool Renderer::Init(int width, int height) {
 	m_windowWidth = width;
 	m_windowHeight = height;
 
 	glEnable(GL_DEPTH_TEST);
+	LoadGLExtensions();
 
 	glGenTextures(1, &m_retroTexture);
 	glBindTexture(GL_TEXTURE_2D, m_retroTexture);

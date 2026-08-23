@@ -16,12 +16,14 @@ public:
     // isim HL'de case-insensitive, biz hep uppercase karsilastiriyoruz
     GLuint GetTexture(const std::string& name, int* outWidth = nullptr, int* outHeight = nullptr) const;
     bool Contains(const std::string& name) const;
+    bool IsMasked(const std::string& name) const;
 
 private:
     struct Entry {
         GLuint glTex = 0;
         int width = 0;
         int height = 0;
+        bool isMasked = false;
     };
     std::unordered_map<std::string, Entry> m_textures;
 

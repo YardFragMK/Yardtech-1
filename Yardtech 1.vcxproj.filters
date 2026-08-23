@@ -87,6 +87,9 @@
     <ClCompile Include="engine\PlayerMovement.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\GLExtensions.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -162,6 +165,9 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\PlayerMovement.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\GLExtensions.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

@@ -120,6 +120,7 @@ bool WadFile::Load(const std::string& wadPath) {
         e.glTex = tex;
         e.width = mt.width;
         e.height = mt.height;
+        e.isMasked = colorKey;
         m_textures[ToUpper(name)] = e;
     }
 
@@ -137,4 +138,9 @@ GLuint WadFile::GetTexture(const std::string& name, int* outWidth, int* outHeigh
 
 bool WadFile::Contains(const std::string& name) const {
     return m_textures.find(ToUpper(name)) != m_textures.end();
+}
+
+bool WadFile::IsMasked(const std::string& name) const {
+    auto it = m_textures.find(ToUpper(name));
+    return (it != m_textures.end()) && it->second.isMasked;
 }
