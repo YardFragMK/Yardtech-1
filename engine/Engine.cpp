@@ -130,7 +130,7 @@ void Engine::gameLoop() {
 
 void Engine::RenderFrame() {
 	renderer.BeginFrame(g_Camera);
-	g_Skybox.Render(g_Camera.position);
+	g_Skybox.Render(g_Camera.GetEyePosition());
 
 	Frustum frustum = Frustum::FromViewProjection(
 		renderer.GetProjectionMatrix() * renderer.GetViewMatrix()

@@ -5,8 +5,8 @@ public:
 	bool cm_noclip = false;
 	bool nvs_cheats = true;
 	int nvs_developer = 1;
-	float nvs_gravity = 800.0f;   // unit/s^2, HL varsayilanina yakin
-	float nvs_jumpforce = 300.0f; // unit/s, ziplama baslangic dikey hizi
+	float nvs_gravity = 900.0f;   // unit/s^2,
+	float nvs_jumpforce = 250.0f; // unit/s, ziplama baslangic dikey hizi
 	//bool itemRGD = true;
 
 

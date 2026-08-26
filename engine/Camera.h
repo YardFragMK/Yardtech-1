@@ -12,7 +12,7 @@ public:
 
 	float yaw = -90.0f; //sağ-sol
 	float pitch = 0.0f; //yukarı-aşağı
-	float moveSpeed = 200.0f;
+	float moveSpeed = 250.0f;
 	float mouseSensitivity = 0.1f;
 	float verticalVelocity = 0.0f;
 

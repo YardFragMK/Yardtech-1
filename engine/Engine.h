@@ -11,7 +11,6 @@ public:
 	~Engine();
 	bool initSystems();
 	void gameLoop();
-	void LoadMap();
 
 private:
 	int windowWidth = 1920;

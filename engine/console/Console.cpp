@@ -13,7 +13,7 @@
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "../../extern/stb/stb_easy_font.h"
 
-bool Console::s_open = false;
+bool Console::s_open = true;
 std::string Console::s_input;
 std::vector<std::string> Console::s_log;
 float Console::s_currentHeight = 0.0f;
@@ -21,7 +21,7 @@ float Console::s_targetHeight = 0.0f;
 float Console::s_slideSpeed = 2000.0f;
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.37");
+    Log("Yardtech-1 version: alpha 0.38");
     Log("=============================");
 }
 
@@ -154,14 +154,14 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "nvs_gravity") {
-        int value;
+        float value;
         if (iss >> value) {
             g_CVar.nvs_gravityF(value);
         }
     }
 
     else if (cmd == "nvs_jumpforce") {
-        int value;
+        float value;
         if (iss >> value) {
             g_CVar.nvs_jumpforceF(value);
         }
@@ -280,7 +280,7 @@ void Console::Render(int windowWidth, int windowHeight) {
             y -= lineHeight;
         }
 
-        // Input satiri (en altta, yanip sonen imlecle)
+        // Input satiri
         std::string inputLine = "> " + s_input;
         bool showCursor = ((int)(SDL_GetTicks() / 400) % 2) == 0;
         if (showCursor) inputLine += "_";
