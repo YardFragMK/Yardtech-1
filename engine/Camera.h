@@ -23,6 +23,8 @@ public:
 	float bobOffsetY = 0.0f;
 	float bobOffsetX = 0.0f;
 
+	int viewBobStyle = 1;       //sinus
+	float doomBobPhase = 0.0f;
 
 	glm::vec3 GetEyePosition() const {
 		glm::vec3 base = position + glm::vec3(0.0f, eyeHeightOffset + bobOffsetY, 0.0f);

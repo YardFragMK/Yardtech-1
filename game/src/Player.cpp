@@ -27,8 +27,6 @@ void Player::takeDamage(int enemyDamage) {
 }
 void Player::attack(int attacknumber) {
     if (attacknumber == 1) {
-        Console::Log("1. saldiri yontemi kullanildi");
-
         if (CurrentWeapon == PISTOL) {
             pistol.Shoot(1);
         }
@@ -37,8 +35,6 @@ void Player::attack(int attacknumber) {
         }
     }
     else if (attacknumber == 2) {
-        Console::Log("2. saldiri yontemi kullanildi");
-
         if (CurrentWeapon == SHOTGUN) {
             shotgun.Shoot(2);
         }

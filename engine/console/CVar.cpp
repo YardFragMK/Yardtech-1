@@ -2,6 +2,7 @@
 #include"../Camera.h"
 #include"Console.h"
 #include"../Engine.h"
+#include"../HUD.h"
 
 CVar g_CVar;
 
@@ -58,6 +59,8 @@ void CVar::helpF() const {
 	Console::Log("cm_sensitivity " + std::to_string(g_Camera.mouseSensitivity));
 	Console::Log("nvs_gravity " + std::to_string(nvs_gravity));       
 	Console::Log("nvs_jumpforce " + std::to_string(nvs_jumpforce));  
+	Console::Log("cm_viewbobstyle " + std::to_string(g_Camera.viewBobStyle));
+	Console::Log("nvs_doombarenabled " + std::to_string(HUD::doomBarEnabled));
 	if (nvs_developer == 1) {
 		Console::Log("cm_speed " + std::to_string(g_Camera.moveSpeed));
 		Console::Log("cm_rollmax " + std::to_string(g_Camera.maxRoll));
@@ -81,4 +84,14 @@ void CVar::nvs_jumpforceF(float value) {
 		nvs_jumpforce = value;
 		Console::Log("nvs_jumpforce set to " + std::to_string(nvs_jumpforce));
 	}
+}
+
+void CVar::cm_viewbobstyleF(int value) {
+	g_Camera.viewBobStyle = value;
+	Console::Log("cm_viewbobstyle set to " + std::to_string(value));
+}
+
+void CVar::nvs_doombarenabledF(int value) {
+	HUD::doomBarEnabled = value;
+	Console::Log("nvs_doombarenabled set to " + std::to_string(value));
 }

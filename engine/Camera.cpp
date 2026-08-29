@@ -92,6 +92,21 @@ void Camera::Update(float deltaTime) {
 }
 
 void Camera::UpdateViewBob(float deltaTime, float horizontalSpeed, bool grounded) {
+	if (viewBobStyle == 1) {
+		// --- Doom tarzi: mesafeye bagli, keskin, sadece dikey sinus ---
+		const float DOOM_BOB_AMP =7.0f;     // genlik (mevcut yumusak bob'tan belirgin daha buyuk)
+		const float DOOM_BOB_FREQ = 0.045f;  // katedilen mesafeye gore faz artis hizi
+
+		float distanceThisFrame = horizontalSpeed * deltaTime;
+		float intensity = (grounded && horizontalSpeed > 1.0f) ? 1.0f : 0.0f;
+
+		doomBobPhase += distanceThisFrame * DOOM_BOB_FREQ;
+		bobOffsetY = sinf(doomBobPhase) * DOOM_BOB_AMP * intensity;
+		bobOffsetX = 0.0f; // Doom bobbing'de yatay kayma yok, sadece dikey
+
+		return;
+	}
+
 	const float BOB_FREQUENCY = 8.0f;   // saniyede sallanma dongusu
 	const float BOB_AMP_Y = 1.6f;       // dikey genlik
 	const float BOB_AMP_X = 1.0f;       // yatay genlik

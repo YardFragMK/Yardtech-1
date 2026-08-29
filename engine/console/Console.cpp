@@ -166,6 +166,24 @@ void Console::ExecuteCommand() {
             g_CVar.nvs_jumpforceF(value);
         }
     }
+    
+    else if (cmd == "cm_viewbobstyle") {
+        int value;
+        if (iss >> value) {
+            if (value == 1 || value == 0) g_CVar.cm_viewbobstyleF(value);
+            else Log("Usage: cm_viewbobstyle <0/1>");
+        }
+        else Log("Usage: cm_viewbobstyle <0/1>");
+    }
+
+    else if (cmd == "nvs_doombarenabled") {
+        int value;
+        if (iss >> value) {
+            if (value == 1 || value == 0) g_CVar.nvs_doombarenabledF(value);
+            else Log("Usage: nvs_doombarenabled <0/1>");
+        }
+        else Log("Usage: nvs_doombarenabled <0/1>");
+    }
 
     else {
         Log("Unknown command");

@@ -21,6 +21,8 @@ public:
 	void nvs_jumpforceF(float value);
 	void helpF() const;
 	void r_retromodeF(int r_retromodeValue);
+	void cm_viewbobstyleF(int value);
+	void nvs_doombarenabledF(int value);
 };
 
 extern CVar g_CVar;
