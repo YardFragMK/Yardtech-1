@@ -65,7 +65,7 @@ void CVar::helpF() const {
 	}
 }
 
-void CVar::r_retromode(int r_retromodeValue) {
+void CVar::r_retromodeF(int r_retromodeValue) {
 	renderer.SetRetroMode(r_retromodeValue);
 }
 

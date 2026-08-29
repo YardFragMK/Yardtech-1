@@ -28,21 +28,23 @@ void Player::takeDamage(int enemyDamage) {
 void Player::attack(int attacknumber) {
     if (attacknumber == 1) {
         Console::Log("1. saldiri yontemi kullanildi");
-        if (CurrentWeapon = PISTOL) {
-            pistol.Shoot();
+
+        if (CurrentWeapon == PISTOL) {
+            pistol.Shoot(1);
         }
-        if (CurrentWeapon = SHOTGUN) {
+        else if (CurrentWeapon == SHOTGUN) {
             shotgun.Shoot(1);
         }
     }
     else if (attacknumber == 2) {
         Console::Log("2. saldiri yontemi kullanildi");
-        if (CurrentWeapon = SHOTGUN) {
+
+        if (CurrentWeapon == SHOTGUN) {
             shotgun.Shoot(2);
         }
     }
-
 }
+
 
 void Player::death() {
     // [] Kamera durdurulacak ve yere düşecek

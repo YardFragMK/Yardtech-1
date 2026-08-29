@@ -147,7 +147,7 @@ void Console::ExecuteCommand() {
     else if (cmd == "r_retromode") {
         int value;
         if (iss >> value) {
-            if (value == 1 || value == 0) g_CVar.r_retromode(value);
+            if (value == 1 || value == 0) g_CVar.r_retromodeF(value);
             else Log("Usage: r_retromode <0/1>");
         }
         else Log("Usage: r_retromode <0/1>");
@@ -298,5 +298,8 @@ void Console::Render(int windowWidth, int windowHeight) {
     glPopMatrix();
 }
 
+void Console::DrawTextAt(float x, float y, const std::string& text, float r, float g, float b) {
+    DrawText(x, y, text, r, g, b); // mevcut static DrawText'i disariya acar
+}
 
 

@@ -96,6 +96,9 @@
     <ClCompile Include="engine\Skybox.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\HUD.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -180,6 +183,9 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\Skybox.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\HUD.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

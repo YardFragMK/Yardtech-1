@@ -90,3 +90,24 @@ void Camera::Update(float deltaTime) {
 	eyeHeightOffset = glm::mix(eyeHeightOffset, targetEyeHeight,
 		glm::clamp(eyeHeightLerpSpeed * deltaTime, 0.0f, 1.0f));
 }
+
+void Camera::UpdateViewBob(float deltaTime, float horizontalSpeed, bool grounded) {
+	const float BOB_FREQUENCY = 8.0f;   // saniyede sallanma dongusu
+	const float BOB_AMP_Y = 1.6f;       // dikey genlik
+	const float BOB_AMP_X = 1.0f;       // yatay genlik
+	const float SPEED_REF = 150.0f;     // bu hizda tam genlik (moveSpeed varsayilanina yakin)
+
+	float intensity = grounded ? (horizontalSpeed / SPEED_REF) : 0.0f;
+	if (intensity > 1.0f) intensity = 1.0f;
+
+	if (intensity > 0.01f) {
+		bobTimer += deltaTime * BOB_FREQUENCY * intensity;
+	}
+	else {
+		// hareket yoksa faz sifira yakinsasin (ani sicrama olmadan yumusak dursun)
+		bobTimer += deltaTime * BOB_FREQUENCY * 0.15f;
+	}
+
+	bobOffsetY = sinf(bobTimer * 2.0f) * BOB_AMP_Y * intensity;
+	bobOffsetX = cosf(bobTimer) * BOB_AMP_X * intensity;
+}

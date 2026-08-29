@@ -16,9 +16,10 @@
 #include"Frustum.h"
 #include"console/CVar.h"
 #include"../game/src/Player.h"
-#include "../game/src/EntityParser.h"
-#include "PlayerMovement.h"
-#include "Skybox.h"
+#include"../game/src/EntityParser.h"
+#include"PlayerMovement.h"
+#include"Skybox.h"
+#include"HUD.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -48,6 +49,15 @@ bool Engine::initSystems() {
 		Logger::error("Window olusturulamadi");
 		return false;
 	}
+
+	// Gercek pencere boyutunu al (DPI olcekleme/farkli cozunurluk ihtimaline karsi
+	// sabit degerlere guvenmek yerine SDL'den dogrudan sor).
+	int actualW = 0, actualH = 0;
+	SDL_GetWindowSize(window1.getWindow(), &actualW, &actualH);
+	windowWidth = actualW;
+	windowHeight = actualH;
+	Logger::info("Pencere boyutu: " + std::to_string(windowWidth) + "x" + std::to_string(windowHeight));
+
 
 	//=========================================================
 	//Opengl Context
@@ -101,10 +111,10 @@ bool Engine::initSystems() {
 //Game Loop
 //=========================================================
 void Engine::gameLoop() {
-	//=========================================================
-    // DELTATIME
-	//=========================================================
 	while (running) {
+		//=========================================================
+		// DELTATIME
+		//=========================================================
 		Uint64 currentCounter = SDL_GetPerformanceCounter();
 		float deltaTime =
 			static_cast<float>(currentCounter - lastCounter) /
@@ -140,6 +150,7 @@ void Engine::RenderFrame() {
 	g_Map.RenderBrushEntities(frustum);
 
 	renderer.EndFrame();
+	HUD::Render(windowWidth, windowHeight);
 	Console::Render(windowWidth, windowHeight);
 
 	SDL_GL_SwapWindow(window1.getWindow());

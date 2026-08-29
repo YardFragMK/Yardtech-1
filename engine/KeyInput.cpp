@@ -32,6 +32,18 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
                 Console::Toggle();
             }
 
+            //if (!Console::IsOpen) {
+                if (event.key.keysym.scancode == SDL_SCANCODE_1) {
+                    g_Player.SwitchWeapon(PISTOL);
+                }
+                if (event.key.keysym.scancode == SDL_SCANCODE_2) {
+                    g_Player.SwitchWeapon(SHOTGUN);
+                }
+                if (event.key.keysym.scancode == SDL_SCANCODE_R) {
+                    g_Player.ReloadCurrentWeapon();
+                }
+            
+
         }
         if (!Console::IsOpen()) {
             if (event.type == SDL_MOUSEBUTTONDOWN) {

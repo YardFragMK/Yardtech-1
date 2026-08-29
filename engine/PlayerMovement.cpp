@@ -5,13 +5,14 @@
 #include "console/CVar.h"
 #include "../game/src/Player.h"
 #include <cmath>
-#include "Engine.h"
 
 void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
+    g_Player.UpdateWeapons(deltaTime);
     if (g_CVar.cm_noclip) {
         // noclip acik: ucus modu, yercekimi/collision/crouch devre disi
         g_Camera.verticalVelocity = 0.0f;
         g_Camera.isCrouching = false;
+        g_Camera.UpdateViewBob(deltaTime, 0.0f, false); // bob'u sonduruyor
         return;
     }
 
@@ -55,6 +56,30 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
             g_Camera.position.y -= HULL_DIFF;
             oldPos.y -= HULL_DIFF;
             g_Camera.isCrouching = true;
+
+            // --- EGIMLI YUZEY DUZELTMESI ---
+            // Duz zeminde bu kaydirma guvenlidir, ama egimli bir yuzeyde hull3'un
+            // gercek sinir noktasi sadece dikey degil, egim normali dogrultusunda kayar.
+            // Bu da yeni origin'in yuzeyin ICINE gomulmesine yol acabilir -- gomulu
+            // origin, sonraki frame'lerde collision tarafindan yakalanamayip
+            // oyuncunun haritadan dusmesine sebep olur. Kucuk adimlarla yukari
+            // iterek gomulmeyi duzeltiyoruz.
+            const float UNSTICK_STEP = 1.0f;
+            const int MAX_UNSTICK_STEPS = static_cast<int>(HULL_DIFF / UNSTICK_STEP) + 2;
+            int steps = 0;
+            while (g_Map.IsPointSolid(g_Camera.position, 3) && steps < MAX_UNSTICK_STEPS) {
+                g_Camera.position.y += UNSTICK_STEP;
+                oldPos.y += UNSTICK_STEP;
+                steps++;
+            }
+
+            if (steps >= MAX_UNSTICK_STEPS) {
+                // Kurtarilamadi (cok dar/garip bir geometri) -- egilmeyi iptal et,
+                // ayakta kalmaya devam et, haritadan dusmektense bu daha guvenli.
+                g_Camera.position.y += HULL_DIFF;
+                oldPos.y += HULL_DIFF;
+                g_Camera.isCrouching = false;
+            }
         }
         else if (!ctrlHeld && g_Camera.isCrouching) {
             // kalksaydik nereye giderdik, o NOKTA solid mi diye dogrudan kontrol et
@@ -85,4 +110,9 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
             g_Camera.verticalVelocity = 0.0f;
         }
     }
+
+    // --- view bob: bu frame'deki yatay hareket miktarina gore ---
+    float horizDist = glm::length(glm::vec2(g_Camera.position.x - oldPos.x, g_Camera.position.z - oldPos.z));
+    float horizSpeed = (deltaTime > 0.0001f) ? (horizDist / deltaTime) : 0.0f;
+    g_Camera.UpdateViewBob(deltaTime, horizSpeed, g_Camera.onGround);
 }

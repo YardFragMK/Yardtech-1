@@ -20,7 +20,7 @@ public:
 	void nvs_gravityF(float value);   
 	void nvs_jumpforceF(float value);
 	void helpF() const;
-	void r_retromode(int r_retromodeValue);
+	void r_retromodeF(int r_retromodeValue);
 };
 
 extern CVar g_CVar;

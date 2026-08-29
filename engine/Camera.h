@@ -19,8 +19,14 @@ public:
 	bool onGround = false;
 	bool isCrouching = false;
 
+	float bobTimer = 0.0f;
+	float bobOffsetY = 0.0f;
+	float bobOffsetX = 0.0f;
+
+
 	glm::vec3 GetEyePosition() const {
-		return position + glm::vec3(0.0f, eyeHeightOffset, 0.0f);
+		glm::vec3 base = position + glm::vec3(0.0f, eyeHeightOffset + bobOffsetY, 0.0f);
+		return base + Right() * bobOffsetX;
 	}
 
 	glm::vec3 Forward() const; //Kameranın baktığı yön
@@ -35,6 +41,7 @@ public:
 
 	void ProcessMouseMovement(float xOffset, float yOffset);
 	void Update(float deltaTime); // her frame çağrılacak
+	void UpdateViewBob(float deltaTime, float horizontalSpeed, bool grounded);
 
 	glm::mat4 GetViewMatrix() const;
 	float roll = 0.0f;
