@@ -1,11 +1,11 @@
 #include "HUD.h"
-#include "console/Console.h"
+#include "BitmapFont.h"
 #include "../game/src/Player.h"
 #include <windows.h>
 #include <GL/gl.h>
 #include <string>
 
-bool HUD::doomBarEnabled = true; // varsayilan kapali (mevcut HUD)
+bool HUD::doomBarEnabled = false;
 
 // Bir sayinin arkasina yumusak, katmanli bir parlama (glow) cizer.
 // Gercek blur yok (FFP), bunun yerine buyuyen, giderek soluklasan yarim-saydam
@@ -28,7 +28,7 @@ static void DrawGlowBehind(float x, float y, float w, float h, float r, float g,
 // Basit cizgi-ikon: arti (health)
 static void DrawCrossIcon(float cx, float cy, float size, float r, float g, float b) {
     glColor4f(r, g, b, 0.9f);
-    float t = size * 0.28f; // kalinlik
+    float t = size * 0.28f;
     glBegin(GL_QUADS);
     glVertex2f(cx - t, cy - size); glVertex2f(cx + t, cy - size);
     glVertex2f(cx + t, cy + size); glVertex2f(cx - t, cy + size);
@@ -68,7 +68,6 @@ static void DrawBulletIcon(float cx, float cy, float size, float r, float g, flo
 
 // --- Doom-tarzi siyah-beyaz retro bar icin yardimcilar ---
 
-// Retro monokrom cerceve: dolgu + kalin beyaz kenarlik (CRT/Doom status bar hissi)
 static void DrawRetroPanel(float x, float y, float w, float h) {
     glColor4f(0.0f, 0.0f, 0.0f, 0.95f);
     glBegin(GL_QUADS);
@@ -107,18 +106,19 @@ static void RenderDoomBar(int windowWidth, int windowHeight) {
     DrawRetroDivider(third * 2.0f, barY + 8.0f, barY + barHeight - 8.0f);
 
     float iconY = barY + barHeight * 0.5f;
-    float textY = barY + barHeight * 0.35f;
+    const float labelHeight = 18.0f;
+    const float numberHeight = 30.0f;
 
     // --- HEALTH (sol) ---
     DrawCrossIcon(third * 0.25f, iconY, 16.0f, 1.0f, 1.0f, 1.0f);
-    Console::DrawTextAt(third * 0.25f + 30.0f, textY, "HP", 1.0f, 1.0f, 1.0f);
-    Console::DrawTextAt(third * 0.25f + 30.0f, textY + 16.0f, std::to_string(g_Player.Health), 1.0f, 1.0f, 1.0f);
+    g_HudFont.DrawText(third * 0.25f + 30.0f, barY + 14.0f, "HP", labelHeight, 1.0f, 1.0f, 1.0f);
+    g_HudFont.DrawText(third * 0.25f + 30.0f, barY + 36.0f, std::to_string(g_Player.Health), numberHeight, 1.0f, 1.0f, 1.0f);
 
     // --- ARMOR (orta) ---
     float armorCx = third + third * 0.25f;
     DrawShieldIcon(armorCx, iconY, 16.0f, 1.0f, 1.0f, 1.0f);
-    Console::DrawTextAt(armorCx + 30.0f, textY, "AP", 1.0f, 1.0f, 1.0f);
-    Console::DrawTextAt(armorCx + 30.0f, textY + 16.0f, std::to_string(g_Player.Armor), 1.0f, 1.0f, 1.0f);
+    g_HudFont.DrawText(armorCx + 30.0f, barY + 14.0f, "AP", labelHeight, 1.0f, 1.0f, 1.0f);
+    g_HudFont.DrawText(armorCx + 30.0f, barY + 36.0f, std::to_string(g_Player.Armor), numberHeight, 1.0f, 1.0f, 1.0f);
 
     // --- AMMO (sag) ---
     int curBullet = g_Player.GetCurrentBullet();
@@ -126,9 +126,13 @@ static void RenderDoomBar(int windowWidth, int windowHeight) {
     float ammoCx = third * 2.0f + third * 0.25f;
 
     DrawBulletIcon(ammoCx, iconY, 16.0f, 1.0f, 1.0f, 1.0f);
-    Console::DrawTextAt(ammoCx + 30.0f, textY, "AMMO", 1.0f, 1.0f, 1.0f);
-    std::string ammoStr = std::to_string(curBullet) + "/" + std::to_string(curAmmo);
-    Console::DrawTextAt(ammoCx + 30.0f, textY + 16.0f, ammoStr, 1.0f, 1.0f, 1.0f);
+    g_HudFont.DrawText(ammoCx + 30.0f, barY + 14.0f, "AMMO", labelHeight, 1.0f, 1.0f, 1.0f);
+
+    float ammoNumX = ammoCx + 30.0f;
+    float ammoNumY = barY + 36.0f;
+    ammoNumX += g_HudFont.DrawText(ammoNumX, ammoNumY, std::to_string(curBullet), numberHeight, 1.0f, 1.0f, 1.0f);
+    ammoNumX += g_HudFont.DrawText(ammoNumX, ammoNumY, "/", numberHeight, 0.7f, 0.7f, 0.7f);
+    g_HudFont.DrawText(ammoNumX, ammoNumY, std::to_string(curAmmo), numberHeight, 0.7f, 0.7f, 0.7f);
 }
 
 void HUD::Render(int windowWidth, int windowHeight) {
@@ -150,12 +154,14 @@ void HUD::Render(int windowWidth, int windowHeight) {
         RenderDoomBar(windowWidth, windowHeight);
     }
     else {
-        // --- mevcut HUD (amber/glow tarzi) ---
+        // --- mevcut HUD, artik sadece ikon + yazi (glow/dikdortgen yok) ---
         float baseY = static_cast<float>(windowHeight) - 60.0f;
+        const float numberHeight = 34.0f;
 
-        const float amberR = 0.95f, amberG = 0.65f, amberB = 0.15f;
-        const float bloodR = 0.85f, bloodG = 0.15f, bloodB = 0.1f;
-
+        //const float amberR = 0.95f, amberG = 0.65f, amberB = 0.15f;
+        //const float bloodR = 0.85f, bloodG = 0.15f, bloodB = 0.1f;
+        const float amberR = 0.5f, amberG = 0.5f, amberB = 0.5f;
+        const float bloodR = 0.5f, bloodG = 0.5f, bloodB =0.5f;
         bool lowHealth = g_Player.Health < (g_Player.maxHealth / 4);
         float hR = lowHealth ? bloodR : amberR;
         float hG = lowHealth ? bloodG : amberG;
@@ -164,32 +170,28 @@ void HUD::Render(int windowWidth, int windowHeight) {
         // --- SOL ALT: Can + Zirh ---
         float x = 40.0f;
 
-        DrawGlowBehind(x - 5.0f, baseY - 30.0f, 140.0f, 40.0f, hR, hG, hB);
         DrawCrossIcon(x + 14.0f, baseY - 10.0f, 14.0f, hR, hG, hB);
-        Console::DrawTextAt(x + 40.0f, baseY - 18.0f, std::to_string(g_Player.Health), hR, hG, hB);
+        g_HudFont.DrawText(x + 40.0f, baseY - 30.0f, std::to_string(g_Player.Health), numberHeight, hR, hG, hB);
 
         float armorX = x + 150.0f;
-        DrawGlowBehind(armorX - 5.0f, baseY - 30.0f, 140.0f, 40.0f, amberR, amberG, amberB);
         DrawShieldIcon(armorX + 14.0f, baseY - 10.0f, 14.0f, amberR, amberG, amberB);
-        Console::DrawTextAt(armorX + 40.0f, baseY - 18.0f, std::to_string(g_Player.Armor), amberR, amberG, amberB);
+        g_HudFont.DrawText(armorX + 40.0f, baseY - 30.0f, std::to_string(g_Player.Armor), numberHeight, amberR, amberG, amberB);
 
         // --- SAG ALT: Mermi (sarjordeki / rezerv sarjor sayisi) ---
         int curBullet = g_Player.GetCurrentBullet();
         int maxBullet = g_Player.GetCurrentMaxBullet();
         int curAmmo = g_Player.GetCurrentAmmo();
 
-        std::string bulletText = std::to_string(curBullet);
-        std::string reserveText = std::to_string(curAmmo);
-
         float ammoX = static_cast<float>(windowWidth) - 220.0f;
+        float ammoY = baseY - 30.0f;
 
-        DrawGlowBehind(ammoX - 5.0f, baseY - 30.0f, 200.0f, 40.0f, amberR, amberG, amberB);
         DrawBulletIcon(ammoX + 12.0f, baseY - 6.0f, 14.0f, amberR, amberG, amberB);
-        Console::DrawTextAt(ammoX + 36.0f, baseY - 18.0f, bulletText, amberR, amberG, amberB);
-        Console::DrawTextAt(ammoX + 36.0f + static_cast<float>(bulletText.size()) * 9.0f + 6.0f,
-            baseY - 18.0f, "/", 0.5f, 0.5f, 0.5f);
-        Console::DrawTextAt(ammoX + 36.0f + static_cast<float>(bulletText.size()) * 9.0f + 20.0f,
-            baseY - 18.0f, reserveText, 0.6f, 0.6f, 0.6f);
+
+        float cursorX = ammoX + 36.0f;
+        cursorX += g_HudFont.DrawText(cursorX, ammoY, std::to_string(curBullet), numberHeight, amberR, amberG, amberB);
+        cursorX += g_HudFont.DrawText(cursorX, ammoY, "+", numberHeight, 0.5f, 0.5f, 0.5f);
+        g_HudFont.DrawText(cursorX, ammoY, std::to_string(curAmmo), numberHeight, 0.6f, 0.6f, 0.6f);
+
         (void)maxBullet;
     }
 

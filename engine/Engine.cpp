@@ -20,6 +20,12 @@
 #include"PlayerMovement.h"
 #include"Skybox.h"
 #include"HUD.h"
+#include"GameState.h"
+#include"MainMenu.h"
+#include"MapLoader.h"
+#include"BitmapFont.h"
+#include"Settings.h" 
+#include"PauseMenu.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -98,9 +104,49 @@ bool Engine::initSystems() {
 	}
 	Logger::info("Renderer initialize edildi.");
 
+	//=========================================================
+	// Bitmap Font
+	//=========================================================
+	if (!g_HudFont.Load("nvs1/gfx/hud_font.tga")) {
+		Logger::error("HUD fontu yuklenemedi.");
+	}
+
+	//=========================================================
+	// Main Menu
+	//=========================================================
+	//SDL_SetRelativeMouseMode(SDL_FALSE);
+	MainMenu::Init();
+	MainMenu::LoadBackgroundImage("nvs1/gfx/menu_bg_blue.tga");
+
+	const float btnX = 70.0f;
+	const float btnW = 320.0f;
+	const float btnH = 55.0f;
+	const float btnSpacing = 68.0f;
+	const float topMargin = 30.0f;
+
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", []() {
+		ReadEntityLump("nvs1/map/cs_assault.bsp");
+		LoadMap("cs_assault");
+		EnterPlaying();
+		});
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 1, btnW, btnH, "LOAD GAME", []() {
+		Console::Log("Load game henuz baglanmadi");
+		});
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 2, btnW, btnH, "HOW TO PLAY", []() {
+		Console::Log("How to play henuz baglanmadi");
+		});
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "SETTINGS", []() {
+		Settings::Open();
+		});
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 4, btnW, btnH, "QUIT", []() {
+		SDL_Event quitEvent;
+		quitEvent.type = SDL_QUIT;
+		SDL_PushEvent(&quitEvent);
+		});
+
+	PauseMenu::Init();
 
 	lastCounter = SDL_GetPerformanceCounter();
-	SDL_SetRelativeMouseMode(SDL_TRUE);
 	Logger::info("Engine initalize edildi.");
 
 	return true;
@@ -131,7 +177,12 @@ void Engine::gameLoop() {
 		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
 		g_Camera.Update(deltaTime);
-		UpdatePlayerPhysics(deltaTime, oldPos);
+		if (g_State == GameState::Playing) {
+			UpdatePlayerPhysics(deltaTime, oldPos); 
+		}
+		else if (g_State == GameState::MenuLive) {
+			MainMenu::Update(deltaTime); 
+		}
  
 		RenderFrame();
 	}
@@ -140,17 +191,32 @@ void Engine::gameLoop() {
 
 void Engine::RenderFrame() {
 	renderer.BeginFrame(g_Camera);
-	g_Skybox.Render(g_Camera.GetEyePosition());
 
-	Frustum frustum = Frustum::FromViewProjection(
-		renderer.GetProjectionMatrix() * renderer.GetViewMatrix()
-	);
+	if (g_State == GameState::MenuLive || g_State == GameState::Playing || g_State == GameState::Paused) {
+		g_Skybox.Render(g_Camera.GetEyePosition());
 
-	g_Map.RenderWorld(frustum);
-	g_Map.RenderBrushEntities(frustum);
+		Frustum frustum = Frustum::FromViewProjection(
+			renderer.GetProjectionMatrix() * renderer.GetViewMatrix()
+		);
+
+		g_Map.RenderWorld(frustum);
+		g_Map.RenderBrushEntities(frustum);
+	}
 
 	renderer.EndFrame();
-	HUD::Render(windowWidth, windowHeight);
+
+	if (g_State == GameState::Playing) {
+		HUD::Render(windowWidth, windowHeight);
+	}
+	else if (g_State == GameState::Paused) {
+		HUD::Render(windowWidth, windowHeight);
+		PauseMenu::Render(windowWidth, windowHeight);
+	}
+	else {
+		MainMenu::Render(windowWidth, windowHeight);
+	}
+
+	Settings::Render(windowWidth, windowHeight);
 	Console::Render(windowWidth, windowHeight);
 
 	SDL_GL_SwapWindow(window1.getWindow());

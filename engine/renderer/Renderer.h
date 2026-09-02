@@ -19,6 +19,7 @@ public:
 		 m_retroMode = !m_retroMode;
 	 }
 	 void SetRetroMode(bool enable);
+	 bool IsRetroMode() const { return m_retroMode; }
 
 	 const glm::mat4& GetProjectionMatrix() const { return m_lastProjection; }
 	 const glm::mat4& GetViewMatrix() const { return m_lastView; }

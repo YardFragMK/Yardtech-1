@@ -99,6 +99,21 @@
     <ClCompile Include="engine\HUD.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\GameState.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\MainMenu.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\BitmapFont.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Settings.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\PauseMenu.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -186,6 +201,21 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\HUD.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\GameState.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\MainMenu.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\BitmapFont.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Settings.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\PauseMenu.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

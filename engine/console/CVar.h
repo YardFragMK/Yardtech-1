@@ -8,6 +8,8 @@ public:
 	float nvs_gravity = 900.0f;   // unit/s^2,
 	float nvs_jumpforce = 250.0f; // unit/s, ziplama baslangic dikey hizi
 	//bool itemRGD = true;
+	float nvs_mastervolume = 1.0f; // 0.0-1.0
+	float nvs_musicvolume = 1.0f;  // 0.0-1.0
 
 
 	void cm_noclipF(int cm_noclipValue);

@@ -13,7 +13,7 @@
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "../../extern/stb/stb_easy_font.h"
 
-bool Console::s_open = true;
+bool Console::s_open = false;
 std::string Console::s_input;
 std::vector<std::string> Console::s_log;
 float Console::s_currentHeight = 0.0f;
@@ -21,7 +21,7 @@ float Console::s_targetHeight = 0.0f;
 float Console::s_slideSpeed = 2000.0f;
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.38");
+    Log("Yardtech-1 version: alpha 0.51");
     Log("=============================");
 }
 
@@ -30,12 +30,10 @@ void Console::Toggle() {
 	if (s_open) {
         SDL_SetRelativeMouseMode(SDL_FALSE);
 		SDL_StartTextInput();
-		Logger::info("[Console opened]");
 	}
 	else {
         SDL_SetRelativeMouseMode(SDL_TRUE);
 		SDL_StopTextInput();
-		Logger::info("[Console closed]");
 	}
 }
 

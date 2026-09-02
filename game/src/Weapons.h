@@ -23,7 +23,7 @@ public:
 	int WDamage = 10;
 	int WmaxBullet = 15;
 	int WBullet = 10;
-	int WAmmo = 2;
+	int WAmmo = 10;
 
 	void Shoot(int shootnumber) override {
 		if (WBullet > 0) {
@@ -52,7 +52,7 @@ public:
 	int WDamage = 20;
 	int WmaxBullet = 7;
 	int WBullet = 5;
-	int WAmmo = 2;
+	int WAmmo = 75;
 
 	// --- tek-tek, zamanli reload state'i ---
 	bool isReloading = false;

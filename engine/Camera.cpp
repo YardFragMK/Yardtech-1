@@ -22,7 +22,7 @@ glm::vec3 Camera::Right() const {
 	return glm::normalize(glm::cross(Forward(), worldUp));
 }
 
-void Camera::MoveForward(float deltaTime) { 
+void Camera::MoveForward(float deltaTime) {
 	if (g_CVar.cm_noclip == 1) {
 		position += Forward() * moveSpeed * deltaTime;
 	}
@@ -30,7 +30,7 @@ void Camera::MoveForward(float deltaTime) {
 		position += FlatForward() * moveSpeed * deltaTime;
 	}
 }
-void Camera::MoveBackward(float deltaTime){
+void Camera::MoveBackward(float deltaTime) {
 	if (g_CVar.cm_noclip == 1) {
 		position -= Forward() * moveSpeed * deltaTime;
 	}
@@ -38,14 +38,14 @@ void Camera::MoveBackward(float deltaTime){
 		position -= FlatForward() * moveSpeed * deltaTime;
 	}
 }
-void Camera::MoveRight(float deltaTime){ 
+void Camera::MoveRight(float deltaTime) {
 	position += Right() * moveSpeed * deltaTime;
 	if (g_CVar.cm_noclip == false) {
 		targetRoll = maxRoll;
 	}
 }
-void Camera::MoveLeft(float deltaTime){ 
-	position -= Right() * moveSpeed * deltaTime; 
+void Camera::MoveLeft(float deltaTime) {
+	position -= Right() * moveSpeed * deltaTime;
 	if (g_CVar.cm_noclip == false) {
 		targetRoll = -maxRoll;
 	}
@@ -79,38 +79,41 @@ glm::vec3 Camera::Up() const {
 }
 
 void Camera::Update(float deltaTime) {
-	// Yumuşak geçiş: roll -> targetRoll
 	roll = glm::mix(roll, targetRoll, glm::clamp(rollLerpSpeed * deltaTime, 0.0f, 1.0f));
-
-	// Bir sonraki frame için sıfırla; eğer o frame'de tekrar
-	// MoveRight/MoveLeft çağrılırsa targetRoll tekrar set edilecek.
 	targetRoll = 0.0f;
 
 	float targetEyeHeight = isCrouching ? eyeHeightCrouching : eyeHeightStanding;
 	eyeHeightOffset = glm::mix(eyeHeightOffset, targetEyeHeight,
 		glm::clamp(eyeHeightLerpSpeed * deltaTime, 0.0f, 1.0f));
+
+	// Inis darbesi zamanla sifira soner, boylece kamera normal yuksekligine geri doner.
+	landingShakeOffset = glm::mix(landingShakeOffset, 0.0f,
+		glm::clamp(landingShakeDecaySpeed * deltaTime, 0.0f, 1.0f));
+}
+
+void Camera::TriggerLandingShake(float shakeAmount) {
+	landingShakeOffset = -shakeAmount;
 }
 
 void Camera::UpdateViewBob(float deltaTime, float horizontalSpeed, bool grounded) {
 	if (viewBobStyle == 1) {
-		// --- Doom tarzi: mesafeye bagli, keskin, sadece dikey sinus ---
-		const float DOOM_BOB_AMP =7.0f;     // genlik (mevcut yumusak bob'tan belirgin daha buyuk)
-		const float DOOM_BOB_FREQ = 0.045f;  // katedilen mesafeye gore faz artis hizi
+		const float DOOM_BOB_AMP = 7.0f;
+		const float DOOM_BOB_FREQ = 0.045f;
 
 		float distanceThisFrame = horizontalSpeed * deltaTime;
 		float intensity = (grounded && horizontalSpeed > 1.0f) ? 1.0f : 0.0f;
 
 		doomBobPhase += distanceThisFrame * DOOM_BOB_FREQ;
 		bobOffsetY = sinf(doomBobPhase) * DOOM_BOB_AMP * intensity;
-		bobOffsetX = 0.0f; // Doom bobbing'de yatay kayma yok, sadece dikey
+		bobOffsetX = 0.0f;
 
 		return;
 	}
 
-	const float BOB_FREQUENCY = 8.0f;   // saniyede sallanma dongusu
-	const float BOB_AMP_Y = 1.6f;       // dikey genlik
-	const float BOB_AMP_X = 1.0f;       // yatay genlik
-	const float SPEED_REF = 150.0f;     // bu hizda tam genlik (moveSpeed varsayilanina yakin)
+	const float BOB_FREQUENCY = 8.0f;
+	const float BOB_AMP_Y = 1.6f;
+	const float BOB_AMP_X = 1.0f;
+	const float SPEED_REF = 150.0f;
 
 	float intensity = grounded ? (horizontalSpeed / SPEED_REF) : 0.0f;
 	if (intensity > 1.0f) intensity = 1.0f;
@@ -119,7 +122,6 @@ void Camera::UpdateViewBob(float deltaTime, float horizontalSpeed, bool grounded
 		bobTimer += deltaTime * BOB_FREQUENCY * intensity;
 	}
 	else {
-		// hareket yoksa faz sifira yakinsasin (ani sicrama olmadan yumusak dursun)
 		bobTimer += deltaTime * BOB_FREQUENCY * 0.15f;
 	}
 

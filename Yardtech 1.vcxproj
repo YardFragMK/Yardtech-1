@@ -151,6 +151,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\BitmapFont.cpp" />
     <ClCompile Include="engine\BSPMap.cpp" />
     <ClCompile Include="engine\BSPReader.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
@@ -158,13 +159,17 @@
     <ClCompile Include="engine\console\CVar.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\Frustum.cpp" />
+    <ClCompile Include="engine\GameState.cpp" />
     <ClCompile Include="engine\GLExtensions.cpp" />
     <ClCompile Include="engine\HUD.cpp" />
     <ClCompile Include="engine\KeyInput.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
+    <ClCompile Include="engine\MainMenu.cpp" />
     <ClCompile Include="engine\MapLoader.cpp" />
+    <ClCompile Include="engine\PauseMenu.cpp" />
     <ClCompile Include="engine\PlayerMovement.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
+    <ClCompile Include="engine\Settings.cpp" />
     <ClCompile Include="engine\Skybox.cpp" />
     <ClCompile Include="engine\TGALoader.cpp" />
     <ClCompile Include="engine\Time.cpp" />
@@ -177,6 +182,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\BitmapFont.h" />
     <ClInclude Include="engine\BSPFormat.h" />
     <ClInclude Include="engine\BSPMap.h" />
     <ClInclude Include="engine\BSPReader.h" />
@@ -185,13 +191,17 @@
     <ClInclude Include="engine\console\CVar.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\Frustum.h" />
+    <ClInclude Include="engine\GameState.h" />
     <ClInclude Include="engine\GLExtensions.h" />
     <ClInclude Include="engine\HUD.h" />
     <ClInclude Include="engine\KeyInput.h" />
     <ClInclude Include="engine\Logger.h" />
+    <ClInclude Include="engine\MainMenu.h" />
     <ClInclude Include="engine\MapLoader.h" />
+    <ClInclude Include="engine\PauseMenu.h" />
     <ClInclude Include="engine\PlayerMovement.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
+    <ClInclude Include="engine\Settings.h" />
     <ClInclude Include="engine\Skybox.h" />
     <ClInclude Include="engine\TGALoader.h" />
     <ClInclude Include="engine\Time.h" />
