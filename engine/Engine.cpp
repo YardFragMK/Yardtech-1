@@ -116,7 +116,7 @@ bool Engine::initSystems() {
 	//=========================================================
 	//SDL_SetRelativeMouseMode(SDL_FALSE);
 	MainMenu::Init();
-	MainMenu::LoadBackgroundImage("nvs1/gfx/menu_bg_blue.tga");
+	MainMenu::LoadBackgroundImage("nvs1/gfx/env/classiclandft.tga");
 
 	const float btnX = 70.0f;
 	const float btnW = 320.0f;
@@ -125,8 +125,8 @@ bool Engine::initSystems() {
 	const float topMargin = 30.0f;
 
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", []() {
-		ReadEntityLump("nvs1/map/cs_assault.bsp");
-		LoadMap("cs_assault");
+		ReadEntityLump("nvs1/map/firstmap.bsp");
+		LoadMap("firstmap");
 		EnterPlaying();
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 1, btnW, btnH, "LOAD GAME", []() {

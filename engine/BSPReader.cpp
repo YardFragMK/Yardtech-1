@@ -23,6 +23,8 @@ std::string ReadEntityLump(const std::string& bspPath){
     file.seekg(entLump.offset, std::ios::beg);
     file.read(entityData.data(), entLump.length);
 
+    Console::Log("=================================================");
+    Console::Log(bspPath);
     Console::Log(bspPath + " Okunuyor");
     return entityData; // "{ \"key\" \"value\" ... } { ... } ..."
 }

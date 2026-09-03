@@ -5,7 +5,7 @@
 #include "renderer/Renderer.h"
 #include "HUD.h"
 
-extern Renderer renderer; // Engine.cpp'de tanimli global
+extern Renderer renderer;
 
 bool Settings::s_open = false;
 bool Settings::s_built = false;
@@ -93,7 +93,7 @@ void Settings::HandleMouseDown(int mx, int my) {
     if (!s_open) return;
 
     // Kategori sekmeleri
-    const char* tabLabels[(int)Category::Count] = { "GRAPHICS", "VIDEO", "SOUND", "GAMEPLAY" };
+    const char* tabLabels[(int)Category::Count] = { "GRAPHICS", "SOUND", "GAMEPLAY" };
     float tabX = s_panelX + 30.0f;
     float tabY = s_panelY + 25.0f;
     for (int i = 0; i < (int)Category::Count; i++) {
@@ -145,7 +145,7 @@ static void DrawFilledRect(float x, float y, float w, float h, float r, float g,
 }
 
 void Settings::RenderCategoryTabs() {
-    const char* tabLabels[(int)Category::Count] = { "GRAPHICS", "VIDEO", "SOUND", "GAMEPLAY" };
+    const char* tabLabels[(int)Category::Count] = { "GRAPHICS", "SOUND", "GAMEPLAY" };
     float tabX = s_panelX + 30.0f;
     float tabY = s_panelY + 25.0f;
 

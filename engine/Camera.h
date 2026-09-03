@@ -23,7 +23,7 @@ public:
 	float bobOffsetY = 0.0f;
 	float bobOffsetX = 0.0f;
 
-	int viewBobStyle = 0;
+	int viewBobStyle = 1;
 	float doomBobPhase = 0.0f;
 
 	// Yere sert inis anindaki dikey kamera darbesi. Inis aninda negatif bir

@@ -1,7 +1,7 @@
 #include "Skybox.h"
 #include "TGALoader.h"
 #include "console/Console.h"
-#include"GLExtensions.h"
+#include "GLExtensions.h"
 #include <vector>
 
 Skybox g_Skybox;
@@ -79,11 +79,12 @@ void Skybox::Render(const glm::vec3& cameraPos) const {
 
     float s = SIZE;
     glm::vec2 uvs[4] = { glm::vec2(0,1), glm::vec2(1,1), glm::vec2(1,0), glm::vec2(0,0) };
+    glm::vec2 uvsRot[4] = { glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1) }; // Bir tık daha (270 derece) döndürülmüş UV
 
     { glm::vec3 v[4] = { {s,-s,-s},{s,-s,s},{s,s,s},{s,s,-s} };       DrawSkyFace(m_faceTex[0], v, uvs); } // +X rt
     { glm::vec3 v[4] = { {-s,-s,s},{-s,-s,-s},{-s,s,-s},{-s,s,s} };   DrawSkyFace(m_faceTex[1], v, uvs); } // -X lf
-    { glm::vec3 v[4] = { {-s,s,s},{s,s,s},{s,s,-s},{-s,s,-s} };       DrawSkyFace(m_faceTex[2], v, uvs); } // +Y up
-    { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,-s,s},{-s,-s,s} };   DrawSkyFace(m_faceTex[3], v, uvs); } // -Y dn
+    { glm::vec3 v[4] = { {-s,s,s},{s,s,s},{s,s,-s},{-s,s,-s} };       DrawSkyFace(m_faceTex[2], v, uvsRot); } // +Y up (Döndürüldü)
+    { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,-s,s},{-s,-s,s} };   DrawSkyFace(m_faceTex[3], v, uvsRot); } // -Y dn (Döndürüldü)
     { glm::vec3 v[4] = { {s,-s,s},{-s,-s,s},{-s,s,s},{s,s,s} };       DrawSkyFace(m_faceTex[4], v, uvs); } // +Z bk
     { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,s,-s},{-s,s,-s} };   DrawSkyFace(m_faceTex[5], v, uvs); } // -Z ft
 

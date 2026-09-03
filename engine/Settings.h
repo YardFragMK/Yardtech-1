@@ -38,7 +38,7 @@ private:
         float dx, dy;
     };
 
-    enum class Category { Graphics = 0, Video, Sound, Gameplay, Count };
+    enum class Category { Graphics = 0, Sound, Gameplay, Count };
 
     static bool s_open;
     static bool s_built;
