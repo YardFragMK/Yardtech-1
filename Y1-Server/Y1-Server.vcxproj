@@ -149,10 +149,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\x64\Release\GB1.ico" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\Yardtech 1.rc" />
+    <ResourceCompile Include="Y1-Server.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\x64\Release\GB1DS.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
