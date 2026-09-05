@@ -144,11 +144,6 @@
     <ClCompile Include="Y1-Server.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Y1-Shared\Y1-Shared.vcxproj">
-      <Project>{82b84d81-0f10-4086-8a9c-e7bd21098ff1}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +151,11 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\x64\Release\GB1DS.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Y1-Shared\Y1-Shared.vcxproj">
+      <Project>{da8ca0d0-19c1-4cf7-8d98-18db9192c376}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
