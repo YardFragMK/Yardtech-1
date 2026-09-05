@@ -1,4 +1,5 @@
 #include<iostream>
+#include<enet/enet.h>
 //#include<glad/glad.h>
 #include<SDL.h>
 #include<cstdlib> 
@@ -27,6 +28,16 @@
 #include"BitmapFont.h"
 #include"Settings.h" 
 #include"PauseMenu.h"
+
+
+void TestEnetInit() {
+	if (enet_initialize() != 0) {
+		Logger::info("ENet baslatilamadi!");
+		return;
+	}
+	Logger::info("ENet basariyla baslatildi.");
+	enet_deinitialize();
+}
 
 Renderer renderer;
 BSPMap g_Map;
@@ -146,6 +157,11 @@ bool Engine::initSystems() {
 		});
 
 	PauseMenu::Init();
+
+	//=========================================================
+	// Enet
+	//=========================================================
+	TestEnetInit();
 
 	lastCounter = SDL_GetPerformanceCounter();
 	Logger::info("Engine initalize edildi.");
