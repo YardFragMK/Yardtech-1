@@ -72,12 +72,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SOLUTUION_DIR)extern/SDL2/include;$(SOLUTUION_DIR)extern/glad/include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(SOLUTUION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTUION_DIR)extern/SDL2/include;$(SOLUTUION_DIR)extern/glad/include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(SOLUTUION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,7 +125,9 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
+;ws2_32.lib
+;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -145,7 +147,9 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
+;ws2_32.lib
+;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
