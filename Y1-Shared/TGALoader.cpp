@@ -1,7 +1,7 @@
 #include "TGALoader.h"
 #include <fstream>
 #include <cstring>
-#include "console/Console.h"
+//#include "../engine/console/Console.h"
 
 #pragma pack(push, 1)
 struct TGAHeader {
@@ -21,24 +21,24 @@ struct TGAHeader {
 bool LoadTGA(const std::string& path, std::vector<uint8_t>& outPixels, int& outWidth, int& outHeight) {
     std::ifstream file(path, std::ios::binary);
     if (!file) {
-        Console::Log("WARNING-> tga acilamadi: " + path);
+        //Console::Log("WARNING-> tga acilamadi: " + path);
         return false;
     }
 
     TGAHeader header{};
     file.read(reinterpret_cast<char*>(&header), sizeof(TGAHeader));
     if (!file) {
-        Console::Log("WARNING-> tga header okunamadi: " + path);
+        //Console::Log("WARNING-> tga header okunamadi: " + path);
         return false;
     }
     if (header.idLength > 0) file.seekg(header.idLength, std::ios::cur);
 
     if (header.imageType != 2 && header.imageType != 10) {
-        Console::Log("WARNING-> desteklenmeyen tga tipi: " + path);
+        //Console::Log("WARNING-> desteklenmeyen tga tipi: " + path);
         return false;
     }
     if (header.pixelDepth != 24 && header.pixelDepth != 32) {
-        Console::Log("WARNING-> desteklenmeyen tga bit derinligi: " + path);
+        //Console::Log("WARNING-> desteklenmeyen tga bit derinligi: " + path);
         return false;
     }
 
@@ -52,7 +52,7 @@ bool LoadTGA(const std::string& path, std::vector<uint8_t>& outPixels, int& outW
     if (header.imageType == 2) {
         file.read(reinterpret_cast<char*>(raw.data()), raw.size());
         if (!file) {
-            Console::Log("WARNING-> tga veri okunamadi: " + path);
+            //Console::Log("WARNING-> tga veri okunamadi: " + path);
             return false;
         }
     }

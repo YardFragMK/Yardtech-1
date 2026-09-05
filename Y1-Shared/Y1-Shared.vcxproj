@@ -21,33 +21,32 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{a0dffa10-b809-49f1-8af3-62bbe341033d}</ProjectGuid>
-    <RootNamespace>Yardtech1</RootNamespace>
+    <ProjectGuid>{82b84d81-0f10-4086-8a9c-e7bd21098ff1}</ProjectGuid>
+    <RootNamespace>Y1Shared</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Y1-Client</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -71,24 +70,19 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SOLUTUION_DIR)extern/SDL2/include;$(SOLUTUION_DIR)extern/glad/include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTUION_DIR)extern/SDL2/include;$(SOLUTUION_DIR)extern/glad/include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>
+      </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Manifest>
@@ -101,12 +95,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>
+      </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Manifest>
@@ -117,15 +114,16 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>
+      </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -137,84 +135,33 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>
+      </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="engine\BitmapFont.cpp" />
-    <ClCompile Include="engine\Camera.cpp" />
-    <ClCompile Include="engine\ClientPlayerController.cpp" />
-    <ClCompile Include="engine\console\Console.cpp" />
-    <ClCompile Include="engine\console\CVar.cpp" />
-    <ClCompile Include="engine\Engine.cpp" />
-    <ClCompile Include="engine\GameState.cpp" />
-    <ClCompile Include="engine\GLExtensions.cpp" />
-    <ClCompile Include="engine\HUD.cpp" />
-    <ClCompile Include="engine\KeyInput.cpp" />
-    <ClCompile Include="engine\Logger.cpp" />
-    <ClCompile Include="engine\MainMenu.cpp" />
-    <ClCompile Include="engine\MapLoader.cpp" />
-    <ClCompile Include="engine\PauseMenu.cpp" />
-    <ClCompile Include="engine\renderer\Renderer.cpp" />
-    <ClCompile Include="engine\Settings.cpp" />
-    <ClCompile Include="engine\Skybox.cpp" />
-    <ClCompile Include="engine\Time.cpp" />
-    <ClCompile Include="engine\Window.cpp" />
-    <ClCompile Include="extern\glad\src\glad.c" />
-    <ClCompile Include="game\src\Player.cpp" />
-    <ClCompile Include="game\src\PolyBreakable.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engine\BitmapFont.h" />
-    <ClInclude Include="engine\Camera.h" />
-    <ClInclude Include="engine\ClientPlayerController.h" />
-    <ClInclude Include="engine\console\Console.h" />
-    <ClInclude Include="engine\console\CVar.h" />
-    <ClInclude Include="engine\Engine.h" />
-    <ClInclude Include="engine\GameState.h" />
-    <ClInclude Include="engine\GLExtensions.h" />
-    <ClInclude Include="engine\HUD.h" />
-    <ClInclude Include="engine\KeyInput.h" />
-    <ClInclude Include="engine\Logger.h" />
-    <ClInclude Include="engine\MainMenu.h" />
-    <ClInclude Include="engine\MapLoader.h" />
-    <ClInclude Include="engine\PauseMenu.h" />
-    <ClInclude Include="engine\renderer\Renderer.h" />
-    <ClInclude Include="engine\Settings.h" />
-    <ClInclude Include="engine\Skybox.h" />
-    <ClInclude Include="engine\Time.h" />
-    <ClInclude Include="engine\Window.h" />
-    <ClInclude Include="game\src\e_ItemBase.h" />
-    <ClInclude Include="game\src\e_BotBase.h" />
-    <ClInclude Include="game\src\e_PolyBase.h" />
-    <ClInclude Include="game\src\e_TriggerBase.h" />
-    <ClInclude Include="game\src\Player.h" />
-    <ClInclude Include="game\src\PolyBreakable.h" />
-    <ClInclude Include="game\src\Weapons.h" />
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Yardtech 1.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="x64\Release\GB1.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Shared\Y1-Shared\Y1-Shared.vcxproj">
-      <Project>{82b84d81-0f10-4086-8a9c-e7bd21098ff1}</Project>
-    </ProjectReference>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Y1-Shared.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

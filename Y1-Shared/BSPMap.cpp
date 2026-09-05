@@ -3,12 +3,12 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
-#include "console/Console.h"
+//#include "../engine/console/Console.h"
 #include <cfloat>
 #include <cmath>
 #include <algorithm>
-#include "Engine.h"
-#include "Skybox.h"
+//#include "../engine/Engine.h"
+#include "../engine/Skybox.h"
 
 static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height) {
     GLuint tex = 0;
@@ -71,7 +71,7 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
 
     std::ifstream file(bspPath, std::ios::binary);
     if (!file) {
-        Console::Log("WARNING-> bsp acilamadi: " + bspPath + "NO:1");
+        //Console::Log("WARNING-> bsp acilamadi: " + bspPath + "NO:1");
         return false;
     }
 
@@ -81,7 +81,7 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
     BSPHeader header{};
     file.read(reinterpret_cast<char*>(&header), sizeof(BSPHeader));
     if (header.version != 30) {
-        Console::Log("WARNING-> bsp versiyonu uyumlu degil (" + std::to_string(header.version) + ")");
+        //Console::Log("WARNING-> bsp versiyonu uyumlu degil (" + std::to_string(header.version) + ")");
     }
 
     {
@@ -140,17 +140,17 @@ bool BSPMap::Load(const std::string& bspPath, const std::vector<std::string>& wa
 
     BuildRenderFaces();
 
-    Console::Log(bspPath + " yuklendi: " + std::to_string(m_models.size()) + " model, " +
+    /*Console::Log(bspPath + " yuklendi: " + std::to_string(m_models.size()) + " model, " +
         std::to_string(m_faces.size()) + " face, " +
         std::to_string(m_worldCells.size()) + " world grid hucresi, " +
-        std::to_string(m_lightingData.size()) + " lighting byte");
+        std::to_string(m_lightingData.size()) + " lighting byte");*/
 
     if (!m_models.empty()) {
-        Console::Log("Model0 headnodes: hull0=" + std::to_string(m_models[0].headnode[0])
+        /*Console::Log("Model0 headnodes: hull0=" + std::to_string(m_models[0].headnode[0])
             + " hull1=" + std::to_string(m_models[0].headnode[1])
             + " hull2=" + std::to_string(m_models[0].headnode[2])
             + " hull3=" + std::to_string(m_models[0].headnode[3])
-            + " (clipnode sayisi=" + std::to_string(m_clipnodes.size()) + ")");
+            + " (clipnode sayisi=" + std::to_string(m_clipnodes.size()) + ")");*/
     }
     return true;
 }
@@ -188,7 +188,7 @@ void BSPMap::LoadExternalWads(const std::vector<std::string>& wadSearchDirs) {
             }
         }
         if (!loaded) {
-            Console::Log("WARNING-> harici wad bulunamadi: " + filename);
+            //Console::Log("WARNING-> harici wad bulunamadi: " + filename);
         }
     }
 }
@@ -240,7 +240,7 @@ void BSPMap::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
                 }
             }
             if (found == 0) {
-                Console::Log("WARNING-> texture bulunamadi: " + name);
+                //Console::Log("WARNING-> texture bulunamadi: " + name);
             }
             m_textureIdByMiptex[i] = found;
             m_isMaskedByMiptex[i] = foundMasked;

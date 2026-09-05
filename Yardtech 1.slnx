@@ -3,5 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="Shared/Y1-Shared/Y1-Shared.vcxproj" Id="82b84d81-0f10-4086-8a9c-e7bd21098ff1" />
+  <Project Path="Y1-Server/Y1-Server.vcxproj" Id="1be09be7-da56-4855-a76c-fa1c3680a6d6" />
   <Project Path="Yardtech 1.vcxproj" Id="a0dffa10-b809-49f1-8af3-62bbe341033d" />
 </Solution>

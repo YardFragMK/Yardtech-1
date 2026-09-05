@@ -3,7 +3,7 @@
 #include "Camera.h"
 #include "Logger.h"
 #include "console/Console.h"
-#include "../game/src/EntityParser.h"
+#include "EntityParser.h"
 #include <cstdlib>
 #include "Skybox.h"
 

@@ -1,12 +1,12 @@
 #include "BSPReader.h"
 #include <fstream>
 #include <cstdio>
-#include"console/Console.h"
+//#include"../engine/console/Console.h"
 
 std::string ReadEntityLump(const std::string& bspPath){
     std::ifstream file(bspPath, std::ios::binary);
     if (!file) {
-        Console::Log("WARNING-> bsp acilamadi: " + bspPath + " NO:2");
+        //Console::Log("WARNING-> bsp acilamadi: " + bspPath + " NO:2");
         return "";
     }
 
@@ -14,7 +14,7 @@ std::string ReadEntityLump(const std::string& bspPath){
     file.read(reinterpret_cast<char*>(&header), sizeof(BSPHeader));
 
     if (header.version != 30) {
-        Console::Log("WARNING-> bsp versiyonu uyumlu degil" + header.version);
+        //Console::Log("WARNING-> bsp versiyonu uyumlu degil" + header.version);
     }
 
     const BSPLump& entLump = header.lumps[LUMP_ENTITIES];
@@ -23,8 +23,8 @@ std::string ReadEntityLump(const std::string& bspPath){
     file.seekg(entLump.offset, std::ios::beg);
     file.read(entityData.data(), entLump.length);
 
-    Console::Log("=================================================");
-    Console::Log(bspPath);
-    Console::Log(bspPath + " Okunuyor");
+    //Console::Log("=================================================");
+    //Console::Log(bspPath);
+    //Console::Log(bspPath + " Okunuyor");
     return entityData; // "{ \"key\" \"value\" ... } { ... } ..."
 }

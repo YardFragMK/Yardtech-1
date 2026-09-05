@@ -7,7 +7,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include"../Camera.h"
-#include"../BSPReader.h"
+#include"BSPReader.h"
 #include"../MapLoader.h"
 
 #define STB_EASY_FONT_IMPLEMENTATION
@@ -21,7 +21,7 @@ float Console::s_targetHeight = 0.0f;
 float Console::s_slideSpeed = 2000.0f;
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.51");
+    Log("Yardtech-1 version: alpha 0.61");
     Log("=============================");
 }
 

@@ -102,11 +102,4 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 
     if (Console::IsOpen()) return;
     if (g_State != GameState::Playing) return;
-
-    const Uint8* keys = SDL_GetKeyboardState(nullptr);
-
-    if (keys[SDL_SCANCODE_W]) camera.MoveForward(deltaTime);
-    if (keys[SDL_SCANCODE_S]) camera.MoveBackward(deltaTime);
-    if (keys[SDL_SCANCODE_A]) camera.MoveLeft(deltaTime);
-    if (keys[SDL_SCANCODE_D]) camera.MoveRight(deltaTime);
 }

@@ -7,9 +7,9 @@
 #include <GL/gl.h>
 #include "BSPFormat.h"
 #include "WadFile.h"
-#include "../game/src/EntityParser.h"
+#include "EntityParser.h"
 #include "Frustum.h"
-#include "GLExtensions.h"
+#include "../engine/GLExtensions.h"
 
 struct BSPRenderFace {
     std::vector<glm::vec3> positions;

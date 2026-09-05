@@ -1,7 +1,7 @@
 #include "WadFile.h"
 #include <fstream>
 #include <algorithm>
-#include "console/Console.h"
+//#include "../engine/console/Console.h"
 
 #pragma pack(push, 1)
 struct WadHeader {
@@ -71,14 +71,14 @@ GLuint CreateGLTextureFromRGBA(const std::vector<uint8_t>& rgba, int width, int 
 bool WadFile::Load(const std::string& wadPath) {
     std::ifstream file(wadPath, std::ios::binary);
     if (!file) {
-        Console::Log("WARNING-> wad acilamadi: " + wadPath);
+        //Console::Log("WARNING-> wad acilamadi: " + wadPath);
         return false;
     }
 
     WadHeader header{};
     file.read(reinterpret_cast<char*>(&header), sizeof(WadHeader));
     if (std::string(header.magic, 4) != "WAD3") {
-        Console::Log("WARNING-> gecersiz wad magic: " + wadPath);
+        //Console::Log("WARNING-> gecersiz wad magic: " + wadPath);
         return false;
     }
 
@@ -124,7 +124,7 @@ bool WadFile::Load(const std::string& wadPath) {
         m_textures[ToUpper(name)] = e;
     }
 
-    Console::Log(wadPath + " yuklendi (" + std::to_string(m_textures.size()) + " texture)");
+    //Console::Log(wadPath + " yuklendi (" + std::to_string(m_textures.size()) + " texture)");
     return true;
 }
 
