@@ -24,6 +24,7 @@
     <ClInclude Include="BSPReader.h" />
     <ClInclude Include="EntityParser.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="NetProtocol.h" />
     <ClInclude Include="PlayerMovement.h" />
     <ClInclude Include="TGALoader.h" />
     <ClInclude Include="WadFile.h" />

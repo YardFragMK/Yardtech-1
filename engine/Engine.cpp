@@ -28,21 +28,15 @@
 #include"BitmapFont.h"
 #include"Settings.h" 
 #include"PauseMenu.h"
-
-
-void TestEnetInit() {
-	if (enet_initialize() != 0) {
-		Logger::info("ENet baslatilamadi!");
-		return;
-	}
-	Logger::info("ENet basariyla baslatildi.");
-	enet_deinitialize();
-}
+#include"NetClient.h"
 
 Renderer renderer;
 BSPMap g_Map;
 
 Engine::~Engine(){
+	NetClient::Disconnect();
+	enet_deinitialize();
+
 	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
 	}
@@ -126,7 +120,7 @@ bool Engine::initSystems() {
 	//=========================================================
 	// Main Menu
 	//=========================================================
-	//SDL_SetRelativeMouseMode(SDL_FALSE);
+	SDL_SetRelativeMouseMode(SDL_FALSE);
 	MainMenu::Init();
 	MainMenu::LoadBackgroundImage("nvs1/gfx/env/classiclandft.tga");
 
@@ -144,13 +138,19 @@ bool Engine::initSystems() {
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 1, btnW, btnH, "LOAD GAME", []() {
 		Console::Log("Load game henuz baglanmadi");
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing * 2, btnW, btnH, "HOW TO PLAY", []() {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing *2, btnW, btnH, "JOIN SERVER", []() {
+		NetClient::Connect("127.0.0.1"); // simdilik test amacli sabit adres
+		});
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "CREATE SERVER", []() {
+		Console::Log("create server henuz baglanmadi");
+		});
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 4, btnW, btnH, "HOW TO PLAY", []() {
 		Console::Log("How to play henuz baglanmadi");
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "SETTINGS", []() {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 5, btnW, btnH, "SETTINGS", []() {
 		Settings::Open();
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing * 4, btnW, btnH, "QUIT", []() {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 6, btnW, btnH, "QUIT", []() {
 		SDL_Event quitEvent;
 		quitEvent.type = SDL_QUIT;
 		SDL_PushEvent(&quitEvent);
@@ -161,7 +161,12 @@ bool Engine::initSystems() {
 	//=========================================================
 	// Enet
 	//=========================================================
-	TestEnetInit();
+	if (enet_initialize() != 0) {
+		Logger::error("ENet baslatilamadi.");
+	}
+	else {
+		Logger::info("ENet baslatildi.");
+	}
 
 	lastCounter = SDL_GetPerformanceCounter();
 	Logger::info("Engine initalize edildi.");
@@ -193,6 +198,7 @@ void Engine::gameLoop() {
         //=========================================================
 		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
+		NetClient::Update();
 		g_Camera.Update(deltaTime);
 		if (g_State == GameState::Playing) {
 			UpdatePlayerPhysics(deltaTime, oldPos); 

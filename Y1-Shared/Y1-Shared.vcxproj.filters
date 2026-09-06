@@ -39,6 +39,9 @@
     <ClInclude Include="WadFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NetProtocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BSPMap.cpp">

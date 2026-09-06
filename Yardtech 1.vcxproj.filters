@@ -96,6 +96,9 @@
     <ClCompile Include="engine\ClientPlayerController.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\NetClient.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -177,6 +180,9 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\ClientPlayerController.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\NetClient.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

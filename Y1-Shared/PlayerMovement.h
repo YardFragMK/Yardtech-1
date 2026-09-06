@@ -15,6 +15,9 @@ struct PlayerPhysicsState {
     float verticalVelocity = 0.0f;
     bool onGround = false;
     bool isCrouching = false;
+
+    bool airborneFromJump = false;
+    bool airborneFromHardSlam = false;
 };
 
 // O anki tick'te oyuncunun ne yapmak istedigini tasir. Client bunu klavyeden

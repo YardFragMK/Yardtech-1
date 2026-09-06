@@ -73,11 +73,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(SOLUTUION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SOLUTION_DIR)extern/SDL2/lib/x64;$(SOLUTION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SOLUTUION_DIR)extern/SDL2/lib/x64;$(SOLUTUION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SOLUTION_DIR)extern/SDL2/lib/x64;$(SOLUTION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -169,6 +169,7 @@
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\MainMenu.cpp" />
     <ClCompile Include="engine\MapLoader.cpp" />
+    <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
     <ClCompile Include="engine\Settings.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\MainMenu.h" />
     <ClInclude Include="engine\MapLoader.h" />
+    <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\Settings.h" />

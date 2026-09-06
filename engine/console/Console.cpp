@@ -28,11 +28,9 @@ void Console::Init() {
 void Console::Toggle() {
 	s_open = !s_open;
 	if (s_open) {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
 		SDL_StartTextInput();
 	}
 	else {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
 		SDL_StopTextInput();
 	}
 }
