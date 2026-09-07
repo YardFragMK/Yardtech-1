@@ -29,6 +29,9 @@
 #include"Settings.h" 
 #include"PauseMenu.h"
 #include"NetClient.h"
+#include"BSPMapRenderer.h"
+#include"ServerMenu.h"
+#include"UIWindow.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -117,12 +120,16 @@ bool Engine::initSystems() {
 		Logger::error("HUD fontu yuklenemedi.");
 	}
 
+	if (!UIWindow::GBLoadIcon("nvs1/gfx/window_icon.tga")) {
+		Logger::error("Pencere ikonu yuklenemedi.");
+	}
+
 	//=========================================================
 	// Main Menu
 	//=========================================================
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	MainMenu::Init();
-	MainMenu::LoadBackgroundImage("nvs1/gfx/env/classiclandft.tga");
+	MainMenu::LoadBackgroundImage("nvs1/gfx/env/dusklandft.tga");
 
 	const float btnX = 70.0f;
 	const float btnW = 320.0f;
@@ -139,7 +146,7 @@ bool Engine::initSystems() {
 		Console::Log("Load game henuz baglanmadi");
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing *2, btnW, btnH, "JOIN SERVER", []() {
-		NetClient::Connect("127.0.0.1"); // simdilik test amacli sabit adres
+		ServerMenu::Open();
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "CREATE SERVER", []() {
 		Console::Log("create server henuz baglanmadi");
@@ -157,6 +164,7 @@ bool Engine::initSystems() {
 		});
 
 	PauseMenu::Init();
+	ServerMenu::Init();
 
 	//=========================================================
 	// Enet
@@ -222,8 +230,8 @@ void Engine::RenderFrame() {
 			renderer.GetProjectionMatrix() * renderer.GetViewMatrix()
 		);
 
-		g_Map.RenderWorld(frustum);
-		g_Map.RenderBrushEntities(frustum);
+		g_MapRenderer.RenderWorld(frustum);
+		g_MapRenderer.RenderBrushEntities(g_Map.GetEntities(), frustum);
 	}
 
 	renderer.EndFrame();
@@ -240,6 +248,7 @@ void Engine::RenderFrame() {
 	}
 
 	Settings::Render(windowWidth, windowHeight);
+	ServerMenu::Render(windowWidth, windowHeight);
 	Console::Render(windowWidth, windowHeight);
 
 	SDL_GL_SwapWindow(window1.getWindow());

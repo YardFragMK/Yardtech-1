@@ -9,6 +9,7 @@
 #include "MainMenu.h"
 #include "PauseMenu.h"
 #include "Settings.h"
+#include "ServerMenu.h"
 
 void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 {
@@ -19,7 +20,10 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 
         if (!Console::IsOpen()) {
             if (event.type == SDL_MOUSEMOTION) {
-                if (Settings::IsOpen()) {
+                if (ServerMenu::IsOpen()) {
+                    ServerMenu::HandleMouseMove(event.motion.x, event.motion.y);
+                }
+                else if (Settings::IsOpen()) {
                     Settings::HandleMouseMove(event.motion.x, event.motion.y);
                 }
                 else if (g_State == GameState::Playing) {
@@ -40,7 +44,10 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 
         if (event.type == SDL_KEYDOWN) {
             if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-                if (Settings::IsOpen()) {
+                if (ServerMenu::IsOpen()) {
+                    ServerMenu::Close();
+                }
+                else if (Settings::IsOpen()) {
                     Settings::Close();
                 }
                 else if (g_State == GameState::Paused) {
@@ -58,7 +65,7 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
                 Console::Toggle();
             }
 
-            if (g_State == GameState::Playing && !Console::IsOpen() && !Settings::IsOpen()) {
+            if (g_State == GameState::Playing && !Console::IsOpen() && !Settings::IsOpen() && !ServerMenu::IsOpen()) {
                 if (event.key.keysym.scancode == SDL_SCANCODE_1) {
                     g_Player.SwitchWeapon(PISTOL);
                 }
@@ -74,7 +81,10 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
         if (!Console::IsOpen()) {
             if (event.type == SDL_MOUSEBUTTONDOWN) {
                 if (event.button.button == SDL_BUTTON_LEFT) {
-                    if (Settings::IsOpen()) {
+                    if (ServerMenu::IsOpen()) {
+                        ServerMenu::HandleMouseClick(event.button.x, event.button.y);
+                    }
+                    else if (Settings::IsOpen()) {
                         Settings::HandleMouseDown(event.button.x, event.button.y);
                     }
                     else if (g_State == GameState::Playing) {
@@ -88,7 +98,7 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
                     }
                 }
 
-                if (event.button.button == SDL_BUTTON_RIGHT && g_State == GameState::Playing && !Settings::IsOpen()) {
+                if (event.button.button == SDL_BUTTON_RIGHT && g_State == GameState::Playing && !Settings::IsOpen() && !ServerMenu::IsOpen()) {
                     g_Player.attack(2);
                 }
             }

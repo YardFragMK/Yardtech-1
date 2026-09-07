@@ -29,5 +29,4 @@ extern PFNGLMULTITEXCOORD2FPROC glMultiTexCoord2f_;
 #define GL_RGB_SCALE 0x8573
 #endif
 
-// glContext current olduktan sonra bir kere cagir (Renderer::Init icinde)
 bool LoadGLExtensions();

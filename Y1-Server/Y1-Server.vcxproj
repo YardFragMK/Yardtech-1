@@ -128,7 +128,7 @@
       </AdditionalLibraryDirectories>
       <AdditionalDependencies>enet.lib
 ;ws2_32.lib
-;winmm.lib</AdditionalDependencies>
+;winmm.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -152,7 +152,7 @@
       </AdditionalLibraryDirectories>
       <AdditionalDependencies>enet.lib
 ;ws2_32.lib
-;winmm.lib</AdditionalDependencies>
+;winmm.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>

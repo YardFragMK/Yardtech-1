@@ -1,11 +1,14 @@
 #include "NetClient.h"
 #include <enet/enet.h>
 #include <NetProtocol.h>
+#include <cstring>
 #include "console/Console.h"
 
 namespace {
     ENetHost* s_client = nullptr;
     ENetPeer* s_peer = nullptr;
+    PlayerPhysicsState s_lastServerState;
+    bool s_hasServerState = false;
 }
 
 bool NetClient::Connect(const std::string& hostAddress) {
@@ -54,6 +57,7 @@ void NetClient::Disconnect() {
         enet_host_destroy(s_client);
         s_client = nullptr;
     }
+    s_hasServerState = false;
 }
 
 void NetClient::Update() {
@@ -65,8 +69,23 @@ void NetClient::Update() {
         case ENET_EVENT_TYPE_RECEIVE: {
             if (event.packet->dataLength >= 1) {
                 uint8_t msgType = event.packet->data[0];
+
                 if (msgType == static_cast<uint8_t>(NetProtocol::MessageType::ServerWelcome)) {
                     Console::Log("Sunucudan welcome mesaji alindi.");
+                }
+                else if (msgType == static_cast<uint8_t>(NetProtocol::MessageType::PlayerState)
+                    && event.packet->dataLength == sizeof(NetProtocol::PlayerStatePacket)) {
+
+                    NetProtocol::PlayerStatePacket statePacket;
+                    std::memcpy(&statePacket, event.packet->data, sizeof(statePacket));
+
+                    bool firstState = !s_hasServerState;
+                    s_lastServerState = statePacket.state;
+                    s_hasServerState = true;
+
+                    if (firstState) {
+                        Console::Log("Sunucudan ilk oyuncu durumu alindi.");
+                    }
                 }
             }
             enet_packet_destroy(event.packet);
@@ -75,6 +94,7 @@ void NetClient::Update() {
         case ENET_EVENT_TYPE_DISCONNECT: {
             Console::Log("Sunucu baglantisi koptu.");
             s_peer = nullptr;
+            s_hasServerState = false;
             break;
         }
         default:
@@ -85,4 +105,22 @@ void NetClient::Update() {
 
 bool NetClient::IsConnected() {
     return s_peer != nullptr;
+}
+
+void NetClient::SendInputCommand(const PlayerInputCommand& cmd) {
+    if (s_peer == nullptr) return;
+
+    NetProtocol::PlayerInputPacket packet;
+    packet.cmd = cmd;
+
+    ENetPacket* enetPacket = enet_packet_create(&packet, sizeof(packet), 0); // guvenilmez, hizli
+    enet_peer_send(s_peer, 1, enetPacket);
+}
+
+const PlayerPhysicsState& NetClient::GetLastServerState() {
+    return s_lastServerState;
+}
+
+bool NetClient::HasServerState() {
+    return s_hasServerState;
 }

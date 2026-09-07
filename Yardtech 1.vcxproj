@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="engine\BitmapFont.cpp" />
+    <ClCompile Include="engine\BSPMapRenderer.cpp" />
     <ClCompile Include="engine\Camera.cpp" />
     <ClCompile Include="engine\ClientPlayerController.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
@@ -172,9 +173,11 @@
     <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
+    <ClCompile Include="engine\ServerMenu.cpp" />
     <ClCompile Include="engine\Settings.cpp" />
     <ClCompile Include="engine\Skybox.cpp" />
     <ClCompile Include="engine\Time.cpp" />
+    <ClCompile Include="engine\UIWindow.cpp" />
     <ClCompile Include="engine\Window.cpp" />
     <ClCompile Include="extern\glad\src\glad.c" />
     <ClCompile Include="game\src\Player.cpp" />
@@ -183,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\BitmapFont.h" />
+    <ClInclude Include="engine\BSPMapRenderer.h" />
     <ClInclude Include="engine\Camera.h" />
     <ClInclude Include="engine\ClientPlayerController.h" />
     <ClInclude Include="engine\console\Console.h" />
@@ -198,9 +202,11 @@
     <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
+    <ClInclude Include="engine\ServerMenu.h" />
     <ClInclude Include="engine\Settings.h" />
     <ClInclude Include="engine\Skybox.h" />
     <ClInclude Include="engine\Time.h" />
+    <ClInclude Include="engine\UIWindow.h" />
     <ClInclude Include="engine\Window.h" />
     <ClInclude Include="game\src\e_ItemBase.h" />
     <ClInclude Include="game\src\e_BotBase.h" />

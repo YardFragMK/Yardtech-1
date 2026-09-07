@@ -99,6 +99,15 @@
     <ClCompile Include="engine\NetClient.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\BSPMapRenderer.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\UIWindow.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ServerMenu.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -183,6 +192,15 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\NetClient.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\BSPMapRenderer.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\UIWindow.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ServerMenu.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

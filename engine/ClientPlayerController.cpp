@@ -5,6 +5,7 @@
 #include "console/Console.h"
 #include "console/CVar.h"
 #include "../game/src/Player.h"
+#include "NetClient.h"
 #include <SDL.h>
 
 void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
@@ -38,8 +39,8 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     if (keys[SDL_SCANCODE_A]) cmd.moveRightAxis -= 1.0f;
 
     // Roll efekti tamamen gorsel/client'a ozgu -- yatay hareket ekseni
-    // pozitifse (D/sag) kameray saga, negatifse (A/sol) sola yatiriyoruz.
-    // noclip'te bu efekti kapatiyoruz, tipik olarak ucus modunda roll istenmez.
+    // pozitifse (D/sag) kamera saga, negatifse (A/sol) sola yatirilir.
+    // noclip'te bu efekt kapatilir, ucus modunda roll istenmez.
     if (!g_CVar.cm_noclip) {
         if (cmd.moveRightAxis > 0.0f) {
             g_Camera.targetRoll = g_Camera.maxRoll;
@@ -51,6 +52,15 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
 
     spaceHeldPrevFrame = spaceHeldNow;
     ctrlHeldPrevFrame = ctrlHeldNow;
+
+    // Baglantı varsa, bu tick'in input'u sunucuya da gonderilir. Su asamada
+    // sunucudan donen sonuc kameraya UYGULANMAZ -- sadece gozlemlenip
+    // konsola loglanir; asil hareket hala asagidaki yerel simulasyondan
+    // gelir. Bu, prediction/reconciliation eklenene kadar gecerli bir
+    // ara asamadir.
+    if (NetClient::IsConnected()) {
+        NetClient::SendInputCommand(cmd);
+    }
 
     // --- Saf fizigi CAGIR: bu kisim Y1-Shared'daki ortak koddan geliyor ---
     PlayerPhysicsState state;
