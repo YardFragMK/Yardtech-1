@@ -20,18 +20,22 @@ namespace NetProtocol {
         PlayerState = 4,  // server -> client, kanal 1 (guvenilmez)
     };
 
-    // Client'in her tick'te gonderdigi girdi. PlayerInputCommand zaten POD
-    // (sadece sayisal alanlar) oldugu icin dogrudan ham bayt olarak
-    // gonderilebilir -- her iki taraf da ayni derleyici/platformda
-    // derlendigi surece bu guvenlidir.
+    // Client'in her tick'te gonderdigi girdi. sequence, bu input'u benzersiz
+    // sekilde tanimlar; client bunu kendi tahmin gecmisiyle eslestirmek,
+    // server ise cevabinda hangi input'u isledigini bildirmek icin kullanir.
     struct PlayerInputPacket {
         uint8_t type = static_cast<uint8_t>(MessageType::PlayerInput);
+        uint32_t sequence = 0;
+        float deltaTime = 0.0f; // bu input'un temsil ettigi GERCEK sure (saniye)
         PlayerInputCommand cmd;
     };
 
     // Server'in bir input'u isledikten sonra client'a geri gonderdigi sonuc.
+    // sequence, hangi input'un sonucu oldugunu belirtir -- client bunu kendi
+    // tahmin gecmisiyle karsilastirip reconciliation yapar.
     struct PlayerStatePacket {
         uint8_t type = static_cast<uint8_t>(MessageType::PlayerState);
+        uint32_t sequence = 0;
         PlayerPhysicsState state;
     };
 }

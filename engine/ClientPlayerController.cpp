@@ -28,7 +28,7 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     cmd.ctrlPressed = ctrlHeldNow && !ctrlHeldPrevFrame;
     cmd.ctrlHeld = ctrlHeldNow;
     cmd.noclip = g_CVar.cm_noclip;
-    cmd.consoleOpen = false; // yukarida zaten erken cikildi, ama acikca belirtiyoruz
+    cmd.consoleOpen = false;
     cmd.yaw = g_Camera.yaw;
     cmd.moveSpeed = g_Camera.moveSpeed;
     cmd.canHardSlam = g_Player.RGDitem;
@@ -38,9 +38,6 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     if (keys[SDL_SCANCODE_D]) cmd.moveRightAxis += 1.0f;
     if (keys[SDL_SCANCODE_A]) cmd.moveRightAxis -= 1.0f;
 
-    // Roll efekti tamamen gorsel/client'a ozgu -- yatay hareket ekseni
-    // pozitifse (D/sag) kamera saga, negatifse (A/sol) sola yatirilir.
-    // noclip'te bu efekt kapatilir, ucus modunda roll istenmez.
     if (!g_CVar.cm_noclip) {
         if (cmd.moveRightAxis > 0.0f) {
             g_Camera.targetRoll = g_Camera.maxRoll;
@@ -53,16 +50,25 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     spaceHeldPrevFrame = spaceHeldNow;
     ctrlHeldPrevFrame = ctrlHeldNow;
 
-    // Baglantı varsa, bu tick'in input'u sunucuya da gonderilir. Su asamada
-    // sunucudan donen sonuc kameraya UYGULANMAZ -- sadece gozlemlenip
-    // konsola loglanir; asil hareket hala asagidaki yerel simulasyondan
-    // gelir. Bu, prediction/reconciliation eklenene kadar gecerli bir
-    // ara asamadir.
-    if (NetClient::IsConnected()) {
-        NetClient::SendInputCommand(cmd);
+    bool multiplayer = NetClient::IsConnected();
+
+    if (multiplayer) {
+        // Sunucudan gelen onaylanmis/reconcile edilmis durumu once uygula --
+        // boylece bu tick'in tahmini, sunucuyla en son senkron olan noktadan
+        // baslar. NetClient::Update zaten reconciliation'i (onaylanmamis
+        // input'lari tekrar oynatarak) tamamlamis durumda sunar.
+        NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
+
+        if (NetClient::HasReconciledState()) {
+            const PlayerPhysicsState& reconciled = NetClient::GetReconciledState();
+            g_Camera.position = reconciled.position;
+            g_Camera.verticalVelocity = reconciled.verticalVelocity;
+            g_Camera.onGround = reconciled.onGround;
+            g_Camera.isCrouching = reconciled.isCrouching;
+        }
     }
 
-    // --- Saf fizigi CAGIR: bu kisim Y1-Shared'daki ortak koddan geliyor ---
+    // --- Saf fizigi CAGIR: bu tick'in kendi input'unu simule et (prediction) ---
     PlayerPhysicsState state;
     state.position = g_Camera.position;
     state.verticalVelocity = g_Camera.verticalVelocity;
@@ -73,7 +79,6 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
         state, cmd, g_Map, deltaTime, g_CVar.nvs_gravity, g_CVar.nvs_jumpforce
     );
 
-    // --- Sonucu gorsel global'lere YAZ: yine client'a ozgu ---
     g_Camera.position = state.position;
     g_Camera.verticalVelocity = state.verticalVelocity;
     g_Camera.onGround = state.onGround;
@@ -84,6 +89,10 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     }
     else if (events.jumpLanded) {
         g_Camera.TriggerLandingShake(6.0f);
+    }
+
+    if (multiplayer) {
+        NetClient::SendInputCommand(cmd, deltaTime);
     }
 
     float horizDist = glm::length(glm::vec2(g_Camera.position.x - oldPos.x, g_Camera.position.z - oldPos.z));

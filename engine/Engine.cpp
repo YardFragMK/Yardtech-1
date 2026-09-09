@@ -206,7 +206,6 @@ void Engine::gameLoop() {
         //=========================================================
 		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
-		NetClient::Update();
 		g_Camera.Update(deltaTime);
 		if (g_State == GameState::Playing) {
 			UpdatePlayerPhysics(deltaTime, oldPos); 
