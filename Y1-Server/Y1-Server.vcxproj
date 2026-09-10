@@ -160,9 +160,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ServerConsole.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ServerConsole.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Y1-Server.rc" />

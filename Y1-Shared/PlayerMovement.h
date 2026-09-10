@@ -34,6 +34,7 @@ struct PlayerInputCommand {
     float moveRightAxis = 0.0f;   // -1..1, D/A
     float moveSpeed = 320.0f;
     bool canHardSlam = true;    // eski "g_Player.RGDitem" karsiligi, cagiran taraf karar verir
+    float pitch = 0.0f;
 };
 
 // Fizigin bu tick'te urettigi olaylar. Cagiran taraf (client) bunlari gorsel

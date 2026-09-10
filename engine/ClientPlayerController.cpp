@@ -30,6 +30,7 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     cmd.noclip = g_CVar.cm_noclip;
     cmd.consoleOpen = false;
     cmd.yaw = g_Camera.yaw;
+    cmd.pitch = g_Camera.pitch;
     cmd.moveSpeed = g_Camera.moveSpeed;
     cmd.canHardSlam = g_Player.RGDitem;
 
@@ -53,12 +54,6 @@ void UpdatePlayerPhysics(float deltaTime, glm::vec3 oldPos) {
     bool multiplayer = NetClient::IsConnected();
 
     if (multiplayer) {
-        // Sunucudan gelen onaylanmis/reconcile edilmis durumu once uygula --
-        // boylece bu tick'in tahmini, sunucuyla en son senkron olan noktadan
-        // baslar. NetClient::Update zaten reconciliation'i (onaylanmamis
-        // input'lari tekrar oynatarak) tamamlamis durumda sunar.
-        NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
-
         if (NetClient::HasReconciledState()) {
             const PlayerPhysicsState& reconciled = NetClient::GetReconciledState();
             g_Camera.position = reconciled.position;

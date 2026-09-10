@@ -206,6 +206,17 @@ void Engine::gameLoop() {
         //=========================================================
 		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
+		NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
+
+		// Sunucu haritayi degistirdiyse, client kendi (render+collision)
+		// kopyasini da guncellemeli. Bu kontrol NetClient::Update'in disinda,
+		// gameLoop'un kendisinde yapiliyor cunku multiplayer sirasinda
+		// Playing disindaki durumlarda (orn. Paused) da gecerli olmalidir.
+		std::string newMapName;
+		if (NetClient::PollMapChange(newMapName)) {
+			LoadMap(newMapName);
+		}
+
 		g_Camera.Update(deltaTime);
 		if (g_State == GameState::Playing) {
 			UpdatePlayerPhysics(deltaTime, oldPos); 

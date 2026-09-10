@@ -29,4 +29,10 @@ public:
     // dondurur. ClientPlayerController, kendi tahmini yerine bunu kullanabilir.
     static bool HasReconciledState();
     static const PlayerPhysicsState& GetReconciledState();
+
+    // Sunucudan yeni bir harita bildirimi geldiyse true doner ve haritanin
+    // adini outMapName'e yazar; ayni zamanda bayragi temizler (bir sonraki
+    // cagrida tekrar true donmez). Cagiran taraf (Engine::gameLoop) bunu her
+    // karede kontrol edip gerekiyorsa LoadMap cagirir.
+    static bool PollMapChange(std::string& outMapName);
 };

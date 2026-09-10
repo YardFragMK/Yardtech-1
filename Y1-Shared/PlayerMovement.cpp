@@ -15,6 +15,24 @@ PlayerPhysicsEvents SimulatePlayerPhysics(
     PlayerPhysicsEvents events;
 
     if (input.noclip) {
+        // Noclip'te collision'suz, tam 3D serbest ucus. Yatay hareket
+        // yaw+pitch'e gore hesaplanir (normal SlideMove hareketinden farkli
+        // olarak burada FlatForward degil, gercek Forward kullanilir --
+        // noclip'te yukari/asagi bakip o yone dogru da ucabilmek beklenir).
+        glm::vec3 forward(
+            cosf(glm::radians(input.yaw)) * cosf(glm::radians(input.pitch)),
+            sinf(glm::radians(input.pitch)),
+            sinf(glm::radians(input.yaw)) * cosf(glm::radians(input.pitch))
+        );
+        forward = glm::normalize(forward);
+        glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+        glm::vec3 moveDir = forward * input.moveForwardAxis + right * input.moveRightAxis;
+        if (glm::length(moveDir) > 0.0001f) {
+            moveDir = glm::normalize(moveDir);
+        }
+        state.position += moveDir * input.moveSpeed * deltaTime;
+
         state.verticalVelocity = 0.0f;
         state.isCrouching = false;
         return events;

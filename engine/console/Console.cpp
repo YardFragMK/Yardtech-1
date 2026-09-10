@@ -9,6 +9,7 @@
 #include"../Camera.h"
 #include"BSPReader.h"
 #include"../MapLoader.h"
+#include"../NetClient.h"
 
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "../../extern/stb/stb_easy_font.h"
@@ -19,6 +20,17 @@ std::vector<std::string> Console::s_log;
 float Console::s_currentHeight = 0.0f;
 float Console::s_targetHeight = 0.0f;
 float Console::s_slideSpeed = 2000.0f;
+
+// Bazi komutlar (dunya/fizik durumunu degistirenler) sadece singleplayer'da
+// (sunucuya bagli degilken) calisir -- multiplayer'da bu tur ayarlar sunucu
+// tarafindan (Y1-Server konsolundan, server_ komutlariyla) yonetilir.
+static bool RequireSingleplayer(const std::string& cmdName) {
+    if (NetClient::IsConnected()) {
+        Console::Log(cmdName + ": bu komut sadece singleplayer modda calisir (sunucuya bagliyken degil)");
+        return false;
+    }
+    return true;
+}
 
 void Console::Init() {
     Log("Yardtech-1 version: alpha 0.61");
@@ -76,6 +88,7 @@ void Console::ExecuteCommand() {
     iss >> cmd;
 
     if (cmd == "nvs_cheats") {
+        if (!RequireSingleplayer(cmd)) return;
         int value;
         if (iss >> value) { 
             if(value == 1 || value == 0) g_CVar.nvs_cheatsF(value);
@@ -85,6 +98,7 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "cm_noclip") {
+        if (!RequireSingleplayer(cmd)) return;
         int value;
         if (iss >> value) { 
             if (value == 1 || value == 0) g_CVar.cm_noclipF(value);
@@ -94,6 +108,7 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "cm_speed") {
+        if (!RequireSingleplayer(cmd)) return;
         float value;
         if (iss >> value) g_CVar.cm_speedF(value);
         else Log("Usage: cm_speed <value>");
@@ -118,6 +133,7 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "nvs_developer") {
+        if (!RequireSingleplayer(cmd)) return;
         int value;
         if (iss >> value) {
             if (value == 1 || value == 0) g_CVar.nvs_developerF(value);
@@ -131,6 +147,7 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "map") {
+        if (!RequireSingleplayer(cmd)) return;
         std::string value;
         if (iss >> value) { 
             ReadEntityLump("nvs1/map/" + value + ".bsp");
@@ -150,6 +167,7 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "nvs_gravity") {
+        if (!RequireSingleplayer(cmd)) return;
         float value;
         if (iss >> value) {
             g_CVar.nvs_gravityF(value);
@@ -157,6 +175,7 @@ void Console::ExecuteCommand() {
     }
 
     else if (cmd == "nvs_jumpforce") {
+        if (!RequireSingleplayer(cmd)) return;
         float value;
         if (iss >> value) {
             g_CVar.nvs_jumpforceF(value);

@@ -18,8 +18,9 @@ namespace NetProtocol {
         ServerWelcome = 2,
         PlayerInput = 3,  // client -> server, kanal 1 (guvenilmez)
         PlayerState = 4,  // server -> client, kanal 1 (guvenilmez)
+        MapChanged = 5, // server -> client, kanal 0 (guvenilir) -- harita adini tasir
     };
-
+ 
     // Client'in her tick'te gonderdigi girdi. sequence, bu input'u benzersiz
     // sekilde tanimlar; client bunu kendi tahmin gecmisiyle eslestirmek,
     // server ise cevabinda hangi input'u isledigini bildirmek icin kullanir.
@@ -38,4 +39,12 @@ namespace NetProtocol {
         uint32_t sequence = 0;
         PlayerPhysicsState state;
     };
+    // Harita ismi sabit uzunlukta bir char dizisinde tasinir (POD, ham bayt
+    // olarak gonderilebilmesi icin std::string kullanilmiyor). 63 karakter +
+    // null-terminator cogu harita adi icin yeterli.
+    struct MapChangedPacket {
+        uint8_t type = static_cast<uint8_t>(MessageType::MapChanged);
+        char mapName[64] = {};
+    };
 }
+

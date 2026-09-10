@@ -12,6 +12,9 @@ namespace {
 
     uint32_t s_nextSequence = 0;
 
+    bool s_mapChangePending = false;
+    std::string s_pendingMapName;
+
     // Client'in gonderdigi ama henuz sunucu tarafindan onaylanmamis
     // input'lari, gonderim anindaki tahmin edilen durumla birlikte tutar.
     // Reconciliation sirasinda, onaylanan sequence'tan sonraki input'lar
@@ -85,6 +88,7 @@ void NetClient::Disconnect() {
     }
     s_pendingInputs.clear();
     s_hasReconciledState = false;
+    s_mapChangePending = false;
 }
 
 void NetClient::Update(float gravity, float jumpforce) {
@@ -118,6 +122,17 @@ void NetClient::Update(float gravity, float jumpforce) {
 
                     s_reconciledState = replayState;
                     s_hasReconciledState = true;
+                }
+                else if (msgType == static_cast<uint8_t>(NetProtocol::MessageType::MapChanged)
+                    && event.packet->dataLength == sizeof(NetProtocol::MapChangedPacket)) {
+
+                    NetProtocol::MapChangedPacket mapPacket;
+                    std::memcpy(&mapPacket, event.packet->data, sizeof(mapPacket));
+
+                    s_pendingMapName = std::string(mapPacket.mapName);
+                    s_mapChangePending = true;
+
+                    Console::Log("Sunucu haritayi degistirdi: " + s_pendingMapName);
                 }
             }
             enet_packet_destroy(event.packet);
@@ -169,4 +184,11 @@ bool NetClient::HasReconciledState() {
 
 const PlayerPhysicsState& NetClient::GetReconciledState() {
     return s_reconciledState;
+}
+
+bool NetClient::PollMapChange(std::string& outMapName) {
+    if (!s_mapChangePending) return false;
+    outMapName = s_pendingMapName;
+    s_mapChangePending = false;
+    return true;
 }
