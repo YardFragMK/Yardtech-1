@@ -1,11 +1,11 @@
 #pragma once
 
-// Sunucu listeleme paneli: Internet/Lan/History/Favorite sekmeleri, sunucu
-// satirlarindan olusan liste, sag tarafta detay paneli ve "Join server"
-// butonu. Bu asamada gercek bir sunucu kesfi (LAN broadcast, master server
-// sorgusu) yapilmiyor -- liste ornek/placeholder satirlarla dolduruluyor,
-// gorunum ve etkilesim iskeleti kurulmus oluyor. Gercek kesif eklendiginde
-// bu satirlar dinamik hale getirilecektir.
+// Sunucu listeleme paneli: Internet/Lan/History/Favorite sekmeleri, her
+// sekmenin kendi (su an placeholder) sunucu listesi, kilit/anti-hile
+// ikonlari, harita adi ve oyuncu sayisi sutunlari, fare tekerlegiyle
+// kaydirma. Gercek bir sunucu kesfi (LAN broadcast, master server sorgusu)
+// henuz yok -- satirlar ornek veriyle doldurulmus, gorunum ve etkilesim
+// iskeleti calisir durumda.
 class ServerMenu {
 public:
     static void Init();
@@ -15,6 +15,7 @@ public:
 
     static void HandleMouseMove(int mx, int my);
     static void HandleMouseClick(int mx, int my);
+    static void HandleMouseWheel(int delta);
 
     static void Render(int windowWidth, int windowHeight);
 };

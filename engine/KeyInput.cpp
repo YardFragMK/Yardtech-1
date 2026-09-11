@@ -107,6 +107,11 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
                     Settings::HandleMouseUp();
                 }
             }
+            if (event.type == SDL_MOUSEWHEEL && !Console::IsOpen()) {
+                if (ServerMenu::IsOpen()) {
+                    ServerMenu::HandleMouseWheel(event.wheel.y);
+                }
+            }
         }
     }
 

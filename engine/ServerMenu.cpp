@@ -7,6 +7,7 @@
 #include <GL/gl.h>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace {
     bool s_open = false;
@@ -16,20 +17,38 @@ namespace {
 
     struct ServerRow {
         std::string name;
-        std::string players; // "current/max" biciminde
-        bool anticheat = true;
-        bool hovered = false;
+        std::string mapName;
+        std::string ipAddress; // gercek kesif gelene kadar elle tanimli test adresleri
+        int currentPlayers = 0;
+        int maxPlayers = 16;
+        bool hasPassword = false;
+        bool hasAnticheat = true;
     };
 
-    std::vector<ServerRow> s_rows;
-    int s_selectedRow = -1;
+    // Her sekmenin kendi listesi. Internet/Lan ornek veriyle dolu; History
+    // ve Favorite bos -- sekme gecisinin gercekten calistigini gormek icin
+    // bos bir liste de anlamli bir durumdur ("henuz kayit yok" mesaji).
+    std::vector<ServerRow> s_rowsByTab[(int)Tab::Count];
 
-    constexpr float PANEL_W = 900.0f;
-    constexpr float PANEL_H = 560.0f;
-    constexpr float TAB_ROW_H = 44.0f;
+    int s_selectedRow = -1;
+    int s_scrollOffset = 0; // ilk gorunen satirin indeksi
+
+    constexpr float PANEL_W = 920.0f;
+    constexpr float PANEL_H = 580.0f;
+    constexpr float TAB_ROW_H = 40.0f;
+    constexpr float HEADER_ROW_H = 26.0f;
     constexpr float SIDE_PANEL_W = 200.0f;
     constexpr float JOIN_BTN_H = 46.0f;
-    constexpr float ROW_H = 26.0f;
+    constexpr float ROW_H = 28.0f;
+    constexpr int SCROLL_STEP = 1;
+
+    // Sutun x-ofsetleri, listenin sol kenarina (contentX) gore. Baslik
+    // satiriyla veri satirlari bu sabitler uzerinden hizalanir.
+    constexpr float COL_LOCK = 8.0f;
+    constexpr float COL_ANTICHEAT = 40.0f;
+    constexpr float COL_NAME = 75.0f;
+    constexpr float COL_MAP = 330.0f;
+    constexpr float COL_PLAYERS = 470.0f;
 
     void FilledRect(float x, float y, float w, float h, float r, float g, float b, float a) {
         glColor4f(r, g, b, a);
@@ -52,15 +71,75 @@ namespace {
         return mx >= x && mx <= x + w && my >= y && my <= y + h;
     }
 
+    // Basit kilit simgesi: govde (dikdortgen) + halka (yari-daire yerine
+    // ust kismi acik bir dikdortgen kenarligi).
+    void DrawLockIcon(float x, float y, float size, float r, float g, float b, float a) {
+        glColor4f(r, g, b, a);
+        float bodyW = size * 0.8f;
+        float bodyH = size * 0.55f;
+        float bodyY = y + size * 0.4f;
+
+        glBegin(GL_QUADS);
+        glVertex2f(x, bodyY);
+        glVertex2f(x + bodyW, bodyY);
+        glVertex2f(x + bodyW, bodyY + bodyH);
+        glVertex2f(x, bodyY + bodyH);
+        glEnd();
+
+        glLineWidth(2.0f);
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(x + bodyW * 0.2f, bodyY);
+        glVertex2f(x + bodyW * 0.2f, y + size * 0.15f);
+        glVertex2f(x + bodyW * 0.5f, y);
+        glVertex2f(x + bodyW * 0.8f, y + size * 0.15f);
+        glVertex2f(x + bodyW * 0.8f, bodyY);
+        glEnd();
+        glLineWidth(1.0f);
+    }
+
+    // Basit kalkan simgesi: besgen benzeri sekil.
+    void DrawShieldIcon(float x, float y, float size, float r, float g, float b, float a) {
+        glColor4f(r, g, b, a);
+        float cx = x + size * 0.5f;
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(cx, y);
+        glVertex2f(x, y + size * 0.25f);
+        glVertex2f(x + size * 0.15f, y + size * 0.8f);
+        glVertex2f(cx, y + size);
+        glVertex2f(x + size * 0.85f, y + size * 0.8f);
+        glVertex2f(x + size, y + size * 0.25f);
+        glEnd();
+    }
+
     void BuildPlaceholderRows() {
-        if (!s_rows.empty()) return;
-        for (int i = 0; i < 9; i++) {
+        if (!s_rowsByTab[(int)Tab::Internet].empty()) return;
+
+        for (int i = 0; i < 14; i++) {
             ServerRow row;
-            row.name = "SERVER " + std::to_string(i + 1);
-            row.players = std::to_string((i * 3) % 12) + "/16";
-            row.anticheat = (i % 2 == 0);
-            s_rows.push_back(row);
+            row.name = "INTERNET SERVER " + std::to_string(i + 1);
+            row.mapName = (i % 2 == 0) ? "FIRSTMAP" : "DUSKLAND";
+            row.ipAddress = "127.0.0.1"; // yer tutucu -- gercek kesif eklenince gercek adresle degisecek
+            row.currentPlayers = (i * 3) % 16;
+            row.maxPlayers = 16;
+            row.hasPassword = (i % 4 == 0);
+            row.hasAnticheat = (i % 3 != 0);
+            s_rowsByTab[(int)Tab::Internet].push_back(row);
         }
+
+        for (int i = 0; i < 3; i++) {
+            ServerRow row;
+            row.name = "LAN SERVER " + std::to_string(i + 1);
+            row.mapName = "FIRSTMAP";
+            row.ipAddress = "127.0.0.1";
+            row.currentPlayers = i;
+            row.maxPlayers = 8;
+            row.hasPassword = false;
+            row.hasAnticheat = true;
+            s_rowsByTab[(int)Tab::Lan].push_back(row);
+        }
+
+        // History ve Favorite bilerek bos birakiliyor -- gercek bagliliklar
+        // ve kaydedilen favoriler eklendiginde bu listeler doldurulacak.
     }
 }
 
@@ -70,6 +149,8 @@ void ServerMenu::Init() {
 
 void ServerMenu::Open() {
     BuildPlaceholderRows();
+    s_selectedRow = -1;
+    s_scrollOffset = 0;
     s_open = true;
 }
 
@@ -82,21 +163,27 @@ bool ServerMenu::IsOpen() {
 }
 
 void ServerMenu::HandleMouseMove(int mx, int my) {
+    (void)mx; (void)my; // hover efekti Render icinde anlik hesaplaniyor, burada state tutmaya gerek yok
+}
+
+void ServerMenu::HandleMouseWheel(int delta) {
     if (!s_open) return;
-    for (auto& row : s_rows) {
-        row.hovered = false; // konumlar Render'da hesaplandigi icin gercek hover testi Render icinde de yapilir
-    }
-    (void)mx; (void)my;
+
+    auto& rows = s_rowsByTab[(int)s_activeTab];
+    int visibleRows = 1; // Render'daki listH hesabina paralel, asagida daha dogru sinirlaniyor
+    (void)visibleRows;
+
+    s_scrollOffset -= delta * SCROLL_STEP;
+    if (s_scrollOffset < 0) s_scrollOffset = 0;
+
+    int maxOffset = static_cast<int>(rows.size()) - 1;
+    if (maxOffset < 0) maxOffset = 0;
+    if (s_scrollOffset > maxOffset) s_scrollOffset = maxOffset;
 }
 
 void ServerMenu::HandleMouseClick(int mx, int my) {
     if (!s_open) return;
 
-    // Panel/pencere ile ilgili sabit degerler Render ile ayni sekilde
-    // hesaplanmali; SDL'den anlik pencere boyutunu tekrar sormak yerine
-    // basitlik icin son bilinen boyutu kullanmiyoruz -- Render zaten her
-    // karede cagrildigi icin, klik islenirken ayni frame'in konumlarini
-    // yeniden hesaplamak guvenlidir.
     int w = 0, h = 0;
     SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &w, &h);
 
@@ -116,21 +203,32 @@ void ServerMenu::HandleMouseClick(int mx, int my) {
     const char* tabLabels[(int)Tab::Count] = { "INTERNET", "LAN", "HISTORY", "FAVORITE" };
     float tabX = contentX;
     for (int i = 0; i < (int)Tab::Count; i++) {
-        float tabW = g_HudFont.MeasureTextWidth(tabLabels[i], 22.0f) + 30.0f;
+        float tabW = g_HudFont.MeasureTextWidth(tabLabels[i], 20.0f) + 30.0f;
         if (PointIn(mx, my, tabX, contentY, tabW, TAB_ROW_H)) {
-            s_activeTab = static_cast<Tab>(i);
+            if (s_activeTab != static_cast<Tab>(i)) {
+                s_activeTab = static_cast<Tab>(i);
+                s_selectedRow = -1;
+                s_scrollOffset = 0;
+            }
             return;
         }
-        tabX += tabW + 8.0f;
+        tabX += tabW + 6.0f;
     }
 
-    // Sunucu satirlari
-    float listY = contentY + TAB_ROW_H + 15.0f;
+    float listY = contentY + TAB_ROW_H + HEADER_ROW_H + 10.0f;
     float listW = innerRight - contentX - SIDE_PANEL_W - 15.0f;
-    for (size_t i = 0; i < s_rows.size(); i++) {
+    float listH = (panelY + PANEL_H - UIWindow::GetMargin() - 10.0f) - listY;
+
+    auto& rows = s_rowsByTab[(int)s_activeTab];
+    int maxVisible = static_cast<int>(listH / ROW_H);
+
+    for (int i = 0; i < maxVisible; i++) {
+        int rowIndex = s_scrollOffset + i;
+        if (rowIndex >= static_cast<int>(rows.size())) break;
+
         float rowY = listY + static_cast<float>(i) * ROW_H;
         if (PointIn(mx, my, contentX, rowY, listW, ROW_H)) {
-            s_selectedRow = static_cast<int>(i);
+            s_selectedRow = rowIndex;
             return;
         }
     }
@@ -139,9 +237,10 @@ void ServerMenu::HandleMouseClick(int mx, int my) {
     float sideX = innerRight - SIDE_PANEL_W;
     float joinY = panelY + PANEL_H - UIWindow::GetMargin() - JOIN_BTN_H - 10.0f;
     if (PointIn(mx, my, sideX, joinY, SIDE_PANEL_W, JOIN_BTN_H)) {
-        if (s_selectedRow >= 0 && s_selectedRow < static_cast<int>(s_rows.size())) {
-            Console::Log("Baglaniliyor: " + s_rows[s_selectedRow].name + " (henuz gercek adres cozumlemesi yok, sabit test adresi kullaniliyor)");
-            NetClient::Connect("127.0.0.1");
+        if (s_selectedRow >= 0 && s_selectedRow < static_cast<int>(rows.size())) {
+            const ServerRow& row = rows[s_selectedRow];
+            Console::Log("Baglaniliyor: " + row.name + " (" + row.ipAddress + ") -- gercek adres cozumlemesi henuz yok, test adresi kullaniliyor");
+            NetClient::Connect(row.ipAddress);
             Close();
         }
     }
@@ -180,39 +279,78 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
     float tabX = contentX;
     for (int i = 0; i < (int)Tab::Count; i++) {
         bool active = (s_activeTab == static_cast<Tab>(i));
-        float tabW = g_HudFont.MeasureTextWidth(tabLabels[i], 22.0f) + 30.0f;
+        float tabW = g_HudFont.MeasureTextWidth(tabLabels[i], 20.0f) + 30.0f;
 
-        FilledRect(tabX, contentY, tabW, TAB_ROW_H, active ? 0.15f : 0.06f, active ? 0.15f : 0.06f, active ? 0.15f : 0.06f, 1.0f);
+        FilledRect(tabX, contentY, tabW, TAB_ROW_H, active ? 0.18f : 0.06f, active ? 0.05f : 0.06f, active ? 0.05f : 0.06f, 1.0f);
         RectOutline(tabX, contentY, tabW, TAB_ROW_H, 0.5f, 0.5f, 0.5f, 0.6f);
 
         float labelR = active ? 1.0f : 0.75f;
-        g_HudFont.DrawText(tabX + 15.0f, contentY + 10.0f, tabLabels[i], 22.0f, labelR, labelR, labelR);
+        g_HudFont.DrawText(tabX + 15.0f, contentY + 8.0f, tabLabels[i], 20.0f, labelR, labelR * 0.9f, labelR * 0.9f);
 
-        tabX += tabW + 8.0f;
+        tabX += tabW + 6.0f;
     }
 
-    // --- Sunucu listesi (sol/orta) ---
-    float listY = contentY + TAB_ROW_H + 15.0f;
+    // --- Sutun basliklari (sekmelerin altindaki bar) ---
+    float headerY = contentY + TAB_ROW_H + 4.0f;
     float listW = innerRight - contentX - SIDE_PANEL_W - 15.0f;
+
+    FilledRect(contentX, headerY, listW, HEADER_ROW_H, 0.1f, 0.1f, 0.1f, 0.9f);
+    g_HudFont.DrawText(contentX + COL_ANTICHEAT, headerY + 4.0f, "AC", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.DrawText(contentX + COL_NAME, headerY + 4.0f, "SERVER NAME", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.DrawText(contentX + COL_MAP, headerY + 4.0f, "MAP", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.DrawText(contentX + COL_PLAYERS, headerY + 4.0f, "PLAYERS", 14.0f, 0.7f, 0.7f, 0.7f);
+
+    // --- Sunucu listesi ---
+    float listY = headerY + HEADER_ROW_H + 6.0f;
     float listH = (panelY + PANEL_H - UIWindow::GetMargin() - 10.0f) - listY;
 
     RectOutline(contentX, listY, listW, listH, 0.4f, 0.4f, 0.4f, 0.6f);
 
-    for (size_t i = 0; i < s_rows.size(); i++) {
-        float rowY = listY + static_cast<float>(i) * ROW_H;
-        if (rowY + ROW_H > listY + listH) break;
+    auto& rows = s_rowsByTab[(int)s_activeTab];
+    int maxVisible = static_cast<int>(listH / ROW_H);
 
-        bool selected = (s_selectedRow == static_cast<int>(i));
+    if (rows.empty()) {
+        g_HudFont.DrawText(contentX + 15.0f, listY + 15.0f, "NO SERVERS FOUND", 18.0f, 0.5f, 0.5f, 0.5f);
+    }
+
+    for (int i = 0; i < maxVisible; i++) {
+        int rowIndex = s_scrollOffset + i;
+        if (rowIndex >= static_cast<int>(rows.size())) break;
+
+        float rowY = listY + static_cast<float>(i) * ROW_H;
+        const ServerRow& row = rows[rowIndex];
+
+        bool selected = (s_selectedRow == rowIndex);
         if (selected) {
             FilledRect(contentX, rowY, listW, ROW_H, 0.3f, 0.08f, 0.06f, 0.8f);
         }
 
-        const ServerRow& row = s_rows[i];
-        std::string anticheatText = row.anticheat ? "ON" : "OFF";
+        float iconY = rowY + ROW_H * 0.5f - 8.0f;
 
-        g_HudFont.DrawText(contentX + 10.0f, rowY + 4.0f, anticheatText, 16.0f, 0.8f, 0.8f, 0.8f);
-        g_HudFont.DrawText(contentX + 130.0f, rowY + 4.0f, row.name, 16.0f, 0.85f, 0.85f, 0.85f);
-        g_HudFont.DrawText(contentX + 330.0f, rowY + 4.0f, row.players, 16.0f, 0.7f, 0.7f, 0.7f);
+        if (row.hasPassword) {
+            DrawLockIcon(contentX + COL_LOCK, iconY, 16.0f, 0.85f, 0.7f, 0.2f, 1.0f);
+        }
+
+        DrawShieldIcon(contentX + COL_ANTICHEAT, iconY, 16.0f,
+            row.hasAnticheat ? 0.3f : 0.5f, row.hasAnticheat ? 0.85f : 0.3f, row.hasAnticheat ? 0.3f : 0.3f, 1.0f);
+
+        g_HudFont.DrawText(contentX + COL_NAME, rowY + 4.0f, row.name, 15.0f, 0.85f, 0.85f, 0.85f);
+        g_HudFont.DrawText(contentX + COL_MAP, rowY + 4.0f, row.mapName, 15.0f, 0.7f, 0.7f, 0.7f);
+
+        std::string playersText = std::to_string(row.currentPlayers) + "/" + std::to_string(row.maxPlayers);
+        g_HudFont.DrawText(contentX + COL_PLAYERS, rowY + 4.0f, playersText, 15.0f, 0.7f, 0.7f, 0.7f);
+    }
+
+    // Kaydirma cubugu gostergesi (basit, dekoratif -- surukleme henuz yok)
+    if (static_cast<int>(rows.size()) > maxVisible) {
+        float scrollBarX = contentX + listW - 6.0f;
+        float scrollRatio = static_cast<float>(s_scrollOffset) / static_cast<float>(rows.size() - maxVisible);
+        float thumbH = listH * (static_cast<float>(maxVisible) / static_cast<float>(rows.size()));
+        if (thumbH < 20.0f) thumbH = 20.0f;
+        float thumbY = listY + scrollRatio * (listH - thumbH);
+
+        FilledRect(scrollBarX, listY, 4.0f, listH, 0.2f, 0.2f, 0.2f, 0.6f);
+        FilledRect(scrollBarX, thumbY, 4.0f, thumbH, 0.6f, 0.15f, 0.1f, 0.9f);
     }
 
     // --- Sag panel: detay ---
@@ -222,10 +360,11 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
     RectOutline(sideX, listY, SIDE_PANEL_W, detailH, 0.4f, 0.4f, 0.4f, 0.6f);
     g_HudFont.DrawText(sideX + 10.0f, listY + 10.0f, "DETAILS", 18.0f, 0.85f, 0.85f, 0.85f);
 
-    if (s_selectedRow >= 0 && s_selectedRow < static_cast<int>(s_rows.size())) {
-        const ServerRow& row = s_rows[s_selectedRow];
-        g_HudFont.DrawText(sideX + 10.0f, listY + 45.0f, row.name, 16.0f, 0.8f, 0.8f, 0.8f);
-        g_HudFont.DrawText(sideX + 10.0f, listY + 70.0f, row.players, 14.0f, 0.7f, 0.7f, 0.7f);
+    if (s_selectedRow >= 0 && s_selectedRow < static_cast<int>(rows.size())) {
+        const ServerRow& row = rows[s_selectedRow];
+        g_HudFont.DrawText(sideX + 10.0f, listY + 45.0f, row.name, 15.0f, 0.8f, 0.8f, 0.8f);
+        g_HudFont.DrawText(sideX + 10.0f, listY + 70.0f, "MAP: " + row.mapName, 14.0f, 0.7f, 0.7f, 0.7f);
+        g_HudFont.DrawText(sideX + 10.0f, listY + 90.0f, row.ipAddress, 13.0f, 0.55f, 0.55f, 0.55f);
     }
 
     // --- Join server butonu ---
