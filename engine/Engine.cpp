@@ -32,6 +32,7 @@
 #include"BSPMapRenderer.h"
 #include"ServerMenu.h"
 #include"UIWindow.h"
+#include"../game/src/BotManager.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -140,16 +141,17 @@ bool Engine::initSystems() {
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", []() {
 		ReadEntityLump("nvs1/map/firstmap.bsp");
 		LoadMap("firstmap");
+		BotManager::Init();
 		EnterPlaying();
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 1, btnW, btnH, "LOAD GAME", []() {
 		Console::Log("Load game henuz baglanmadi");
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing *2, btnW, btnH, "JOIN SERVER", []() {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing *2, btnW, btnH, "FIND SERVERS", []() {
 		ServerMenu::Open();
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "CREATE SERVER", []() {
-		Console::Log("create server henuz baglanmadi");
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "NEW MULTIPLAYER GAME", []() {
+		Console::Log("new multiplayer game henuz baglanmadi");
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 4, btnW, btnH, "HOW TO PLAY", []() {
 		Console::Log("How to play henuz baglanmadi");
@@ -220,6 +222,7 @@ void Engine::gameLoop() {
 		g_Camera.Update(deltaTime);
 		if (g_State == GameState::Playing) {
 			UpdatePlayerPhysics(deltaTime, oldPos); 
+			BotManager::Update(deltaTime);
 		}
 		else if (g_State == GameState::MenuLive) {
 			MainMenu::Update(deltaTime); 
@@ -242,6 +245,7 @@ void Engine::RenderFrame() {
 
 		g_MapRenderer.RenderWorld(frustum);
 		g_MapRenderer.RenderBrushEntities(g_Map.GetEntities(), frustum);
+		BotManager::Render();
 	}
 
 	renderer.EndFrame();

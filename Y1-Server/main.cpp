@@ -47,7 +47,7 @@ static void ExecuteServerCommand(const std::string& line) {
                 }
             }
             else {
-                printf("HATA: harita yuklenemedi: %s\n", mapName.c_str());
+                printf("ERROR-> harita yuklenemedi: %s\n", mapName.c_str());
             }
         }
         else {

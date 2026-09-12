@@ -11,8 +11,8 @@ class Player {
 public:
 	int maxHealth = 200;
 	int maxArmor = 200;
-	int Health = 10;
-	int Armor = 100;
+	int Health = 200;
+	int Armor = 200;
 	int Damage;
 	int CurrentWeapon = PISTOL;
 	bool RGDitem = true;

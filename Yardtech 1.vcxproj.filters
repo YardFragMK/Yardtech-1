@@ -108,6 +108,15 @@
     <ClCompile Include="engine\ServerMenu.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="game\src\BotStilar.cpp">
+      <Filter>Source Files\game src</Filter>
+    </ClCompile>
+    <ClCompile Include="game\src\e_BotBase.cpp">
+      <Filter>Source Files\game src</Filter>
+    </ClCompile>
+    <ClCompile Include="game\src\BotManager.cpp">
+      <Filter>Source Files\game src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -202,6 +211,15 @@
     </ClInclude>
     <ClInclude Include="engine\ServerMenu.h">
       <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\BotProjectile.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\BotManager.h">
+      <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="game\src\BotStilar.h">
+      <Filter>Header Files\game src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
