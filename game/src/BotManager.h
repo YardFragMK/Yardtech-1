@@ -4,18 +4,16 @@
 #include "e_BotBase.h"
 #include "BotProjectile.h"
 
-// Sahnedeki tum botlari ve onlarin projektillerini yonetir. Su asamada
-// botlar haritanin entity sistemine bagli degil -- sabit test konumlarinda
-// olusturuluyor. Ileride harita entity'lerinden (orn. bir "bot_spawn"
-// siniflandirmasi) otomatik spawn eklenebilir.
 class BotManager {
 public:
+    // Haritanin entity listesini tarar, "monster_stilar" classname'ine sahip
+    // her entity icin bir BotStilar spawn eder. Entity'nin "origin" ve
+    // "difficulty" key'leri okunur; difficulty yoksa varsayilan (1) kullanilir.
     static void Init();
+
     static void Update(float deltaTime);
     static void Render();
 
-    // Bot alt siniflari (BotStilar::Shoot gibi) yeni bir projektil olusturmak
-    // icin bunu cagirir.
     static void SpawnProjectile(const glm::vec3& origin, const glm::vec3& direction, float speed, int damage);
 
 private:

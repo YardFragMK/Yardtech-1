@@ -6,9 +6,18 @@
 [
 	message(string) : "Harita Adi / Aciklama"
 	wad(string) : "Wad Dosyalari"
+	skyname(string) : "Skybox Adi (gfx/env/<isim><rt/lf/up/dn/bk/ft>.tga)"
 ]
 
-@PointClass size(-16 -16 -36, 16 16 36) color(0 255 0) = player_start : "Oyuncu Baslangic Noktasi"
+@PointClass size(-16 -16 -36, 16 16 36) color(0 255 0) = player_start : "Oyuncu Baslangic Noktasi (Singleplayer)"
+[
+	angle(integer) : "Bakis Acisi (Yaw)" : 0
+]
+
+// PLANLANAN: cok oyunculu spawn noktasi. Su an motor bunu okumuyor,
+// singleplayer'da oldugu gibi tek bir player_start kullaniliyor -- coklu
+// spawn secimi (rastgele/round-robin) eklenince bu entity devreye girecek.
+@PointClass size(-16 -16 -36, 16 16 36) color(0 128 255) = player_deathmatch : "Oyuncu Baslangic Noktasi (Multiplayer) [PLANLANAN]"
 [
 	angle(integer) : "Bakis Acisi (Yaw)" : 0
 ]
@@ -59,4 +68,44 @@
 @SolidClass = poly_wall : "Statik Duvar/Blok (hareketsiz brush entity)"
 [
 	targetname(target_source) : "Isim"
+]
+
+// Motor, collision testlerinde (BSPMap::TraceLine) classname'i "func_illusionary"
+// olan brush entity'leri otomatik olarak solid-disi sayiyor -- yani bu entity
+// zaten TANINIYOR ve dogru davraniyor, gorsel olarak var ama icinden gecilebiliyor.
+@SolidClass = func_illusionary : "Gorunur ama Gecirgen Brush (collision'siz)"
+[
+	targetname(target_source) : "Isim"
+]
+
+// Motor, classname'i "trigger_" ile baslayan HERHANGI bir brush entity'yi
+// collision testlerinde otomatik atliyor (TraceLine icinde ozel olarak
+// kontrol ediliyor). Gercek tetikleme mantigi (dokununca calisan bir olay)
+// HENUZ YAZILMADI -- su an sadece "collision'a girmez" davranisi var.
+@SolidClass = trigger_multiple : "Tetikleyici Brush (collision'siz) [MANTIK PLANLANAN]"
+[
+	targetname(target_source) : "Isim"
+]
+
+// Bot/dusman spawn noktasi. Model, glTF/GLB formatinda yuklenir (bkz. GLBModel).
+// difficulty, Health/Damage tablosundan hangi zorluk satirinin secilecegini
+// belirler: 0=kolay(70hp/15dmg) 1=orta-kolay(90hp/25dmg) 2=orta(100hp/40dmg) 3=zor(150hp/50dmg)
+@PointClass size(-16 -32 -16, 16 32 16) color(150 20 20) = bot_stilar : "Stilar"
+[
+	model(studio) : "Model Dosyasi" : "nvs1/models/stilar/stilar.glb"
+	difficulty(choices) : "Zorluk Seviyesi" : 1 =
+	[
+		0 : "Kolay (70 HP / 15 DMG)"
+		1 : "Orta-Kolay (90 HP / 25 DMG)"
+		2 : "Orta (100 HP / 40 DMG)"
+		3 : "Zor (150 HP / 50 DMG)"
+	]
+]
+
+// PLANLANAN: ortam sesi (ambient_generic benzeri). Ses motoru henuz entegre
+// edilmedi, bu entity su an motor tarafindan okunmuyor.
+@PointClass size(-8 -8 -8, 8 8 8) color(0 200 200) = ambient_generic : "Ortam Sesi [PLANLANAN, ses motoru yok]"
+[
+	message(string) : "Ses Dosyasi Yolu"
+	volume(integer) : "Ses Seviyesi (0-10)" : 10
 ]

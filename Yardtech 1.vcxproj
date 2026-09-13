@@ -83,7 +83,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -101,7 +101,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -117,7 +117,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
@@ -139,7 +139,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
@@ -183,6 +183,7 @@
     <ClCompile Include="game\src\BotManager.cpp" />
     <ClCompile Include="game\src\BotStilar.cpp" />
     <ClCompile Include="game\src\e_BotBase.cpp" />
+    <ClCompile Include="game\src\GLBModel.cpp" />
     <ClCompile Include="game\src\Player.cpp" />
     <ClCompile Include="game\src\PolyBreakable.cpp" />
     <ClCompile Include="main.cpp" />
@@ -218,6 +219,7 @@
     <ClInclude Include="game\src\e_BotBase.h" />
     <ClInclude Include="game\src\e_PolyBase.h" />
     <ClInclude Include="game\src\e_TriggerBase.h" />
+    <ClInclude Include="game\src\GLBModel.h" />
     <ClInclude Include="game\src\Player.h" />
     <ClInclude Include="game\src\PolyBreakable.h" />
     <ClInclude Include="game\src\Weapons.h" />
