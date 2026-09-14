@@ -2,13 +2,13 @@
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include <windows.h>
+#include <GL/gl.h>
 
-// Minimal bir glTF/GLB (binary glTF) yukleyici. cgltf kutuphanesini kullanir
-// (tek header, MIT lisansli -- sifirdan bir JSON/glTF parser yazmaktan
-// cok daha az riskli ve daha az kod). Su asamada SADECE statik geometri
-// (pozisyon, normal, UV, index) okunur -- materyal, texture, skin/animasyon
-// desteklenmiyor. Model, duz bir renkle (FFP immediate mode) cizilir.
-// Ileride texture/materyal eklemek istenirse, bu sinif genisletilebilir.
+// Minimal bir glTF/GLB yukleyici (cgltf ile). Statik geometri + tek bir
+// diffuse texture (base color) okur. Multi-material/multi-primitive/
+// animasyon/skin desteklenmiyor -- "en kolay yol" kapsaminda ilk mesh'in
+// ilk primitive'i ve onun base-color texture'i kullanilir.
 class GLBModel {
 public:
     bool Load(const std::string& glbPath);
@@ -20,4 +20,6 @@ private:
     std::vector<glm::vec3> m_normals;
     std::vector<glm::vec2> m_texcoords;
     std::vector<unsigned int> m_indices;
+
+    GLuint m_diffuseTexture = 0;
 };

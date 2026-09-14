@@ -13,7 +13,7 @@ std::vector<std::unique_ptr<e_BotBase>> BotManager::s_bots;
 std::vector<BotProjectile> BotManager::s_projectiles;
 
 namespace {
-    constexpr const char* MONSTER_STILAR_CLASSNAME = "monster_stilar";
+    constexpr const char* BOT_STILAR_CLASSNAME = "bot_stilar";
     constexpr const char* STILAR_MODEL_PATH = "nvs1/models/stilar/stilar.glb";
 }
 
@@ -24,7 +24,7 @@ void BotManager::Init() {
     int spawnedCount = 0;
 
     for (const Entity& ent : g_Map.GetEntities()) {
-        if (!ent.Is(MONSTER_STILAR_CLASSNAME)) continue;
+        if (!ent.Is(BOT_STILAR_CLASSNAME)) continue;
 
         const std::string* originStr = ent.Get(EntityKeys::Origin);
         if (!originStr) continue;

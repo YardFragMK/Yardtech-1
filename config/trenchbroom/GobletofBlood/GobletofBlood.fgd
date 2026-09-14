@@ -70,10 +70,10 @@
 	targetname(target_source) : "Isim"
 ]
 
-// Motor, collision testlerinde (BSPMap::TraceLine) classname'i "func_illusionary"
+// Motor, collision testlerinde (BSPMap::TraceLine) classname'i "poly_illusionary"
 // olan brush entity'leri otomatik olarak solid-disi sayiyor -- yani bu entity
 // zaten TANINIYOR ve dogru davraniyor, gorsel olarak var ama icinden gecilebiliyor.
-@SolidClass = func_illusionary : "Gorunur ama Gecirgen Brush (collision'siz)"
+@SolidClass = poly_illusionary : "Gorunur ama Gecirgen Brush (collision'siz)"
 [
 	targetname(target_source) : "Isim"
 ]

@@ -1,16 +1,67 @@
 #include "GLBModel.h"
-#include <windows.h>
-#include <GL/gl.h>
 #include <cstdio>
+#include <cstring>
 
 #define CGLTF_IMPLEMENTATION
-#include "../../extern/cgltf/cgltf.h"
+#include <../extern/cgltf/cgltf.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <../extern/stb/stb_image.h>
+
+namespace {
+    // image, bir GLB icinde gomulu (buffer_view) ya da harici bir dosyaya
+    // (uri) isaret edebilir. Ikisini de tek bir yol uzerinden GL texture'a
+    // cevirir.
+    GLuint LoadTextureFromCgltfImage(const cgltf_image* image, const std::string& glbDir) {
+        if (image == nullptr) return 0;
+
+        int width = 0, height = 0, channels = 0;
+        unsigned char* pixels = nullptr;
+        bool ownsPixels = false;
+
+        if (image->buffer_view != nullptr) {
+            const cgltf_buffer_view* bv = image->buffer_view;
+            const unsigned char* data = reinterpret_cast<const unsigned char*>(bv->buffer->data) + bv->offset;
+            pixels = stbi_load_from_memory(data, static_cast<int>(bv->size), &width, &height, &channels, 4);
+            ownsPixels = true;
+        }
+        else if (image->uri != nullptr) {
+            std::string path = glbDir + image->uri;
+            pixels = stbi_load(path.c_str(), &width, &height, &channels, 4);
+            ownsPixels = true;
+        }
+
+        if (pixels == nullptr) {
+            printf("GLBModel: texture yuklenemedi (embedded/uri).\n");
+            return 0;
+        }
+
+        GLuint tex = 0;
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        if (ownsPixels) stbi_image_free(pixels);
+        return tex;
+    }
+}
 
 bool GLBModel::Load(const std::string& glbPath) {
     m_positions.clear();
     m_normals.clear();
     m_texcoords.clear();
     m_indices.clear();
+    if (m_diffuseTexture != 0) {
+        glDeleteTextures(1, &m_diffuseTexture);
+        m_diffuseTexture = 0;
+    }
 
     cgltf_options options = {};
     cgltf_data* data = nullptr;
@@ -34,9 +85,6 @@ bool GLBModel::Load(const std::string& glbPath) {
         return false;
     }
 
-    // Sadece ilk mesh'in ilk primitive'i okunuyor -- "en kolay yol" kapsaminda
-    // birden fazla mesh/primitive/node hiyerarsisi desteklenmiyor. Coklu
-    // parcali modeller icin ileride genisletilmesi gerekir.
     const cgltf_primitive& prim = data->meshes[0].primitives[0];
 
     cgltf_accessor* posAccessor = nullptr;
@@ -92,25 +140,43 @@ bool GLBModel::Load(const std::string& glbPath) {
         }
     }
     else {
-        // Index yoksa, vertex'ler sirali ucgen olarak kabul edilir.
         m_indices.resize(vertexCount);
         for (cgltf_size i = 0; i < vertexCount; i++) {
             m_indices[i] = static_cast<unsigned int>(i);
         }
     }
 
+    // Materyalin base-color (diffuse) texture'ini yukle. Sadece metallic-
+    // roughness workflow destekleniyor -- glTF'nin varsayilan/en yaygin
+    // materyal modeli bu, "en kolay yol" kapsaminda bu yeterli.
+    if (prim.material != nullptr && prim.material->has_pbr_metallic_roughness) {
+        const cgltf_texture_view& baseColorView = prim.material->pbr_metallic_roughness.base_color_texture;
+        if (baseColorView.texture != nullptr && baseColorView.texture->image != nullptr) {
+            size_t slash = glbPath.find_last_of("/\\");
+            std::string glbDir = (slash == std::string::npos) ? "" : glbPath.substr(0, slash + 1);
+            m_diffuseTexture = LoadTextureFromCgltfImage(baseColorView.texture->image, glbDir);
+        }
+    }
+
     cgltf_free(data);
 
-    printf("GLBModel yuklendi: %s (%zu vertex, %zu index)\n",
-        glbPath.c_str(), m_positions.size(), m_indices.size());
+    printf("GLBModel yuklendi: %s (%zu vertex, %zu index, texture=%s)\n",
+        glbPath.c_str(), m_positions.size(), m_indices.size(), m_diffuseTexture != 0 ? "var" : "yok");
     return true;
 }
 
 void GLBModel::Render() const {
     if (m_positions.empty() || m_indices.empty()) return;
 
-    glDisable(GL_TEXTURE_2D);
-    glColor4f(0.6f, 0.6f, 0.65f, 1.0f); // duz gri -- materyal/texture henuz yok
+    if (m_diffuseTexture != 0) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, m_diffuseTexture);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+    else {
+        glDisable(GL_TEXTURE_2D);
+        glColor4f(0.6f, 0.6f, 0.65f, 1.0f); // texture yoksa duz gri fallback
+    }
 
     glBegin(GL_TRIANGLES);
     for (size_t i = 0; i < m_indices.size(); i++) {
@@ -127,5 +193,7 @@ void GLBModel::Render() const {
     }
     glEnd();
 
-    glEnable(GL_TEXTURE_2D);
+    if (m_diffuseTexture != 0) {
+        glDisable(GL_TEXTURE_2D);
+    }
 }
