@@ -72,12 +72,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath);$(SolutionDir)extern/RayTracedGL1/include;$(SolutionDir)RayTracedGL1/include</IncludePath>
     <LibraryPath>$(SOLUTION_DIR)extern/SDL2/lib/x64;$(SOLUTION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath);$(SolutionDir)extern/RayTracedGL1/include;$(SolutionDir)RayTracedGL1/include</IncludePath>
     <LibraryPath>$(SOLUTION_DIR)extern/SDL2/lib/x64;$(SOLUTION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;$(SolutionDir)extern/RayTracedGL1/include;$(SolutionDir)RayTracedGL1/include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;$(SolutionDir)extern/RayTracedGL1/include;$(SolutionDir)RayTracedGL1/include</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -90,6 +96,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern/RayTracedGL1/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);RayTracedGL1.lib;RayTracedGL1.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -108,6 +116,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern/RayTracedGL1/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);RayTracedGL1.lib;RayTracedGL1.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -127,7 +137,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
 ;ws2_32.lib
-;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+;winmm.lib;%(AdditionalDependencies);RayTracedGL1.lib;RayTracedGL1.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern/RayTracedGL1/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -149,7 +160,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
 ;ws2_32.lib
-;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+;winmm.lib;%(AdditionalDependencies);RayTracedGL1.lib;RayTracedGL1.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern/RayTracedGL1/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -173,6 +185,7 @@
     <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
+    <ClCompile Include="engine\RTRenderer.cpp" />
     <ClCompile Include="engine\ServerMenu.cpp" />
     <ClCompile Include="engine\Settings.cpp" />
     <ClCompile Include="engine\Skybox.cpp" />
@@ -206,6 +219,7 @@
     <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
+    <ClInclude Include="engine\RTRenderer.h" />
     <ClInclude Include="engine\ServerMenu.h" />
     <ClInclude Include="engine\Settings.h" />
     <ClInclude Include="engine\Skybox.h" />

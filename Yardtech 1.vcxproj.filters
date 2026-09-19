@@ -120,6 +120,9 @@
     <ClCompile Include="game\src\GLBModel.cpp">
       <Filter>Source Files\game src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\RTRenderer.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="game\src\GLBModel.h">
       <Filter>Header Files\game src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\RTRenderer.h">
+      <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
