@@ -1,32 +1,29 @@
 #include<iostream>
 #include<enet/enet.h>
-//#include<glad/glad.h>
 #include<SDL.h>
-#include<cstdlib> 
+#include<cstdlib>
 #include"Engine.h"
 #include"Logger.h"
 #include"Time.h"
 #include"KeyInput.h"
 #include"Window.h"
 #include"console/Console.h"
-#include"renderer/Renderer.h"
+#include"RTRenderer.h"
 #include"Camera.h"
 #include"BSPReader.h"
 #include"BSPMap.h"
 #include"BSPFormat.h"
-#include"Frustum.h"
 #include"console/CVar.h"
 #include"../game/src/Player.h"
 #include"EntityParser.h"
 #include"PlayerMovement.h"
 #include"ClientPlayerController.h"
-#include"Skybox.h"
 #include"HUD.h"
 #include"GameState.h"
 #include"MainMenu.h"
 #include"MapLoader.h"
 #include"BitmapFont.h"
-#include"Settings.h" 
+#include"Settings.h"
 #include"PauseMenu.h"
 #include"NetClient.h"
 #include"BSPMapRenderer.h"
@@ -34,24 +31,22 @@
 #include"UIWindow.h"
 #include"../game/src/BotManager.h"
 
-Renderer renderer;
 BSPMap g_Map;
 
-Engine::~Engine(){
+Engine::~Engine() {
 	NetClient::Disconnect();
 	enet_deinitialize();
 
-	if (glContext) {
-		SDL_GL_DeleteContext(glContext);
-	}
+	g_RTRenderer.Shutdown();
+
 	if (window1.getWindow()) {
 		SDL_DestroyWindow(window1.getWindow());
 	}
 	SDL_Quit();
 }
- 
+
 //=========================================================
-//Engine 
+//Engine
 //=========================================================
 bool Engine::initSystems() {
 
@@ -66,64 +61,37 @@ bool Engine::initSystems() {
 		return false;
 	}
 
-	// Gercek pencere boyutunu al (DPI olcekleme/farkli cozunurluk ihtimaline karsi
-	// sabit degerlere guvenmek yerine SDL'den dogrudan sor).
 	int actualW = 0, actualH = 0;
 	SDL_GetWindowSize(window1.getWindow(), &actualW, &actualH);
 	windowWidth = actualW;
 	windowHeight = actualH;
 	Logger::info("Pencere boyutu: " + std::to_string(windowWidth) + "x" + std::to_string(windowHeight));
 
-
 	//=========================================================
-	//Opengl Context
+	//RTGL1 (Vulkan) Renderer Init
 	//=========================================================
-	glContext = SDL_GL_CreateContext(window1.getWindow());
-	if (!glContext) {
-		Logger::error(SDL_GetError());
+	// RTRenderer, RTGL1'in kendi Vulkan surface/swapchain yonetimini
+	// SDL penceresinin HWND'i uzerinden kuruyor.
+	if (!g_RTRenderer.Init(window1.getWindow(), windowWidth, windowHeight)) {
+		Logger::error("RTRenderer initialize edilemedi.");
 		return false;
 	}
-	Logger::info("glContext olusturuldu.");
-
-	//=========================================================
-	//Context and Window
-	//=========================================================
-	if (SDL_GL_MakeCurrent(window1.getWindow(), glContext) != 0) {
-		Logger::error(SDL_GetError());
-		return false;
-	} 
-	Logger::info("window ve glContext birbirine baglandi.");
-
-	/*
-	//=========================================================
-	//GLAD
-	//=========================================================
-	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-		Logger::error("Glad yüklenemedi");
-		return false;
-	}
-	Logger::info("glad initialize edildi.");
-	*/
-
-	//=========================================================
-	//Renderer Init
-	//=========================================================
-	if (!renderer.Init(windowWidth, windowHeight)){
-		Logger::error("Renderer initialize edilemedi.");
-		return false;
-	}
-	Logger::info("Renderer initialize edildi.");
+	Logger::info("RTRenderer initialize edildi.");
 
 	//=========================================================
 	// Bitmap Font
 	//=========================================================
-	if (!g_HudFont.Load("nvs1/gfx/hud_font.tga")) {
+	// NOT: BitmapFont/UIWindow su an hala eski OpenGL FFP cizim kodunu
+	// (glBegin/glTexImage2D) kullaniyor. RTGL1 devreye girdikten sonra bu
+	// sistemlerin de rasterized-overlay (rgUploadNonWorldPrimitive) yoluna
+	// tasinmasi gerekecek.
+	/*if (!g_HudFont.Load("nvs1/gfx/hud_font.tga")) {
 		Logger::error("HUD fontu yuklenemedi.");
 	}
 
 	if (!UIWindow::GBLoadIcon("nvs1/gfx/window_icon.tga")) {
 		Logger::error("Pencere ikonu yuklenemedi.");
-	}
+	}*/
 
 	//=========================================================
 	// Main Menu
@@ -147,7 +115,7 @@ bool Engine::initSystems() {
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 1, btnW, btnH, "LOAD GAME", []() {
 		Console::Log("Load game henuz baglanmadi");
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing *2, btnW, btnH, "FIND SERVERS", []() {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 2, btnW, btnH, "FIND SERVERS", []() {
 		ServerMenu::Open();
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "NEW MULTIPLAYER GAME", []() {
@@ -190,9 +158,6 @@ bool Engine::initSystems() {
 //=========================================================
 void Engine::gameLoop() {
 	while (running) {
-		//=========================================================
-		// DELTATIME
-		//=========================================================
 		Uint64 currentCounter = SDL_GetPerformanceCounter();
 		float deltaTime =
 			static_cast<float>(currentCounter - lastCounter) /
@@ -203,17 +168,10 @@ void Engine::gameLoop() {
 
 		glm::vec3 oldPos = g_Camera.position;
 
-		//=========================================================
-        // Input / Update
-        //=========================================================
 		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
 		NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
 
-		// Sunucu haritayi degistirdiyse, client kendi (render+collision)
-		// kopyasini da guncellemeli. Bu kontrol NetClient::Update'in disinda,
-		// gameLoop'un kendisinde yapiliyor cunku multiplayer sirasinda
-		// Playing disindaki durumlarda (orn. Paused) da gecerli olmalidir.
 		std::string newMapName;
 		if (NetClient::PollMapChange(newMapName)) {
 			LoadMap(newMapName);
@@ -221,49 +179,39 @@ void Engine::gameLoop() {
 
 		g_Camera.Update(deltaTime);
 		if (g_State == GameState::Playing) {
-			UpdatePlayerPhysics(deltaTime, oldPos); 
+			UpdatePlayerPhysics(deltaTime, oldPos);
 			BotManager::Update(deltaTime);
 		}
 		else if (g_State == GameState::MenuLive) {
-			MainMenu::Update(deltaTime); 
+			MainMenu::Update(deltaTime);
 		}
- 
+
 		RenderFrame();
 	}
 }
 
 
 void Engine::RenderFrame() {
-	renderer.BeginFrame(g_Camera);
+	g_RTRenderer.BeginFrame();
 
+	// NOT: World geometrisi (g_MapRenderer), bot'lar ve skybox su an hala
+	// eski OpenGL FFP cizim kodunu kullaniyor (glBegin/glVertex3f). Bu
+	// cagrilar RTGL1'e hicbir sey "upload" etmiyor -- yani su an path-traced
+	// bir goruntu ALMIYORUZ, sadece RTGL1'in bos bir frame'i "start/end"
+	// etme dongusunu dogruluyoruz. BSPMapRenderer'in
+	// DrawRenderFace fonksiyonunu glBegin/glVertex3f yerine
+	// rgUploadMeshPrimitive kullanacak sekilde yeniden yazmak.
 	if (g_State == GameState::MenuLive || g_State == GameState::Playing || g_State == GameState::Paused) {
-		g_Skybox.Render(g_Camera.GetEyePosition());
+		Frustum frustum = Frustum::FromViewProjection(glm::mat4(1.0f)); // gecici -- asagida acikliyorum
+		(void)frustum;
 
-		Frustum frustum = Frustum::FromViewProjection(
-			renderer.GetProjectionMatrix() * renderer.GetViewMatrix()
-		);
-
-		g_MapRenderer.RenderWorld(frustum);
-		g_MapRenderer.RenderBrushEntities(g_Map.GetEntities(), frustum);
+		//g_MapRenderer.RenderWorld();
+		//g_MapRenderer.RenderBrushEntities(g_Map.GetEntities());
 		BotManager::Render();
 	}
 
-	renderer.EndFrame();
+	const float fovYRadians = glm::radians(75.0f);
+	g_RTRenderer.EndFrame(g_Camera.GetViewMatrix(), fovYRadians, 0.1f, 10000.0f);
 
-	if (g_State == GameState::Playing) {
-		HUD::Render(windowWidth, windowHeight);
-	}
-	else if (g_State == GameState::Paused) {
-		HUD::Render(windowWidth, windowHeight);
-		PauseMenu::Render(windowWidth, windowHeight);
-	}
-	else {
-		MainMenu::Render(windowWidth, windowHeight);
-	}
-
-	Settings::Render(windowWidth, windowHeight);
-	ServerMenu::Render(windowWidth, windowHeight);
-	Console::Render(windowWidth, windowHeight);
-
-	SDL_GL_SwapWindow(window1.getWindow());
+	SDL_Delay(0); // Vulkan present zaten senkronize ediyor, ekstra swap cagrisi yok
 }

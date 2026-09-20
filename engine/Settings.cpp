@@ -2,10 +2,10 @@
 #include "BitmapFont.h"
 #include "Camera.h"
 #include "console/CVar.h"
-#include "renderer/Renderer.h"
+//#include "renderer/Renderer.h"
 #include "HUD.h"
 
-extern Renderer renderer;
+//extern Renderer renderer;
 
 bool Settings::s_open = false;
 bool Settings::s_built = false;
@@ -24,12 +24,12 @@ void Settings::BuildControls() {
     s_built = true;
 
     // --- GRAPHICS ---
-    s_toggles[(int)Category::Graphics].push_back({
+    /*s_toggles[(int)Category::Graphics].push_back({
         "RETRO MODE",
         []() { return renderer.IsRetroMode(); },
         [](bool v) { renderer.SetRetroMode(v); },
         40.0f, 130.0f
-        });
+        });*/
 
     // --- SOUND ---
     // Henuz bir ses motoru yok; bu degerler simdilik sadece CVar'da tutuluyor,

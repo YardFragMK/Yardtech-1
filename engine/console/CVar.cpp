@@ -69,7 +69,7 @@ void CVar::helpF() const {
 }
 
 void CVar::r_retromodeF(int r_retromodeValue) {
-	renderer.SetRetroMode(r_retromodeValue);
+	//renderer.SetRetroMode(r_retromodeValue);
 }
 
 void CVar::nvs_gravityF(float value) {

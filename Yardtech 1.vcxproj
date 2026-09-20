@@ -133,7 +133,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
 ;ws2_32.lib
@@ -156,7 +156,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
 ;ws2_32.lib
@@ -184,7 +184,6 @@
     <ClCompile Include="engine\MapLoader.cpp" />
     <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
-    <ClCompile Include="engine\renderer\Renderer.cpp" />
     <ClCompile Include="engine\RTRenderer.cpp" />
     <ClCompile Include="engine\ServerMenu.cpp" />
     <ClCompile Include="engine\Settings.cpp" />
@@ -218,7 +217,6 @@
     <ClInclude Include="engine\MapLoader.h" />
     <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
-    <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\RTRenderer.h" />
     <ClInclude Include="engine\ServerMenu.h" />
     <ClInclude Include="engine\Settings.h" />

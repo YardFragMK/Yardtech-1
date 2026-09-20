@@ -8,7 +8,7 @@ public:
 	SDL_Window* getWindow() const;
 
 private:
-	int windowWidth = 1920;
-	int windowHeight = 1080;
+	int windowWidth = 800;
+	int windowHeight = 400;
 	SDL_Window* window = nullptr;
 };

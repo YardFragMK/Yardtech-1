@@ -1,5 +1,5 @@
+#define RG_USE_SURFACE_WIN32
 #include "RTRenderer.h"
-#define RG_USE_SURFACE_WIN32 
 #include <RTGL1.h>
 #include <SDL_syswm.h>
 #include <cstdio>
@@ -26,6 +26,7 @@ bool RTRenderer::Init(SDL_Window* window, int width, int height) {
     createInfo.pWin32SurfaceInfo = &win32Surface;
 
     createInfo.pConfigPath = "RayTracedGL1.txt";
+    createInfo.pOverrideFolderPath = "resources";
 
     // Rasterize edilen (immediate-mode benzeri) geometri icin ayrilan bellek
     // -- HUD/Console gibi 2D overlay'ler bu yoldan cizilecek, dunya

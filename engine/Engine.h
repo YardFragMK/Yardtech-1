@@ -2,7 +2,7 @@
 #include"Window.h"
 #include"SDL.h"
 #include"Camera.h"
-#include"renderer/Renderer.h"
+#include"RTRenderer.h"
 #include"BSPMap.h"
 
 class Engine {
@@ -15,12 +15,9 @@ public:
 private:
 	int windowWidth = 1920;
 	int windowHeight = 1080;
-	SDL_GLContext glContext = nullptr;
-	bool running=true;
+	bool running = true;
 	Uint64 lastCounter = 0;
 	Window window1;
 	void RenderFrame();
 
 };
-
-extern 	Renderer renderer;
