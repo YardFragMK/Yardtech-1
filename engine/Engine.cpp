@@ -57,7 +57,7 @@ Engine::~Engine(){
 bool Engine::initSystems() {
 	std::filesystem::path dataFolder = "nvs1";
 	if (!std::filesystem::exists(dataFolder)) {
-		windowsError(L"Oyun verilerinin bulundugu nvs1 klasoru eksik veya yok. Oyunun orjinal bir kopyasini edinin veya kendiniz olusturun.", L"Veri klasoru hatasi ERROR367");
+		windowsError(L"The nvs1 folder containing the game data could not be found or is missing. Please obtain an original copy of the game or properly create the required nvs1 folder.", L"Data folder error ERROR367");
 	}
 
 	Console::Init();
@@ -275,13 +275,7 @@ void Engine::RenderFrame() {
 
 void Engine::windowsError(const std::wstring& message, const std::wstring& title) {
 	int rnvalue = MessageBoxW(NULL, message.c_str(), title.c_str(),
-		MB_ICONERROR | MB_OKCANCEL | MB_APPLMODAL | MB_TOPMOST);
+		MB_ICONERROR | MB_OK | MB_APPLMODAL | MB_TOPMOST);
 
-	if (rnvalue == IDRETRY) {
-
-	}
-	else if (rnvalue == IDCANCEL) {
 		exit(EXIT_FAILURE);
-	}
-
 }
