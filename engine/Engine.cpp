@@ -1,4 +1,5 @@
 #include<iostream>
+#include<filesystem>
 #include<enet/enet.h>
 #include<SDL.h>
 #include<cstdlib>
@@ -49,6 +50,10 @@ Engine::~Engine() {
 //Engine
 //=========================================================
 bool Engine::initSystems() {
+	std::filesystem::path dataFolder = "nvs1";
+	if (!std::filesystem::exists(dataFolder)) {
+		windowsError(L"Oyun verilerinin bulundugu nvs1 klasoru eksik veya yok. Oyunun orjinal bir kopyasini edinin veya kendiniz olusturun.", L"Veri klasoru hatasi ERROR367");
+	}
 
 	Console::Init();
 	Logger::info("Console initalize edildi");
@@ -212,6 +217,19 @@ void Engine::RenderFrame() {
 
 	const float fovYRadians = glm::radians(75.0f);
 	g_RTRenderer.EndFrame(g_Camera.GetViewMatrix(), fovYRadians, 0.1f, 10000.0f);
-
+	
 	SDL_Delay(0); // Vulkan present zaten senkronize ediyor, ekstra swap cagrisi yok
+}
+
+void Engine::windowsError(const std::wstring& message, const std::wstring& title) {
+	int rnvalue = MessageBoxW(NULL, message.c_str(), title.c_str(),
+		MB_ICONERROR | MB_OKCANCEL | MB_APPLMODAL | MB_TOPMOST);
+
+	if (rnvalue == IDRETRY) {
+
+	}
+	else if (rnvalue == IDCANCEL) {
+		exit(EXIT_FAILURE);
+	}
+
 }
