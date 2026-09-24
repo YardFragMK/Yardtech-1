@@ -1,4 +1,5 @@
 #pragma once
+#include"Windows.h"
 #include"Window.h"
 #include"SDL.h"
 #include"Camera.h"
@@ -11,6 +12,7 @@ public:
 	~Engine();
 	bool initSystems();
 	void gameLoop();
+	void windowsError(const std::wstring& message, const std::wstring& title);
 
 private:
 	int windowWidth = 1920;

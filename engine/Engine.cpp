@@ -1,4 +1,5 @@
 #include<iostream>
+#include<filesystem>
 #include<enet/enet.h>
 //#include<glad/glad.h>
 #include<SDL.h>
@@ -54,6 +55,10 @@ Engine::~Engine(){
 //Engine 
 //=========================================================
 bool Engine::initSystems() {
+	std::filesystem::path dataFolder = "nvs1";
+	if (!std::filesystem::exists(dataFolder)) {
+		windowsError(L"Oyun verilerinin bulundugu nvs1 klasoru eksik veya yok. Oyunun orjinal bir kopyasini edinin veya kendiniz olusturun.", L"Veri klasoru hatasi ERROR367");
+	}
 
 	Console::Init();
 	Logger::info("Console initalize edildi");
@@ -266,4 +271,17 @@ void Engine::RenderFrame() {
 	Console::Render(windowWidth, windowHeight);
 
 	SDL_GL_SwapWindow(window1.getWindow());
+}
+
+void Engine::windowsError(const std::wstring& message, const std::wstring& title) {
+	int rnvalue = MessageBoxW(NULL, message.c_str(), title.c_str(),
+		MB_ICONERROR | MB_OKCANCEL | MB_APPLMODAL | MB_TOPMOST);
+
+	if (rnvalue == IDRETRY) {
+
+	}
+	else if (rnvalue == IDCANCEL) {
+		exit(EXIT_FAILURE);
+	}
+
 }
