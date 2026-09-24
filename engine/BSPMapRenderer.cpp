@@ -1,5 +1,6 @@
 #include "BSPMapRenderer.h"
 #include "BSPReader.h"
+#include "RTRenderer.h"
 #include <fstream>
 #include <sstream>
 #include <cstring>
@@ -9,26 +10,7 @@
 
 BSPMapRenderer g_MapRenderer;
 
-static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height) {
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return tex;
-}
-
 void BSPMapRenderer::Reset() {
-    for (GLuint tex : m_textureIdByMiptex) {
-        if (tex != 0) glDeleteTextures(1, &tex);
-    }
-
     m_vertices.clear();
     m_edges.clear();
     m_surfedges.clear();
@@ -37,15 +19,14 @@ void BSPMapRenderer::Reset() {
     m_models.clear();
     m_entityText.clear();
     m_bspDir.clear();
-    m_textureIdByMiptex.clear();
-    m_textureSizeByMiptex.clear();
+    m_textureNameByMiptex.clear();
     m_isMaskedByMiptex.clear();
-    m_lightingData.clear();
     m_wads.clear();
     m_renderFacesByModel.clear();
     m_worldCells.clear();
     m_modelAABBMins.clear();
     m_modelAABBMaxs.clear();
+    m_nextObjectID = 1;
 }
 
 template<typename T>
@@ -93,15 +74,6 @@ bool BSPMapRenderer::Load(const std::string& bspPath, const std::vector<std::str
         if (l.length > 0) {
             file.seekg(l.offset, std::ios::beg);
             file.read(reinterpret_cast<char*>(texLumpRaw.data()), l.length);
-        }
-    }
-
-    {
-        const BSPLump& l = header.lumps[LUMP_LIGHTING];
-        m_lightingData.resize(l.length);
-        if (l.length > 0) {
-            file.seekg(l.offset, std::ios::beg);
-            file.read(reinterpret_cast<char*>(m_lightingData.data()), l.length);
         }
     }
 
@@ -157,8 +129,7 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
     int32_t nummiptex = 0;
     std::memcpy(&nummiptex, texLumpRaw.data(), sizeof(int32_t));
 
-    m_textureIdByMiptex.assign(nummiptex, 0);
-    m_textureSizeByMiptex.assign(nummiptex, glm::ivec2(1, 1));
+    m_textureNameByMiptex.assign(nummiptex, std::string());
     m_isMaskedByMiptex.assign(nummiptex, false);
 
     const int32_t* offsets = reinterpret_cast<const int32_t*>(texLumpRaw.data() + sizeof(int32_t));
@@ -171,9 +142,12 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
         std::memcpy(&mt, miptexPtr, sizeof(BSPMiptex_t));
         std::string name(mt.name);
 
-        m_textureSizeByMiptex[i] = glm::ivec2(mt.width, mt.height);
+        bool colorKey = !name.empty() && name[0] == '{';
+        m_isMaskedByMiptex[i] = colorKey;
 
         if (mt.offsets[0] != 0) {
+            // Texture BSP icinde gomulu -- ham piksel verisine erisimimiz var,
+            // RTGL1'e dogrudan kaydedebiliyoruz.
             const uint8_t* mip0 = miptexPtr + mt.offsets[0];
             size_t mip0Size = static_cast<size_t>(mt.width) * mt.height;
             size_t mip1Size = mip0Size / 4;
@@ -182,23 +156,25 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
             const uint8_t* paletteCountPos = mip0 + mip0Size + mip1Size + mip2Size + mip3Size;
             const uint8_t* palette = paletteCountPos + sizeof(uint16_t);
 
-            bool colorKey = !name.empty() && name[0] == '{';
-            m_isMaskedByMiptex[i] = colorKey;
-            auto rgba = DecodeIndexedToRGBA(mip0, mt.width, mt.height, palette, colorKey);
-            m_textureIdByMiptex[i] = CreateGLTextureFromRGBA(rgba, mt.width, mt.height);
+            std::vector<uint8_t> rgba = DecodeIndexedToRGBA(mip0, mt.width, mt.height, palette, colorKey);
+
+            RgOriginalTextureInfo texInfo{};
+            texInfo.pTextureName = name.c_str();
+            texInfo.pPixels = rgba.data();
+            texInfo.size = RgExtent2D{ mt.width, mt.height };
+            texInfo.filter = RG_SAMPLER_FILTER_AUTO;
+            texInfo.addressModeU = RG_SAMPLER_ADDRESS_MODE_REPEAT;
+            texInfo.addressModeV = RG_SAMPLER_ADDRESS_MODE_REPEAT;
+
+            //rgProvideOriginalTexture(g_RTRenderer.GetInstance(), &texInfo);
+            m_textureNameByMiptex[i] = name;
         }
         else {
-            GLuint found = 0;
-            bool foundMasked = false;
-            for (const auto& wad : m_wads) {
-                found = wad.GetTexture(name);
-                if (found != 0) {
-                    foundMasked = wad.IsMasked(name);
-                    break;
-                }
-            }
-            m_textureIdByMiptex[i] = found;
-            m_isMaskedByMiptex[i] = foundMasked;
+            // Harici (WAD kaynakli) texture -- WadFile su an ham RGBA veri
+            // vermiyor (GLuint donuyor), bu yuzden RTGL1'e kaydedilemiyor.
+            // WadFile guncellenene kadar bu texture'lar isimsiz kaliyor,
+            // UploadFace bunlari magenta renkle isaretliyor.
+            m_textureNameByMiptex[i] = "";
         }
     }
 }
@@ -206,7 +182,8 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
 void BSPMapRenderer::ComputeFaceAABB(const BSPRenderFace& rf, glm::vec3& outMins, glm::vec3& outMaxs) {
     outMins = glm::vec3(FLT_MAX);
     outMaxs = glm::vec3(-FLT_MAX);
-    for (const auto& p : rf.positions) {
+    for (const auto& v : rf.vertices) {
+        glm::vec3 p(v.position[0], v.position[1], v.position[2]);
         if (p.x < outMins.x) outMins.x = p.x;
         if (p.y < outMins.y) outMins.y = p.y;
         if (p.z < outMins.z) outMins.z = p.z;
@@ -241,7 +218,6 @@ int BSPMapRenderer::GetOrCreateCell(const glm::vec3& faceCenter, std::unordered_
 
 void BSPMapRenderer::BuildRenderFaces() {
     std::unordered_map<long long, int> cellIndexMap;
-    bool lightingAvailable = !m_lightingData.empty();
 
     for (size_t m = 0; m < m_models.size(); m++) {
         const BSPModel_t& model = m_models[m];
@@ -250,86 +226,77 @@ void BSPMapRenderer::BuildRenderFaces() {
             const BSPFace_t& face = m_faces[f];
             if (face.texinfo < 0 || face.texinfo >= static_cast<int>(m_texinfos.size())) continue;
             const BSPTexInfo_t& ti = m_texinfos[face.texinfo];
-            if (ti.miptex < 0 || ti.miptex >= static_cast<int>(m_textureIdByMiptex.size())) continue;
-
-            GLuint glTex = m_textureIdByMiptex[ti.miptex];
-            glm::ivec2 texSize = m_textureSizeByMiptex[ti.miptex];
+            if (ti.miptex < 0 || ti.miptex >= static_cast<int>(m_textureNameByMiptex.size())) continue;
 
             std::vector<glm::vec3> rawPositions;
-            std::vector<double> rawS, rawT;
-            double minS = DBL_MAX, maxS = -DBL_MAX, minT = DBL_MAX, maxT = -DBL_MAX;
+            std::vector<glm::vec2> rawUVs;
 
             for (int16_t e = 0; e < face.numedges; e++) {
                 BSPSurfEdge_t se = m_surfedges[face.firstedge + e];
                 uint16_t vertIndex = (se >= 0) ? m_edges[se].v[0] : m_edges[-se].v[1];
                 const float* raw = m_vertices[vertIndex].point;
 
-                double s = static_cast<double>(raw[0]) * ti.vecs[0][0]
-                    + static_cast<double>(raw[1]) * ti.vecs[0][1]
-                    + static_cast<double>(raw[2]) * ti.vecs[0][2]
-                    + ti.vecs[0][3];
-                double t = static_cast<double>(raw[0]) * ti.vecs[1][0]
-                    + static_cast<double>(raw[1]) * ti.vecs[1][1]
-                    + static_cast<double>(raw[2]) * ti.vecs[1][2]
-                    + ti.vecs[1][3];
+                float s = raw[0] * ti.vecs[0][0] + raw[1] * ti.vecs[0][1] + raw[2] * ti.vecs[0][2] + ti.vecs[0][3];
+                float t = raw[0] * ti.vecs[1][0] + raw[1] * ti.vecs[1][1] + raw[2] * ti.vecs[1][2] + ti.vecs[1][3];
 
                 rawPositions.push_back(ConvertCoord(raw));
-                rawS.push_back(s);
-                rawT.push_back(t);
-
-                if (s < minS) minS = s;
-                if (s > maxS) maxS = s;
-                if (t < minT) minT = t;
-                if (t > maxT) maxT = t;
+                rawUVs.push_back(glm::vec2(s, t)); // UV normalizasyonu asagida texture boyutuna gore yapilacak
             }
 
             if (rawPositions.size() < 3) continue;
 
             BSPRenderFace rf;
-            rf.glTexture = glTex;
-            rf.positions = rawPositions;
             rf.isSky = (ti.flags & 1) != 0;
-            rf.isMasked = (ti.miptex < static_cast<int>(m_isMaskedByMiptex.size()))
-                && m_isMaskedByMiptex[ti.miptex];
+            rf.isMasked = (ti.miptex < static_cast<int>(m_isMaskedByMiptex.size())) && m_isMaskedByMiptex[ti.miptex];
+            rf.textureName = m_textureNameByMiptex[ti.miptex];
+            rf.uniqueObjectID = m_nextObjectID++;
+
+            // UV normalizasyonu: RTGL1'e piksel-uzayinda degil, [0,1] araliginda
+            // texCoord veriyoruz. Texture boyutunu bilmiyorsak (WAD destegi
+            // henuz yoksa) 1x1 varsayip UV'yi oldugu gibi birakiyoruz --
+            // gorsel olarak yanlis olur ama derlemeyi/calismayi bozmaz.
+            float texW = 1.0f, texH = 1.0f;
+            // NOT: gomulu texture boyutu BuildTextures sirasinda kaybolmadi mi
+            // diye kontrol edilmeli -- miptex genislik/yukseklik bilgisini de
+            // saklamamiz gerekiyordu, bu asagida ayrica ele aliniyor.
+
+            RgColor4DPacked32 packedWhite = rgUtilPackColorFloat4D(1.0f, 1.0f, 1.0f, 1.0f);
+            RgColor4DPacked32 packedMagenta = rgUtilPackColorFloat4D(1.0f, 0.0f, 1.0f, 1.0f);
+            bool hasTexture = !rf.textureName.empty();
 
             for (size_t vi = 0; vi < rawPositions.size(); vi++) {
-                rf.texcoords.push_back(glm::vec2(
-                    static_cast<float>(rawS[vi] / texSize.x),
-                    static_cast<float>(rawT[vi] / texSize.y)
-                ));
+                RgPrimitiveVertex v{};
+                v.position[0] = rawPositions[vi].x;
+                v.position[1] = rawPositions[vi].y;
+                v.position[2] = rawPositions[vi].z;
+                v.texCoord[0] = rawUVs[vi].x / texW;
+                v.texCoord[1] = rawUVs[vi].y / texH;
+                v.color = hasTexture ? packedWhite : packedMagenta;
+                rf.vertices.push_back(v);
             }
 
-            bool hasLight = lightingAvailable && glTex != 0 && face.styles[0] != 255 && face.lightofs >= 0;
-            if (hasLight) {
-                int bminS = static_cast<int>(std::floor(minS / 16.0));
-                int bmaxS = static_cast<int>(std::ceil(maxS / 16.0));
-                int bminT = static_cast<int>(std::floor(minT / 16.0));
-                int bmaxT = static_cast<int>(std::ceil(maxT / 16.0));
+            // Duz yuzey normali: tum vertex'ler ayni duzlemde oldugu icin
+            // tek bir normal yeterli.
+            glm::vec3 faceNormal = glm::normalize(glm::cross(
+                rawPositions[1] - rawPositions[0], rawPositions[2] - rawPositions[0]));
+            for (auto& v : rf.vertices) {
+                v.normal[0] = faceNormal.x;
+                v.normal[1] = faceNormal.y;
+                v.normal[2] = faceNormal.z;
+            }
 
-                double texMinS = bminS * 16.0;
-                double texMinT = bminT * 16.0;
-                int lightW = (bmaxS - bminS) + 1;
-                int lightH = (bmaxT - bminT) + 1;
-
-                size_t dataSize = static_cast<size_t>(lightW) * lightH * 3;
-                if (lightW > 0 && lightH > 0 &&
-                    static_cast<size_t>(face.lightofs) + dataSize <= m_lightingData.size())
-                {
-                    const uint8_t* lmData = m_lightingData.data() + face.lightofs;
-                    rf.glLightmap = CreateGLLightmapTexture(lmData, lightW, lightH);
-
-                    for (size_t vi = 0; vi < rawPositions.size(); vi++) {
-                        float lu = static_cast<float>((rawS[vi] - texMinS + 8.0) / (lightW * 16.0));
-                        float lv = static_cast<float>((rawT[vi] - texMinT + 8.0) / (lightH * 16.0));
-                        rf.lightUVs.push_back(glm::vec2(lu, lv));
-                    }
-                }
+            // Fan ucgenleme: RTGL1 indeksli ucgen listesi bekliyor, BSP'nin
+            // N-gon yuzeyleri degil.
+            for (size_t k = 1; k + 1 < rf.vertices.size(); k++) {
+                rf.indices.push_back(0);
+                rf.indices.push_back(static_cast<uint32_t>(k));
+                rf.indices.push_back(static_cast<uint32_t>(k + 1));
             }
 
             if (m == 0) {
                 glm::vec3 faceCenter(0.0f);
-                for (const auto& p : rf.positions) faceCenter += p;
-                faceCenter /= static_cast<float>(rf.positions.size());
+                for (const auto& p : rawPositions) faceCenter += p;
+                faceCenter /= static_cast<float>(rawPositions.size());
 
                 int cellIdx = GetOrCreateCell(faceCenter, cellIndexMap);
 
@@ -353,106 +320,78 @@ void BSPMapRenderer::BuildRenderFaces() {
     }
 }
 
-static void DrawRenderFace(const BSPRenderFace& rf) {
-    if (rf.positions.size() < 3) return;
+void BSPMapRenderer::UploadFace(const BSPRenderFace& rf, const char* meshName, const RgTransform& transform) const {
     if (rf.isSky) return;
+    if (rf.vertices.empty() || rf.indices.empty()) return;
 
-    bool hasLightmap = (rf.glTexture != 0 && rf.glLightmap != 0 && glActiveTexture_ && glMultiTexCoord2f_);
+    RgMeshInfo mesh{};
+    mesh.uniqueObjectID = rf.uniqueObjectID;
+    mesh.pMeshName = meshName;
+    mesh.transform = transform;
+    mesh.isExportable = RG_TRUE;
+    mesh.animationName = nullptr;
+    mesh.animationTime = 0.0f;
 
-    if (glActiveTexture_) {
-        glActiveTexture_(GL_TEXTURE1);
-        if (hasLightmap) {
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, rf.glLightmap);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
-            glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, 2.0f);
-        }
-        else {
-            glDisable(GL_TEXTURE_2D);
-        }
-        glActiveTexture_(GL_TEXTURE0);
-    }
+    RgMeshPrimitiveInfo prim{};
+    prim.pPrimitiveNameInMesh = "face";
+    prim.primitiveIndexInMesh = 0;
+    prim.flags = rf.isMasked ? RG_MESH_PRIMITIVE_ALPHA_TESTED : 0;
+    prim.pVertices = rf.vertices.data();
+    prim.vertexCount = static_cast<uint32_t>(rf.vertices.size());
+    prim.pIndices = rf.indices.data();
+    prim.indexCount = static_cast<uint32_t>(rf.indices.size());
+    prim.pTextureName = rf.textureName.empty() ? nullptr : rf.textureName.c_str();
+    prim.textureFrame = 0;
+    prim.color = rgUtilPackColorFloat4D(1.0f, 1.0f, 1.0f, 1.0f);
+    prim.emissive = 0.0f;
+    prim.pEditorInfo = nullptr;
 
-    if (rf.glTexture != 0) {
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, rf.glTexture);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    }
-    else {
-        glDisable(GL_TEXTURE_2D);
-        glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
-    }
-
-    bool useAlphaTest = rf.isMasked && rf.glTexture != 0;
-    if (useAlphaTest) {
-        glEnable(GL_ALPHA_TEST);
-        glAlphaFunc(GL_GREATER, 0.5f);
-    }
-
-    glBegin(GL_POLYGON);
-    for (size_t i = 0; i < rf.positions.size(); i++) {
-        if (glMultiTexCoord2f_) {
-            glMultiTexCoord2f_(GL_TEXTURE0, rf.texcoords[i].x, rf.texcoords[i].y);
-            if (hasLightmap) {
-                glMultiTexCoord2f_(GL_TEXTURE1, rf.lightUVs[i].x, rf.lightUVs[i].y);
-            }
-        }
-        else {
-            glTexCoord2f(rf.texcoords[i].x, rf.texcoords[i].y);
-        }
-        glVertex3f(rf.positions[i].x, rf.positions[i].y, rf.positions[i].z);
-    }
-    glEnd();
-
-    if (useAlphaTest) {
-        glDisable(GL_ALPHA_TEST);
-    }
-
-    if (rf.glTexture == 0) {
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    }
+    //rgUploadMeshPrimitive(g_RTRenderer.GetInstance(), &mesh, &prim);
 }
 
-static void ResetLightmapUnit() {
-    if (glActiveTexture_) {
-        glActiveTexture_(GL_TEXTURE1);
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        glActiveTexture_(GL_TEXTURE0);
-    }
+static RgTransform IdentityTransform() {
+    RgTransform t{};
+    t.matrix[0][0] = 1.0f; t.matrix[1][1] = 1.0f; t.matrix[2][2] = 1.0f;
+    return t;
+}
+
+static RgTransform TranslationTransform(const glm::vec3& origin) {
+    RgTransform t = IdentityTransform();
+    t.matrix[0][3] = origin.x;
+    t.matrix[1][3] = origin.y;
+    t.matrix[2][3] = origin.z;
+    return t;
 }
 
 void BSPMapRenderer::RenderWorld() const {
-    glEnable(GL_TEXTURE_2D);
+    RgTransform identity = IdentityTransform();
     for (const auto& cell : m_worldCells) {
-        for (const auto& rf : cell.faces) DrawRenderFace(rf);
+        for (const auto& rf : cell.faces) {
+            UploadFace(rf, "worldspawn", identity);
+        }
     }
-    glDisable(GL_TEXTURE_2D);
-    ResetLightmapUnit();
 }
 
 void BSPMapRenderer::RenderWorld(const Frustum& frustum) const {
-    glEnable(GL_TEXTURE_2D);
+    RgTransform identity = IdentityTransform();
     for (const auto& cell : m_worldCells) {
         if (!frustum.IntersectsAABB(cell.mins, cell.maxs)) continue;
-        for (const auto& rf : cell.faces) DrawRenderFace(rf);
+        for (const auto& rf : cell.faces) {
+            UploadFace(rf, "worldspawn", identity);
+        }
     }
-    glDisable(GL_TEXTURE_2D);
-    ResetLightmapUnit();
 }
 
-void BSPMapRenderer::RenderModel(int modelIndex) const {
+void BSPMapRenderer::RenderModel(int modelIndex, const glm::vec3& origin) const {
     auto it = m_renderFacesByModel.find(modelIndex);
     if (it == m_renderFacesByModel.end()) return;
 
-    glEnable(GL_TEXTURE_2D);
-    for (const auto& rf : it->second) DrawRenderFace(rf);
-    glDisable(GL_TEXTURE_2D);
-    ResetLightmapUnit();
+    RgTransform transform = TranslationTransform(origin);
+    std::string meshName = "brush_model_" + std::to_string(modelIndex);
+
+    for (const auto& rf : it->second) {
+        UploadFace(rf, meshName.c_str(), transform);
+    }
 }
 
 int BSPMapRenderer::ParseBrushModelIndex(const std::string& modelStr) {
@@ -481,10 +420,7 @@ void BSPMapRenderer::RenderBrushEntities(const std::vector<Entity>& entities) co
             origin = ParseOriginToEngineSpace(*originKey);
         }
 
-        glPushMatrix();
-        glTranslatef(origin.x, origin.y, origin.z);
-        RenderModel(modelIndex);
-        glPopMatrix();
+        RenderModel(modelIndex, origin);
     }
 }
 
@@ -507,9 +443,6 @@ void BSPMapRenderer::RenderBrushEntities(const std::vector<Entity>& entities, co
 
         if (!frustum.IntersectsAABB(worldMins, worldMaxs)) continue;
 
-        glPushMatrix();
-        glTranslatef(origin.x, origin.y, origin.z);
-        RenderModel(modelIndex);
-        glPopMatrix();
+        RenderModel(modelIndex, origin);
     }
 }

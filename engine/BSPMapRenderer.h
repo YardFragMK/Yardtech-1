@@ -3,22 +3,25 @@
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
-#include <windows.h>
-#include <GL/gl.h>
+#include <RTGL1.h>
 #include "BSPFormat.h"
 #include "WadFile.h"
 #include "EntityParser.h"
 #include "Frustum.h"
-#include "GLExtensions.h"
 
+// Bir yuzeyin (BSP face) onceden hesaplanmis, RTGL1'e her frame yuklenmeye
+// hazir hali. Fan-ucgenlenmis vertex/index dizileri build-time'da (BuildRenderFaces
+// icinde) bir kez hesaplanir; RenderWorld/RenderModel her frame bu diziyi
+// rgUploadMeshPrimitive'e verir -- RTGL1'in kendisi, statik geometrinin
+// her frame yeniden "upload" edilmesini bekleyen bir API tasarimina sahip
+// (klasik retained-mode degil, per-frame immediate-benzeri bir model).
 struct BSPRenderFace {
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec2> texcoords;
-    std::vector<glm::vec2> lightUVs;
-    GLuint glTexture = 0;
-    GLuint glLightmap = 0;
+    std::vector<RgPrimitiveVertex> vertices;
+    std::vector<uint32_t> indices;
+    std::string textureName; // rgProvideOriginalTexture ile kayitli isim; bos ise texture yok/desteklenmiyor
     bool isMasked = false;
     bool isSky = false;
+    uint32_t uniqueObjectID = 0; // build-time'da atanir, frame'ler arasi sabit kalir
 };
 
 struct WorldGridCell {
@@ -27,19 +30,19 @@ struct WorldGridCell {
     std::vector<BSPRenderFace> faces;
 };
 
-// Bir .bsp dosyasinin gorsel tarafini (texture, lightmap, gorunurluk gridi,
-// cizim) yonetir. Collision/entity verisi bu sinifin ilgi alani disindadir --
-// onun icin BSPMap (Y1-Shared) kullanilir. Istemci, ayni .bsp dosyasini hem
-// BSPMap::Load hem BSPMapRenderer::Load ile ayri ayri acar; bu kucuk bir
-// dosya-okuma tekrari pahasina, sunucunun hicbir grafik API'sine bagimli
-// olmamasini saglar.
+// Bir .bsp dosyasinin gorsel tarafini (texture, gorunurluk gridi, RTGL1'e
+// geometri/texture yukleme) yonetir. Collision/entity verisi bu sinifin
+// ilgi alani disindadir -- onun icin BSPMap (Y1-Shared) kullanilir.
 class BSPMapRenderer {
 public:
     bool Load(const std::string& bspPath, const std::vector<std::string>& wadSearchDirs = { "", "wads/", "textures/" });
 
+    // RTGL1'e bu frame'in dunya geometrisini yukler (rgStartFrame ile
+    // rgDrawFrame arasinda cagrilmalidir). Cizim RTGL1'in kendi ic
+    // pipeline'inda gerceklesir, bu fonksiyon sadece veri "upload" eder.
     void RenderWorld(const Frustum& frustum) const;
     void RenderWorld() const;
-    void RenderModel(int modelIndex) const;
+    void RenderModel(int modelIndex, const glm::vec3& origin) const;
     void RenderBrushEntities(const std::vector<Entity>& entities, const Frustum& frustum) const;
     void RenderBrushEntities(const std::vector<Entity>& entities) const;
 
@@ -53,10 +56,8 @@ private:
     std::string m_entityText;
     std::string m_bspDir;
 
-    std::vector<GLuint> m_textureIdByMiptex;
-    std::vector<glm::ivec2> m_textureSizeByMiptex;
+    std::vector<std::string> m_textureNameByMiptex; // bos string = texture yok/desteklenmiyor
     std::vector<bool> m_isMaskedByMiptex;
-    std::vector<uint8_t> m_lightingData;
     std::vector<WadFile> m_wads;
 
     std::unordered_map<int, std::vector<BSPRenderFace>> m_renderFacesByModel;
@@ -65,6 +66,8 @@ private:
 
     std::vector<glm::vec3> m_modelAABBMins;
     std::vector<glm::vec3> m_modelAABBMaxs;
+
+    uint32_t m_nextObjectID = 1; // 0'i "atanmamis" olarak ayirmak icin 1'den basliyor
 
     static glm::vec3 ConvertCoord(const float p[3]) {
         return glm::vec3(p[0], p[2], -p[1]);
@@ -84,6 +87,8 @@ private:
 
     static void ComputeFaceAABB(const BSPRenderFace& rf, glm::vec3& outMins, glm::vec3& outMaxs);
     int GetOrCreateCell(const glm::vec3& faceCenter, std::unordered_map<long long, int>& cellIndexMap);
+
+    void UploadFace(const BSPRenderFace& rf, const char* meshName, const RgTransform& transform) const;
 
     void Reset();
 };
