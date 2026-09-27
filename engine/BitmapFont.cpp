@@ -2,6 +2,9 @@
 #include "TGALoader.h"
 #include <vector>
 #include "GLExtensions.h"
+#include <RTGL1.h>
+#include "RTInstance.h"
+#include "RTUI.h"
 
 BitmapFont g_HudFont;
 
@@ -88,16 +91,16 @@ bool BitmapFont::Load(const std::string& atlasTgaPath) {
     int w = 0, h = 0;
     if (!LoadTGA(atlasTgaPath, pixels, w, h)) return false;
 
-    glGenTextures(1, &m_texture);
-    glBindTexture(GL_TEXTURE_2D, m_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    RgOriginalTextureInfo texInfo{};
+    texInfo.pTextureName = "hud_font_atlas";
+    texInfo.pPixels = pixels.data();
+    texInfo.size = RgExtent2D{ static_cast<uint32_t>(w), static_cast<uint32_t>(h) };
+    texInfo.filter = RG_SAMPLER_FILTER_LINEAR;
+    texInfo.addressModeU = RG_SAMPLER_ADDRESS_MODE_CLAMP;
+    texInfo.addressModeV = RG_SAMPLER_ADDRESS_MODE_CLAMP;
+
+    rgProvideOriginalTexture(GetRTInstance(), &texInfo);
+    m_textureName = "hud_font_atlas";
 
     BuildGlyphTable(m_glyphs, w, h);
     return true;
@@ -111,7 +114,7 @@ static char32_t NormalizeCodepoint(char32_t cp) {
     return cp;
 }
 
-float BitmapFont::DrawText(float x, float y, const std::string& text, float pixelHeight,
+float BitmapFont::UIDrawText(float x, float y, const std::string& text, float pixelHeight,
     float r, float g, float b, float a) const {
     if (m_texture == 0) return 0.0f;
 
@@ -143,12 +146,8 @@ float BitmapFont::DrawText(float x, float y, const std::string& text, float pixe
         float scale = pixelHeight / gl.pixelHeight;
         float drawW = gl.pixelWidth * scale;
 
-        glBegin(GL_QUADS);
-        glTexCoord2f(gl.u0, gl.v0); glVertex2f(cursorX, y);
-        glTexCoord2f(gl.u1, gl.v0); glVertex2f(cursorX + drawW, y);
-        glTexCoord2f(gl.u1, gl.v1); glVertex2f(cursorX + drawW, y + pixelHeight);
-        glTexCoord2f(gl.u0, gl.v1); glVertex2f(cursorX, y + pixelHeight);
-        glEnd();
+        RTUI::TexturedQuad(cursorX, y, drawW, pixelHeight, m_textureName,
+            gl.u0, gl.v0, gl.u1, gl.v1, r, g, b, a);
 
         cursorX += drawW + LETTER_SPACING;
     }

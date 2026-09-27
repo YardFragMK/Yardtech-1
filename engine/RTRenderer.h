@@ -19,6 +19,8 @@ public:
     // path-traced goruntuyu urettirip ekrana sunar.
     void EndFrame(const glm::mat4& viewMatrix, float fovYRadians, float nearPlane, float farPlane);
 
+    void* GetRawInstance() const { return m_instance; }
+
 private:
     void* m_instance = nullptr; // RgInstance, header'i cpp'de include ediyoruz
 };

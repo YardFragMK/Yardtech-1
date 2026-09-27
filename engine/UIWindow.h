@@ -29,5 +29,5 @@ public:
     static float GetMargin();
 
 private:
-    static unsigned int s_iconTexture;
+    static std::string s_iconTextureName;
 };

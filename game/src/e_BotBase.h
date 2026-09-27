@@ -12,11 +12,11 @@ class e_BotBase {
 public:
     virtual ~e_BotBase() = default;
 
-    virtual void Spawn();
-    virtual void Live(float deltaTime);
-    virtual void Run(float deltaTime);
-    virtual void Shoot();
-    virtual void Render() const;
+    virtual void Spawn()=0;
+    virtual void Live(float deltaTime)=0;
+    virtual void Run(float deltaTime)=0;
+    virtual void Shoot()=0;
+    virtual void Render() const=0;
 
     bool IsAlive() const { return health > 0; }
 

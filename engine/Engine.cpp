@@ -90,13 +90,13 @@ bool Engine::initSystems() {
 	// (glBegin/glTexImage2D) kullaniyor. RTGL1 devreye girdikten sonra bu
 	// sistemlerin de rasterized-overlay (rgUploadNonWorldPrimitive) yoluna
 	// tasinmasi gerekecek.
-	/*if (!g_HudFont.Load("nvs1/gfx/hud_font.tga")) {
+	if (!g_HudFont.Load("nvs1/gfx/hud_font.tga")) {
 		Logger::error("HUD fontu yuklenemedi.");
 	}
 
 	if (!UIWindow::GBLoadIcon("nvs1/gfx/window_icon.tga")) {
 		Logger::error("Pencere ikonu yuklenemedi.");
-	}*/
+	}
 
 	//=========================================================
 	// Main Menu

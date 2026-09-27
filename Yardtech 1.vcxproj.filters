@@ -120,6 +120,9 @@
     <ClCompile Include="engine\RTRenderer.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\RTUI.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -225,6 +228,12 @@
       <Filter>Header Files\game src</Filter>
     </ClInclude>
     <ClInclude Include="engine\RTRenderer.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\RTInstance.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\RTUI.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

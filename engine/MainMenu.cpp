@@ -101,7 +101,7 @@ static void DrawButtonText(const MenuButton& b, float pixelHeight) {
     float g = b.hovered ? 0.15f : 0.85f;
     float bl = b.hovered ? 0.1f : 0.85f;
 
-    g_HudFont.DrawText(b.x, b.y, b.label, pixelHeight, r, g, bl);
+    g_HudFont.UIDrawText(b.x, b.y, b.label, pixelHeight, r, g, bl);
 }
 
 void MainMenu::Render(int windowWidth, int windowHeight) {

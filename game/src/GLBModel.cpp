@@ -165,9 +165,11 @@ bool GLBModel::Load(const std::string& glbPath) {
     return true;
 }
 
-void GLBModel::Render() const {
+void GLBModel::Render(const glm::vec3& pos, float scale) const {
     if (m_positions.empty() || m_indices.empty()) return;
-
+    glPushMatrix();
+    glTranslatef(pos.x, pos.y, pos.z);
+    glScalef(scale, scale, scale);
     if (m_diffuseTexture != 0) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, m_diffuseTexture);
@@ -196,4 +198,5 @@ void GLBModel::Render() const {
     if (m_diffuseTexture != 0) {
         glDisable(GL_TEXTURE_2D);
     }
+    glPopMatrix();
 }

@@ -154,7 +154,7 @@ void Settings::RenderCategoryTabs() {
         float r = active ? 1.0f : 0.6f;
         float g = active ? 0.15f : 0.6f;
         float b = active ? 0.1f : 0.6f;
-        float w = g_HudFont.DrawText(tabX, tabY, tabLabels[i], 24.0f, r, g, b);
+        float w = g_HudFont.UIDrawText(tabX, tabY, tabLabels[i], 24.0f, r, g, b);
         tabX += w + 40.0f;
     }
 }
@@ -163,7 +163,7 @@ void Settings::RenderActiveCategory() {
     for (const auto& s : s_sliders[(int)s_activeCategory]) {
         float labelX = s_panelX + s.dx;
         float labelY = s_panelY + s.dy - 34.0f;
-        g_HudFont.DrawText(labelX, labelY, s.label, 20.0f, 0.85f, 0.85f, 0.85f);
+        g_HudFont.UIDrawText(labelX, labelY, s.label, 20.0f, 0.85f, 0.85f, 0.85f);
 
         float barX = s_panelX + s.dx;
         float barY = s_panelY + s.dy;
@@ -174,7 +174,7 @@ void Settings::RenderActiveCategory() {
         DrawFilledRect(handleX - 6.0f, barY - 8.0f, 12.0f, 22.0f, 0.85f, 0.15f, 0.1f, 1.0f);
 
         int displayValue = static_cast<int>(t * 100.0f + 0.5f);
-        g_HudFont.DrawText(barX + s.w + 20.0f, barY - 10.0f, std::to_string(displayValue), 20.0f, 0.7f, 0.7f, 0.7f);
+        g_HudFont.UIDrawText(barX + s.w + 20.0f, barY - 10.0f, std::to_string(displayValue), 20.0f, 0.7f, 0.7f, 0.7f);
     }
 
     for (const auto& t : s_toggles[(int)s_activeCategory]) {
@@ -182,12 +182,12 @@ void Settings::RenderActiveCategory() {
         float ly = s_panelY + t.dy;
         bool val = t.getValue();
 
-        float labelW = g_HudFont.DrawText(lx, ly, t.label, 22.0f, 0.85f, 0.85f, 0.85f);
+        float labelW = g_HudFont.UIDrawText(lx, ly, t.label, 22.0f, 0.85f, 0.85f, 0.85f);
 
         float stateR = val ? 0.3f : 0.5f;
         float stateG = val ? 0.85f : 0.5f;
         float stateB = val ? 0.3f : 0.5f;
-        g_HudFont.DrawText(lx + labelW + 30.0f, ly, val ? "ON" : "OFF", 22.0f, stateR, stateG, stateB);
+        g_HudFont.UIDrawText(lx + labelW + 30.0f, ly, val ? "ON" : "OFF", 22.0f, stateR, stateG, stateB);
     }
 }
 

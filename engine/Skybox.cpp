@@ -1,48 +1,37 @@
 #include "Skybox.h"
 #include "TGALoader.h"
 #include "console/Console.h"
-#include "GLExtensions.h"
+#include "RTInstance.h"
 #include <vector>
 
 Skybox g_Skybox;
 
-static GLuint UploadSkyTexture(const std::string& path) {
+static std::string UploadSkyTexture(const std::string& path, const std::string& name) {
     std::vector<uint8_t> pixels;
     int w = 0, h = 0;
-    if (!LoadTGA(path, pixels, w, h)) return 0;
+    if (!LoadTGA(path, pixels, w, h)) return "";
 
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return tex;
-}
+    RgOriginalTextureInfo texInfo{};
+    texInfo.pTextureName = name.c_str();
+    texInfo.pPixels = pixels.data();
+    texInfo.size = RgExtent2D{ static_cast<uint32_t>(w), static_cast<uint32_t>(h) };
+    texInfo.filter = RG_SAMPLER_FILTER_LINEAR;
 
-void Skybox::Unload() {
-    for (int i = 0; i < 6; i++) {
-        if (m_faceTex[i] != 0) { glDeleteTextures(1, &m_faceTex[i]); m_faceTex[i] = 0; }
-    }
-    m_loaded = false;
+    rgProvideOriginalTexture(GetRTInstance(), &texInfo);
+    return name;
 }
 
 bool Skybox::Load(const std::string& skyname) {
-    Unload();
     if (skyname.empty()) return false;
 
     static const char* suffixes[6] = { "rt", "lf", "up", "dn", "bk", "ft" };
 
     bool anyLoaded = false;
     for (int i = 0; i < 6; i++) {
+        std::string texName = "sky_" + skyname + suffixes[i];
         std::string path = "nvs1/gfx/env/" + skyname + suffixes[i] + ".tga";
-        m_faceTex[i] = UploadSkyTexture(path);
-        if (m_faceTex[i] != 0) anyLoaded = true;
+        m_faceTexNames[i] = UploadSkyTexture(path, texName);
+        if (!m_faceTexNames[i].empty()) anyLoaded = true;
     }
 
     if (!anyLoaded) {
@@ -55,40 +44,59 @@ bool Skybox::Load(const std::string& skyname) {
     return true;
 }
 
-static void DrawSkyFace(GLuint tex, const glm::vec3 verts[4], const glm::vec2 uvs[4]) {
-    if (tex == 0) return;
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glBegin(GL_QUADS);
+static void UploadSkyFace(const std::string& texName, const glm::vec3 verts[4], const glm::vec2 uvs[4],
+    const glm::vec3& cameraOffset, uint32_t objectID) {
+    if (texName.empty()) return;
+
+    RgPrimitiveVertex v[4] = {};
     for (int i = 0; i < 4; i++) {
-        glTexCoord2f(uvs[i].x, uvs[i].y);
-        glVertex3f(verts[i].x, verts[i].y, verts[i].z);
+        v[i].position[0] = verts[i].x + cameraOffset.x;
+        v[i].position[1] = verts[i].y + cameraOffset.y;
+        v[i].position[2] = verts[i].z + cameraOffset.z;
+        v[i].texCoord[0] = uvs[i].x;
+        v[i].texCoord[1] = uvs[i].y;
+        v[i].color = rgUtilPackColorFloat4D(1.0f, 1.0f, 1.0f, 1.0f);
     }
-    glEnd();
+    uint32_t indices[6] = { 0, 1, 2, 0, 2, 3 };
+
+    RgTransform transform{};
+    transform.matrix[0][0] = 1.0f; transform.matrix[1][1] = 1.0f; transform.matrix[2][2] = 1.0f;
+
+    RgMeshInfo mesh{};
+    mesh.uniqueObjectID = objectID;
+    mesh.pMeshName = "skybox";
+    mesh.transform = transform;
+
+    RgMeshPrimitiveInfo prim{};
+    prim.pPrimitiveNameInMesh = "face";
+    prim.pVertices = v;
+    prim.vertexCount = 4;
+    prim.pIndices = indices;
+    prim.indexCount = 6;
+    prim.pTextureName = texName.c_str();
+    prim.color = rgUtilPackColorFloat4D(1.0f, 1.0f, 1.0f, 1.0f);
+
+    rgUploadMeshPrimitive(GetRTInstance(), &mesh, &prim);
 }
 
 void Skybox::Render(const glm::vec3& cameraPos) const {
     if (!m_loaded) return;
 
-    glPushMatrix();
-    glTranslatef(cameraPos.x, cameraPos.y, cameraPos.z);
-
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glEnable(GL_TEXTURE_2D);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
     float s = SIZE;
     glm::vec2 uvs[4] = { glm::vec2(0,1), glm::vec2(1,1), glm::vec2(1,0), glm::vec2(0,0) };
-    glm::vec2 uvsRot[4] = { glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1) }; // Bir tık daha (270 derece) döndürülmüş UV
+    glm::vec2 uvsRot[4] = { glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1) };
 
-    { glm::vec3 v[4] = { {s,-s,-s},{s,-s,s},{s,s,s},{s,s,-s} };       DrawSkyFace(m_faceTex[0], v, uvs); } // +X rt
-    { glm::vec3 v[4] = { {-s,-s,s},{-s,-s,-s},{-s,s,-s},{-s,s,s} };   DrawSkyFace(m_faceTex[1], v, uvs); } // -X lf
-    { glm::vec3 v[4] = { {-s,s,s},{s,s,s},{s,s,-s},{-s,s,-s} };       DrawSkyFace(m_faceTex[2], v, uvsRot); } // +Y up (Döndürüldü)
-    { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,-s,s},{-s,-s,s} };   DrawSkyFace(m_faceTex[3], v, uvsRot); } // -Y dn (Döndürüldü)
-    { glm::vec3 v[4] = { {s,-s,s},{-s,-s,s},{-s,s,s},{s,s,s} };       DrawSkyFace(m_faceTex[4], v, uvs); } // +Z bk
-    { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,s,-s},{-s,s,-s} };   DrawSkyFace(m_faceTex[5], v, uvs); } // -Z ft
+    glm::vec3 v0[4] = { {s,-s,-s},{s,-s,s},{s,s,s},{s,s,-s} };
+    glm::vec3 v1[4] = { {-s,-s,s},{-s,-s,-s},{-s,s,-s},{-s,s,s} };
+    glm::vec3 v2[4] = { {-s,s,s},{s,s,s},{s,s,-s},{-s,s,-s} };
+    glm::vec3 v3[4] = { {-s,-s,-s},{s,-s,-s},{s,-s,s},{-s,-s,s} };
+    glm::vec3 v4[4] = { {s,-s,s},{-s,-s,s},{-s,s,s},{s,s,s} };
+    glm::vec3 v5[4] = { {-s,-s,-s},{s,-s,-s},{s,s,-s},{-s,s,-s} };
 
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-    glPopMatrix();
+    UploadSkyFace(m_faceTexNames[0], v0, uvs, cameraPos, 900001);
+    UploadSkyFace(m_faceTexNames[1], v1, uvs, cameraPos, 900002);
+    UploadSkyFace(m_faceTexNames[2], v2, uvsRot, cameraPos, 900003);
+    UploadSkyFace(m_faceTexNames[3], v3, uvsRot, cameraPos, 900004);
+    UploadSkyFace(m_faceTexNames[4], v4, uvs, cameraPos, 900005);
+    UploadSkyFace(m_faceTexNames[5], v5, uvs, cameraPos, 900006);
 }

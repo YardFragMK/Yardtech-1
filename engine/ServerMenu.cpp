@@ -285,7 +285,7 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
         RectOutline(tabX, contentY, tabW, TAB_ROW_H, 0.5f, 0.5f, 0.5f, 0.6f);
 
         float labelR = active ? 1.0f : 0.75f;
-        g_HudFont.DrawText(tabX + 15.0f, contentY + 8.0f, tabLabels[i], 20.0f, labelR, labelR * 0.9f, labelR * 0.9f);
+        g_HudFont.UIDrawText(tabX + 15.0f, contentY + 8.0f, tabLabels[i], 20.0f, labelR, labelR * 0.9f, labelR * 0.9f);
 
         tabX += tabW + 6.0f;
     }
@@ -295,10 +295,10 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
     float listW = innerRight - contentX - SIDE_PANEL_W - 15.0f;
 
     FilledRect(contentX, headerY, listW, HEADER_ROW_H, 0.1f, 0.1f, 0.1f, 0.9f);
-    g_HudFont.DrawText(contentX + COL_ANTICHEAT, headerY + 4.0f, "AC", 14.0f, 0.7f, 0.7f, 0.7f);
-    g_HudFont.DrawText(contentX + COL_NAME, headerY + 4.0f, "SERVER NAME", 14.0f, 0.7f, 0.7f, 0.7f);
-    g_HudFont.DrawText(contentX + COL_MAP, headerY + 4.0f, "MAP", 14.0f, 0.7f, 0.7f, 0.7f);
-    g_HudFont.DrawText(contentX + COL_PLAYERS, headerY + 4.0f, "PLAYERS", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.UIDrawText(contentX + COL_ANTICHEAT, headerY + 4.0f, "AC", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.UIDrawText(contentX + COL_NAME, headerY + 4.0f, "SERVER NAME", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.UIDrawText(contentX + COL_MAP, headerY + 4.0f, "MAP", 14.0f, 0.7f, 0.7f, 0.7f);
+    g_HudFont.UIDrawText(contentX + COL_PLAYERS, headerY + 4.0f, "PLAYERS", 14.0f, 0.7f, 0.7f, 0.7f);
 
     // --- Sunucu listesi ---
     float listY = headerY + HEADER_ROW_H + 6.0f;
@@ -310,7 +310,7 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
     int maxVisible = static_cast<int>(listH / ROW_H);
 
     if (rows.empty()) {
-        g_HudFont.DrawText(contentX + 15.0f, listY + 15.0f, "NO SERVERS FOUND", 18.0f, 0.5f, 0.5f, 0.5f);
+        g_HudFont.UIDrawText(contentX + 15.0f, listY + 15.0f, "NO SERVERS FOUND", 18.0f, 0.5f, 0.5f, 0.5f);
     }
 
     for (int i = 0; i < maxVisible; i++) {
@@ -334,11 +334,11 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
         DrawShieldIcon(contentX + COL_ANTICHEAT, iconY, 16.0f,
             row.hasAnticheat ? 0.3f : 0.5f, row.hasAnticheat ? 0.85f : 0.3f, row.hasAnticheat ? 0.3f : 0.3f, 1.0f);
 
-        g_HudFont.DrawText(contentX + COL_NAME, rowY + 4.0f, row.name, 15.0f, 0.85f, 0.85f, 0.85f);
-        g_HudFont.DrawText(contentX + COL_MAP, rowY + 4.0f, row.mapName, 15.0f, 0.7f, 0.7f, 0.7f);
+        g_HudFont.UIDrawText(contentX + COL_NAME, rowY + 4.0f, row.name, 15.0f, 0.85f, 0.85f, 0.85f);
+        g_HudFont.UIDrawText(contentX + COL_MAP, rowY + 4.0f, row.mapName, 15.0f, 0.7f, 0.7f, 0.7f);
 
         std::string playersText = std::to_string(row.currentPlayers) + "/" + std::to_string(row.maxPlayers);
-        g_HudFont.DrawText(contentX + COL_PLAYERS, rowY + 4.0f, playersText, 15.0f, 0.7f, 0.7f, 0.7f);
+        g_HudFont.UIDrawText(contentX + COL_PLAYERS, rowY + 4.0f, playersText, 15.0f, 0.7f, 0.7f, 0.7f);
     }
 
     // Kaydirma cubugu gostergesi (basit, dekoratif -- surukleme henuz yok)
@@ -358,13 +358,13 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
     float detailH = listH - JOIN_BTN_H - 15.0f;
 
     RectOutline(sideX, listY, SIDE_PANEL_W, detailH, 0.4f, 0.4f, 0.4f, 0.6f);
-    g_HudFont.DrawText(sideX + 10.0f, listY + 10.0f, "DETAILS", 18.0f, 0.85f, 0.85f, 0.85f);
+    g_HudFont.UIDrawText(sideX + 10.0f, listY + 10.0f, "DETAILS", 18.0f, 0.85f, 0.85f, 0.85f);
 
     if (s_selectedRow >= 0 && s_selectedRow < static_cast<int>(rows.size())) {
         const ServerRow& row = rows[s_selectedRow];
-        g_HudFont.DrawText(sideX + 10.0f, listY + 45.0f, row.name, 15.0f, 0.8f, 0.8f, 0.8f);
-        g_HudFont.DrawText(sideX + 10.0f, listY + 70.0f, "MAP: " + row.mapName, 14.0f, 0.7f, 0.7f, 0.7f);
-        g_HudFont.DrawText(sideX + 10.0f, listY + 90.0f, row.ipAddress, 13.0f, 0.55f, 0.55f, 0.55f);
+        g_HudFont.UIDrawText(sideX + 10.0f, listY + 45.0f, row.name, 15.0f, 0.8f, 0.8f, 0.8f);
+        g_HudFont.UIDrawText(sideX + 10.0f, listY + 70.0f, "MAP: " + row.mapName, 14.0f, 0.7f, 0.7f, 0.7f);
+        g_HudFont.UIDrawText(sideX + 10.0f, listY + 90.0f, row.ipAddress, 13.0f, 0.55f, 0.55f, 0.55f);
     }
 
     // --- Join server butonu ---
@@ -372,7 +372,7 @@ void ServerMenu::Render(int windowWidth, int windowHeight) {
     bool canJoin = (s_selectedRow >= 0);
     FilledRect(sideX, joinY, SIDE_PANEL_W, JOIN_BTN_H, canJoin ? 0.15f : 0.08f, canJoin ? 0.08f : 0.08f, canJoin ? 0.06f : 0.08f, 1.0f);
     RectOutline(sideX, joinY, SIDE_PANEL_W, JOIN_BTN_H, 0.6f, 0.6f, 0.6f, 0.8f);
-    g_HudFont.DrawText(sideX + 30.0f, joinY + 12.0f, "JOIN SERVER", 18.0f, canJoin ? 1.0f : 0.5f, canJoin ? 1.0f : 0.5f, canJoin ? 1.0f : 0.5f);
+    g_HudFont.UIDrawText(sideX + 30.0f, joinY + 12.0f, "JOIN SERVER", 18.0f, canJoin ? 1.0f : 0.5f, canJoin ? 1.0f : 0.5f, canJoin ? 1.0f : 0.5f);
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);

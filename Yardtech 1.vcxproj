@@ -185,6 +185,7 @@
     <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
     <ClCompile Include="engine\RTRenderer.cpp" />
+    <ClCompile Include="engine\RTUI.cpp" />
     <ClCompile Include="engine\ServerMenu.cpp" />
     <ClCompile Include="engine\Settings.cpp" />
     <ClCompile Include="engine\Skybox.cpp" />
@@ -217,7 +218,9 @@
     <ClInclude Include="engine\MapLoader.h" />
     <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
+    <ClInclude Include="engine\RTInstance.h" />
     <ClInclude Include="engine\RTRenderer.h" />
+    <ClInclude Include="engine\RTUI.h" />
     <ClInclude Include="engine\ServerMenu.h" />
     <ClInclude Include="engine\Settings.h" />
     <ClInclude Include="engine\Skybox.h" />

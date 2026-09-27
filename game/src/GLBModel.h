@@ -12,7 +12,7 @@
 class GLBModel {
 public:
     bool Load(const std::string& glbPath);
-    void Render() const;
+    void Render(const glm::vec3& pos = glm::vec3(0.0f), float scale = 1.0f) const;
     bool IsLoaded() const { return !m_positions.empty(); }
 
 private:

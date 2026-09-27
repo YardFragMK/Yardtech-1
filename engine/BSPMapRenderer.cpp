@@ -1,6 +1,7 @@
 #include "BSPMapRenderer.h"
 #include "BSPReader.h"
 #include "RTRenderer.h"
+#include "RTInstance.h"
 #include <fstream>
 #include <sstream>
 #include <cstring>
@@ -166,7 +167,7 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
             texInfo.addressModeU = RG_SAMPLER_ADDRESS_MODE_REPEAT;
             texInfo.addressModeV = RG_SAMPLER_ADDRESS_MODE_REPEAT;
 
-            //rgProvideOriginalTexture(g_RTRenderer.GetInstance(), &texInfo);
+            rgProvideOriginalTexture(static_cast<RgInstance>(g_RTRenderer.GetRawInstance()), &texInfo);
             m_textureNameByMiptex[i] = name;
         }
         else {
@@ -346,7 +347,7 @@ void BSPMapRenderer::UploadFace(const BSPRenderFace& rf, const char* meshName, c
     prim.emissive = 0.0f;
     prim.pEditorInfo = nullptr;
 
-    //rgUploadMeshPrimitive(g_RTRenderer.GetInstance(), &mesh, &prim);
+    rgUploadMeshPrimitive(static_cast<RgInstance>(g_RTRenderer.GetRawInstance()), &mesh, &prim);
 }
 
 static RgTransform IdentityTransform() {

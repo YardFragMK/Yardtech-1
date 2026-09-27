@@ -14,7 +14,7 @@ public:
 
 private:
     // sira: +X(rt) -X(lf) +Y(up) -Y(dn) +Z(bk) -Z(ft) -- engine (Y-up) eksenlerine gore
-    GLuint m_faceTex[6] = { 0,0,0,0,0,0 };
+    std::string m_faceTexNames[6];
     bool m_loaded = false;
     static constexpr float SIZE = 4000.0f;
 };

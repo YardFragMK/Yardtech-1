@@ -93,7 +93,7 @@ void PauseMenu::Render(int windowWidth, int windowHeight) {
         float r = e.hovered ? 1.0f : 0.85f;
         float g = e.hovered ? 0.15f : 0.85f;
         float b = e.hovered ? 0.1f : 0.85f;
-        g_HudFont.DrawText(e.x, e.y, e.label, e.h, r, g, b);
+        g_HudFont.UIDrawText(e.x, e.y, e.label, e.h, r, g, b);
     }
 
     glDisable(GL_BLEND);
