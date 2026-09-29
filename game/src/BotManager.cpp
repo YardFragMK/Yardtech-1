@@ -45,16 +45,6 @@ void BotManager::Init() {
         s_bots.push_back(std::move(stilar));
         spawnedCount++;
     }
-
-    // Haritada hic monster_stilar yoksa (orn. eski test haritalarinda),
-    // eskisi gibi tek bir test botu spawn ediliyor -- boylece bot sistemi
-    // hala test edilebilir kaliyor.
-    if (spawnedCount == 0) {
-        auto stilar = std::make_unique<BotStilar>();
-        stilar->SpawnAt(glm::vec3(0.0f, 60.0f, 300.0f), 1);
-        stilar->LoadModel(STILAR_MODEL_PATH);
-        s_bots.push_back(std::move(stilar));
-    }
 }
 
 void BotManager::Update(float deltaTime) {

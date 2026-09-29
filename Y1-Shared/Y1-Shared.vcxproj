@@ -27,15 +27,18 @@
     <ClInclude Include="NetProtocol.h" />
     <ClInclude Include="PlayerMovement.h" />
     <ClInclude Include="TGALoader.h" />
+    <ClInclude Include="VFSypak.h" />
     <ClInclude Include="WadFile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\extern\miniz\miniz.c" />
     <ClCompile Include="BSPMap.cpp" />
     <ClCompile Include="BSPReader.cpp" />
     <ClCompile Include="EntityParser.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="PlayerMovement.cpp" />
     <ClCompile Include="TGALoader.cpp" />
+    <ClCompile Include="VFSypak.cpp" />
     <ClCompile Include="WadFile.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -90,6 +93,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)extern/miniz;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)extern/miniz;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)extern/miniz;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)extern/miniz;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

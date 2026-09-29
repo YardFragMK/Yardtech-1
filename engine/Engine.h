@@ -5,6 +5,7 @@
 #include"Camera.h"
 #include"renderer/Renderer.h"
 #include"BSPMap.h"
+#include"VFSypak.h"
 
 class Engine {
 public:
@@ -22,6 +23,7 @@ private:
 	Uint64 lastCounter = 0;
 	Window window1;
 	void RenderFrame();
+	VirtualFileSystem vfs;
 
 };
 
