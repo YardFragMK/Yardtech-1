@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <cmath>
 #include <algorithm>
+#include "Engine.h"
 
 BSPMapRenderer g_MapRenderer;
 
@@ -137,19 +138,39 @@ void BSPMapRenderer::LoadExternalWads(const std::vector<std::string>& wadSearchD
     std::string token;
     while (std::getline(ss, token, ';')) {
         if (token.empty()) continue;
+
         size_t slash = token.find_last_of("/\\");
         std::string filename = (slash == std::string::npos) ? token : token.substr(slash + 1);
 
-        for (const auto& dir : wadSearchDirs) {
-            std::string candidate = m_bspDir + dir + filename;
+        extern VirtualFileSystem vfs;
+
+        std::string vfsWadPath = "map/" + filename;
+
+        std::vector<uint8_t> wadBuffer = vfs.ReadFile(vfsWadPath);
+
+        if (!wadBuffer.empty()) {
             WadFile wad;
-            if (wad.Load(candidate)) {
+            if (wad.LoadFromMemory(wadBuffer)) {
                 m_wads.push_back(std::move(wad));
-                break;
+                continue; // Başarıyla yüklendiyse sonraki WAD dosyasına geç
+            }
+        }
+
+        // Eğer map/ altında bulunamazsa engine standart arama yollarını da VFS üzerinde dene
+        for (const auto& dir : wadSearchDirs) {
+            std::string fallbackPath = dir + filename;
+            std::vector<uint8_t> fallbackBuffer = vfs.ReadFile(fallbackPath);
+            if (!fallbackBuffer.empty()) {
+                WadFile wad;
+                if (wad.LoadFromMemory(fallbackBuffer)) {
+                    m_wads.push_back(std::move(wad));
+                    break;
+                }
             }
         }
     }
 }
+
 
 void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
     if (texLumpRaw.size() < sizeof(int32_t)) return;

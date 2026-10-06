@@ -12,6 +12,7 @@
 class WadFile {
 public:
     bool Load(const std::string& wadPath);
+    bool LoadFromMemory(const std::vector<uint8_t>& wadData);
 
     // isim HL'de case-insensitive, biz hep uppercase karsilastiriyoruz
     GLuint GetTexture(const std::string& name, int* outWidth = nullptr, int* outHeight = nullptr) const;

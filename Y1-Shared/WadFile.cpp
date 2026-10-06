@@ -128,6 +128,65 @@ bool WadFile::Load(const std::string& wadPath) {
     return true;
 }
 
+bool WadFile::LoadFromMemory(const std::vector<uint8_t>& wadData) {
+    if (wadData.size() < sizeof(WadHeader)) {
+        return false;
+    }
+
+    WadHeader header{};
+    std::memcpy(&header, wadData.data(), sizeof(WadHeader));
+    if (std::string(header.magic, 4) != "WAD3") {
+        return false;
+    }
+
+    size_t tableSize = sizeof(WadLumpInfo) * header.numlumps;
+    if (header.infotableofs < 0 || static_cast<size_t>(header.infotableofs) + tableSize > wadData.size()) {
+        return false;
+    }
+
+    std::vector<WadLumpInfo> lumps(header.numlumps);
+    std::memcpy(lumps.data(), wadData.data() + header.infotableofs, tableSize);
+
+    for (const auto& lump : lumps) {
+        if (lump.type != WAD_TYPE_MIPTEX) continue;
+        if (lump.filepos < 0 || static_cast<size_t>(lump.filepos) + lump.disksize > wadData.size()) continue;
+
+        std::vector<uint8_t> raw(lump.disksize);
+        std::memcpy(raw.data(), wadData.data() + lump.filepos, lump.disksize);
+
+        if (raw.size() < sizeof(WadMiptex)) continue;
+        WadMiptex mt{};
+        std::memcpy(&mt, raw.data(), sizeof(WadMiptex));
+
+        if (mt.offsets[0] == 0) continue;
+
+        const uint8_t* mip0 = raw.data() + mt.offsets[0];
+        size_t mip0Size = static_cast<size_t>(mt.width) * mt.height;
+        size_t mip1Size = mip0Size / 4;
+        size_t mip2Size = mip0Size / 16;
+        size_t mip3Size = mip0Size / 64;
+        const uint8_t* paletteCountPos = mip0 + mip0Size + mip1Size + mip2Size + mip3Size;
+
+        const uint8_t* palette = paletteCountPos + sizeof(uint16_t);
+
+        std::string name(mt.name);
+        bool colorKey = !name.empty() && name[0] == '{';
+
+        auto rgba = DecodeIndexedToRGBA(mip0, mt.width, mt.height, palette, colorKey);
+        GLuint tex = CreateGLTextureFromRGBA(rgba, mt.width, mt.height);
+
+        Entry e;
+        e.glTex = tex;
+        e.width = mt.width;
+        e.height = mt.height;
+        e.isMasked = colorKey;
+        m_textures[ToUpper(name)] = e;
+    }
+
+    return true;
+}
+
+
 GLuint WadFile::GetTexture(const std::string& name, int* outWidth, int* outHeight) const {
     auto it = m_textures.find(ToUpper(name));
     if (it == m_textures.end()) return 0;
