@@ -24,6 +24,8 @@ struct TraceResult {
 class BSPMap {
 public:
     bool Load(const std::string& bspPath);
+    bool LoadFromMemory(const std::vector<uint8_t>& bspData);
+
 
     TraceResult TraceLine(const glm::vec3& start, const glm::vec3& end, int hullIndex = 1) const;
     glm::vec3 SlideMove(const glm::vec3& start, const glm::vec3& end, int hullIndex = 1) const;

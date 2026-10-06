@@ -101,3 +101,73 @@ bool LoadTGA(const std::string& path, std::vector<uint8_t>& outPixels, int& outW
     outHeight = height;
     return true;
 }
+
+bool LoadTGAFromMemory(const std::vector<uint8_t>& buffer, std::vector<uint8_t>& outPixels, int& outWidth, int& outHeight) {
+    if (buffer.size() < sizeof(TGAHeader)) return false;
+    size_t offset = 0;
+
+    TGAHeader header{};
+    std::memcpy(&header, buffer.data() + offset, sizeof(TGAHeader));
+    offset += sizeof(TGAHeader);
+
+    if (header.idLength > 0) offset += header.idLength;
+    if (header.imageType != 2 && header.imageType != 10) return false;
+    if (header.pixelDepth != 24 && header.pixelDepth != 32) return false;
+
+    int width = header.width;
+    int height = header.height;
+    int bpp = header.pixelDepth / 8;
+    size_t pixelCount = static_cast<size_t>(width) * height;
+    size_t expectedRawSize = pixelCount * bpp;
+
+    if (offset > buffer.size()) return false;
+    std::vector<uint8_t> raw(expectedRawSize);
+
+    if (header.imageType == 2) {
+        if (offset + expectedRawSize > buffer.size()) return false;
+        std::memcpy(raw.data(), buffer.data() + offset, expectedRawSize);
+        offset += expectedRawSize;
+    }
+    else {
+        size_t pixelIndex = 0;
+        std::vector<uint8_t> pixelBuf(bpp);
+        while (pixelIndex < pixelCount && offset < buffer.size()) {
+            uint8_t packetHeader = buffer[offset++];
+            int count = (packetHeader & 0x7F) + 1;
+            bool rle = (packetHeader & 0x80) != 0;
+
+            if (rle) {
+                if (offset + bpp > buffer.size()) break;
+                std::memcpy(pixelBuf.data(), buffer.data() + offset, bpp);
+                offset += bpp;
+                for (int i = 0; i < count && pixelIndex < pixelCount; i++, pixelIndex++) {
+                    std::memcpy(&raw[pixelIndex * bpp], pixelBuf.data(), bpp);
+                }
+            }
+            else {
+                for (int i = 0; i < count && pixelIndex < pixelCount; i++, pixelIndex++) {
+                    if (offset + bpp > buffer.size()) break;
+                    std::memcpy(&raw[pixelIndex * bpp], buffer.data() + offset, bpp);
+                    offset += bpp;
+                }
+            }
+        }
+    }
+
+    outPixels.assign(pixelCount * 4, 255);
+    bool topToBottom = (header.imageDescriptor & 0x20) != 0;
+    for (int y = 0; y < height; y++) {
+        int srcRow = topToBottom ? y : (height - 1 - y);
+        for (int x = 0; x < width; x++) {
+            size_t srcIdx = (static_cast<size_t>(srcRow) * width + x) * bpp;
+            size_t dstIdx = (static_cast<size_t>(y) * width + x) * 4;
+            outPixels[dstIdx + 0] = raw[srcIdx + 2];
+            outPixels[dstIdx + 1] = raw[srcIdx + 1];
+            outPixels[dstIdx + 2] = raw[srcIdx + 0];
+            outPixels[dstIdx + 3] = (bpp == 4) ? raw[srcIdx + 3] : 255;
+        }
+    }
+    outWidth = width;
+    outHeight = height;
+    return true;
+}

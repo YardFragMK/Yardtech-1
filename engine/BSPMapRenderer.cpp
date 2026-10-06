@@ -513,3 +513,69 @@ void BSPMapRenderer::RenderBrushEntities(const std::vector<Entity>& entities, co
         glPopMatrix();
     }
 }
+
+template<typename T>
+static std::vector<T> ReadLumpFromMemory(const std::vector<uint8_t>& buffer, const BSPLump& lump) {
+    std::vector<T> out(lump.length / sizeof(T));
+    if (!out.empty() && (lump.offset + lump.length <= buffer.size())) {
+        std::memcpy(out.data(), buffer.data() + lump.offset, lump.length);
+    }
+    return out;
+}
+
+bool BSPMapRenderer::LoadFromMemory(const std::vector<uint8_t>& bspData) {
+    Reset();
+
+    if (bspData.size() < sizeof(BSPHeader)) {
+        return false;
+    }
+
+    // WAD arama klasörleri varsayılan olarak Engine standartlarına göre set edilir
+    std::vector<std::string> wadSearchDirs = { "", "map/", "wads/", "textures/" };
+    m_bspDir = ""; // Bellekten yüklendiği için spesifik bir dosya dizini yok
+
+    BSPHeader header{};
+    std::memcpy(&header, bspData.data(), sizeof(BSPHeader));
+
+    {
+        const BSPLump& l = header.lumps[LUMP_ENTITIES_F];
+        if (l.offset + l.length > bspData.size()) return false;
+        m_entityText.assign(reinterpret_cast<const char*>(bspData.data() + l.offset), static_cast<size_t>(l.length));
+    }
+
+    m_vertices = ReadLumpFromMemory<BSPVertex_t>(bspData, header.lumps[LUMP_VERTEXES]);
+    m_edges = ReadLumpFromMemory<BSPEdge_t>(bspData, header.lumps[LUMP_EDGES]);
+    m_surfedges = ReadLumpFromMemory<BSPSurfEdge_t>(bspData, header.lumps[LUMP_SURFEDGES]);
+    m_faces = ReadLumpFromMemory<BSPFace_t>(bspData, header.lumps[LUMP_FACES]);
+    m_texinfos = ReadLumpFromMemory<BSPTexInfo_t>(bspData, header.lumps[LUMP_TEXINFO]);
+    m_models = ReadLumpFromMemory<BSPModel_t>(bspData, header.lumps[LUMP_MODELS]);
+
+    std::vector<uint8_t> texLumpRaw;
+    {
+        const BSPLump& l = header.lumps[LUMP_TEXTURES];
+        if (l.length > 0 && l.offset + l.length <= bspData.size()) {
+            texLumpRaw.resize(l.length);
+            std::memcpy(texLumpRaw.data(), bspData.data() + l.offset, l.length);
+        }
+    }
+
+    {
+        const BSPLump& l = header.lumps[LUMP_LIGHTING];
+        if (l.length > 0 && l.offset + l.length <= bspData.size()) {
+            m_lightingData.resize(l.length);
+            std::memcpy(m_lightingData.data(), bspData.data() + l.offset, l.length);
+        }
+    }
+
+    LoadExternalWads(wadSearchDirs);
+    BuildTextures(texLumpRaw);
+
+    m_modelAABBMins.resize(m_models.size());
+    m_modelAABBMaxs.resize(m_models.size());
+    for (size_t i = 0; i < m_models.size(); i++) {
+        ConvertAABB(m_models[i].mins, m_models[i].maxs, m_modelAABBMins[i], m_modelAABBMaxs[i]);
+    }
+
+    BuildRenderFaces();
+    return true;
+}

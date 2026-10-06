@@ -58,6 +58,8 @@ bool BSPMap::Load(const std::string& bspPath) {
     return true;
 }
 
+
+
 glm::vec3 BSPMap::ParseOriginToEngineSpace(const std::string& originStr) {
     float x = 0.0f, y = 0.0f, z = 0.0f;
     std::istringstream ss(originStr);
@@ -303,4 +305,55 @@ bool BSPMap::IsPointSolid(const glm::vec3& enginePos, int hullIndex) const {
     glm::vec3 bspPos = ConvertToBSP(enginePos);
     int contents = HullPointContents(headnode, bspPos);
     return contents == CONTENTS_SOLID;
+}
+
+template<typename T>
+static std::vector<T> ReadLumpFromMemory(const std::vector<uint8_t>& buffer, const BSPLump& lump) {
+    std::vector<T> out(lump.length / sizeof(T));
+    if (!out.empty() && (lump.offset + lump.length <= buffer.size())) {
+        std::memcpy(out.data(), buffer.data() + lump.offset, lump.length);
+    }
+    return out;
+}
+
+bool BSPMap::LoadFromMemory(const std::vector<uint8_t>& bspData) {
+    Reset();
+
+    if (bspData.size() < sizeof(BSPHeader)) {
+        return false;
+    }
+
+    BSPHeader header{};
+    std::memcpy(&header, bspData.data(), sizeof(BSPHeader));
+
+    std::string entityText;
+
+    const BSPLump& l = header.lumps[LUMP_ENTITIES_F];
+
+    if (l.offset < 0 || l.length < 0 ||
+        static_cast<size_t>(l.offset) + static_cast<size_t>(l.length) > bspData.size()) {
+        return false;
+    }
+
+    entityText.assign(
+        reinterpret_cast<const char*>(bspData.data() + l.offset),
+        static_cast<size_t>(l.length)
+    );
+
+    m_entities = ParseEntities(entityText);
+
+    for (const Entity& ent : m_entities) {
+        if (ent.Is(EntityClassnames::Worldspawn)) {
+            if (const std::string* sky = ent.Get("skyname")) {
+                m_skyName = *sky;
+            }
+            break;
+        }
+    }
+
+    m_models = ReadLumpFromMemory<BSPModel_t>(bspData, header.lumps[LUMP_MODELS]);
+    m_planes = ReadLumpFromMemory<BSPPlane_t>(bspData, header.lumps[LUMP_PLANES]);
+    m_clipnodes = ReadLumpFromMemory<BSPClipNode_t>(bspData, header.lumps[LUMP_CLIPNODES]);
+
+    return true;
 }

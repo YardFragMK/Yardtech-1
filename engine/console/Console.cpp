@@ -10,9 +10,14 @@
 #include"BSPReader.h"
 #include"../MapLoader.h"
 #include"../NetClient.h"
+#include"VFSypak.h"
+#include"../GameState.h"
 
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "../../extern/stb/stb_easy_font.h"
+
+#include"../BSPMapRenderer.h"
+#include"../Engine.h"
 
 bool Console::s_open = false;
 std::string Console::s_input;
@@ -149,12 +154,44 @@ void Console::ExecuteCommand() {
     else if (cmd == "map") {
         if (!RequireSingleplayer(cmd)) return;
         std::string value;
-        if (iss >> value) { 
-            ReadEntityLump("nvs1/map/" + value + ".bsp");
-            LoadMap(value);
+        if (iss >> value) {
+
+            // Kullanıcı yanlışlıkla "map/" veya "map\" yazarak girdiyse temizle
+            if (value.rfind("map/", 0) == 0) {
+                value = value.substr(4);
+            }
+            else if (value.rfind("map\\", 0) == 0) {
+                value = value.substr(4);
+            }
+
+            // Kullanıcı sonuna ".bsp" uzantısı eklediyse temizle
+            if (value.size() > 4 && value.substr(value.size() - 4) == ".bsp") {
+                value = value.substr(0, value.size() - 4);
+            }
+
+            // gbpak.ypak paketi içindeki sanal harita yolu
+            std::string fullVfsPath = "map/" + value + ".bsp";
+
+            // Engine.cpp tarafından içi doldurulan asıl global vfs nesnesinden dosyayı oku
+            std::vector<uint8_t> mapBuffer = vfs.ReadFile(fullVfsPath);
+            if (mapBuffer.empty()) {
+                Log("WARNING -> Paket (gbpak.ypak) icinde harita bulunamadi: " + fullVfsPath);
+                return;
+            }
+
+            if (LoadMapFromMemory(mapBuffer, value)) {
+                Log("Harita basariyla yuklendi: " + value);
+
+                // Oyunu oynanış durumuna geçir ve kamerayı player_start konumuna bağla
+                EnterPlaying();
+            }
+            else {
+                Log("WARNING-> Harita yuklenirken bellek/render hatasi olustu.");
+            }
         }
-        else Log("Usage: map <path>");
-        
+        else {
+            Log("Usage: map <harita_adi>");
+        }
     }
     
     else if (cmd == "r_retromode") {

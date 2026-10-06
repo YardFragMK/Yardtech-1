@@ -27,6 +27,7 @@ public:
 
     // MenuStatic arkaplan resmi (TGA). Basarisiz olursa duz koyu renge duser.
     static bool LoadBackgroundImage(const std::string& tgaPath);
+    static bool LoadBackgroundImageFromMemory(const std::vector<uint8_t>& buffer);
 
 private:
     static void UpdateLiveCamera(float deltaTime);

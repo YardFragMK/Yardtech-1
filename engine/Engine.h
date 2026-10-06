@@ -23,8 +23,8 @@ private:
 	Uint64 lastCounter = 0;
 	Window window1;
 	void RenderFrame();
-	VirtualFileSystem vfs;
 
 };
 
-extern 	Renderer renderer;
+extern Renderer renderer;
+extern VirtualFileSystem vfs;

@@ -15,6 +15,7 @@ struct BitmapGlyph {
 class BitmapFont {
 public:
     bool Load(const std::string& atlasTgaPath);
+    bool LoadFromMemory(const std::vector<uint8_t>& buffer);
     bool IsLoaded() const { return m_texture != 0; }
 
     // text UTF-8 kodlu olabilir (Turkce karakterler dahil). pixelHeight, glyph'in

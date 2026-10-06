@@ -136,3 +136,25 @@ float UIWindow::ContentStartX(float x) {
 float UIWindow::GetMargin() {
     return MARGIN;
 }
+
+bool UIWindow::GBLoadIconFromMemory(const std::vector<uint8_t>& buffer) {
+    if (buffer.empty()) return false;
+
+    std::vector<uint8_t> pixels;
+    int w = 0, h = 0;
+
+    if (!LoadTGAFromMemory(buffer, pixels, w, h)) return false;
+
+    glGenTextures(1, &s_iconTexture);
+    glBindTexture(GL_TEXTURE_2D, s_iconTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return true;
+}

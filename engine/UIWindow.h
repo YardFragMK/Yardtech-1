@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <vector>
+#include <cstdint>
 
 // GoldSrc'nin klasik pencere kromunu (ikon + baslik + kapatma kutusu, iki
 // katmanli cerceve: kenarliksiz siyah dis kutu + beyaz kenarlikli ic kutu),
@@ -11,6 +13,8 @@ public:
     // Bir kere, program baslarken cagrilir. Basarisiz olursa ikon cizilmez,
     // pencereler ikon olmadan calismaya devam eder.
     static bool GBLoadIcon(const std::string& iconTgaPath);
+
+    static bool GBLoadIconFromMemory(const std::vector<uint8_t>& buffer);
 
     static void Draw(float x, float y, float w, float h, const std::string& title);
 

@@ -37,6 +37,7 @@
 
 Renderer renderer;
 BSPMap g_Map;
+VirtualFileSystem vfs;
 
 Engine::~Engine(){
 	NetClient::Disconnect();
@@ -55,7 +56,8 @@ Engine::~Engine(){
 //Engine 
 //=========================================================
 bool Engine::initSystems() {
-	std::filesystem::path dataFolder = "nvs1";
+	// Check the data files
+	std::filesystem::path dataFolder = "nvs1/gbpak.ypak";
 	if (!std::filesystem::exists(dataFolder)) {
 		windowsError(L"The nvs1 folder containing the game data could not be found or is missing. Please obtain an original copy of the game or properly create the required nvs1 folder.", L"Data folder error ERROR367");
 	}
@@ -113,8 +115,9 @@ bool Engine::initSystems() {
 	//=========================================================
 	//VFS
 	//=========================================================
-	vfs.MountYPAK("nvs1/gbpak1.ypak");
+
 	vfs.MountDirectory("nvs1/");
+	vfs.MountYPAK("nvs1/gbpak.ypak");
 
 	//=========================================================
 	//Renderer Init
@@ -128,20 +131,27 @@ bool Engine::initSystems() {
 	//=========================================================
 	// Bitmap Font
 	//=========================================================
-	if (!g_HudFont.Load("nvs1/gfx/hud_font.tga")) {
-		Logger::error("HUD fontu yuklenemedi.");
+	std::vector<uint8_t> fontBuffer = vfs.ReadFile("gfx/hud_font.tga");
+	if (fontBuffer.empty() || !g_HudFont.LoadFromMemory(fontBuffer)) {
+		Logger::error("HUD fontu VFS (Paket/Klasor) uzerinden yuklenemedi.");
 	}
 
-	if (!UIWindow::GBLoadIcon("nvs1/gfx/window_icon.tga")) {
-		Logger::error("Pencere ikonu yuklenemedi.");
+	std::vector<uint8_t> iconBuffer = vfs.ReadFile("gfx/window_icon.tga");
+	if (iconBuffer.empty() || !UIWindow::GBLoadIconFromMemory(iconBuffer)) {
+		Logger::error("Pencere ikonu VFS (Paket/Klasor) uzerinden yuklenemedi.");
 	}
+
 
 	//=========================================================
 	// Main Menu
 	//=========================================================
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	MainMenu::Init();
-	MainMenu::LoadBackgroundImage("nvs1/gfx/env/dusklandft.tga");
+	std::vector<uint8_t> bgBuffer = vfs.ReadFile("gfx/env/dusklandft.tga");
+	if (bgBuffer.empty() || !MainMenu::LoadBackgroundImageFromMemory(bgBuffer)) {
+		Logger::error("Ana menu arka plan gorseli VFS uzerinden yuklenemedi.");
+	}
+
 
 	const float btnX = 70.0f;
 	const float btnW = 320.0f;
@@ -149,9 +159,15 @@ bool Engine::initSystems() {
 	const float btnSpacing = 68.0f;
 	const float topMargin = 30.0f;
 
-	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", []() {
-		ReadEntityLump("nvs1/map/firstmap.bsp");
-		LoadMap("firstmap");
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", [this]() {
+		std::vector<uint8_t> mapBuffer = vfs.ReadFile("map/firstmap.bsp");
+		if (LoadMapFromMemory(mapBuffer, "firstmap")) {
+			BotManager::Init();
+			EnterPlaying();
+		}
+		else {
+			Logger::error("Harita yukleme basarisiz.");
+		}
 		BotManager::Init();
 		EnterPlaying();
 		});
@@ -227,7 +243,8 @@ void Engine::gameLoop() {
 		// Playing disindaki durumlarda (orn. Paused) da gecerli olmalidir.
 		std::string newMapName;
 		if (NetClient::PollMapChange(newMapName)) {
-			LoadMap(newMapName);
+			std::vector<uint8_t> mapBuffer = vfs.ReadFile("map/" + newMapName + ".bsp");
+			LoadMapFromMemory(mapBuffer, newMapName);
 		}
 
 		g_Camera.Update(deltaTime);

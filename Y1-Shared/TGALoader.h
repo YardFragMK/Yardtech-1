@@ -5,3 +5,5 @@
 
 // 24/32-bit TGA (uncompressed veya RLE) yukler. Cikti her zaman RGBA8, satirlar UST-SOL sirali.
 bool LoadTGA(const std::string& path, std::vector<uint8_t>& outPixels, int& outWidth, int& outHeight);
+
+bool LoadTGAFromMemory(const std::vector<uint8_t>& buffer, std::vector<uint8_t>& outPixels, int& outWidth, int& outHeight);

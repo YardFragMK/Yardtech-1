@@ -36,6 +36,7 @@ struct WorldGridCell {
 class BSPMapRenderer {
 public:
     bool Load(const std::string& bspPath, const std::vector<std::string>& wadSearchDirs = { "", "wads/", "textures/" });
+    bool LoadFromMemory(const std::vector<uint8_t>& bspData);
 
     void RenderWorld(const Frustum& frustum) const;
     void RenderWorld() const;
