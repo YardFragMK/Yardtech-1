@@ -29,4 +29,8 @@ extern PFNGLMULTITEXCOORD2FPROC glMultiTexCoord2f_;
 #define GL_RGB_SCALE 0x8573
 #endif
 
+#ifndef GL_MULTISAMPLE
+#define GL_MULTISAMPLE 0x809D
+#endif
+
 bool LoadGLExtensions();

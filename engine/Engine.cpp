@@ -65,6 +65,9 @@ bool Engine::initSystems() {
 	Console::Init();
 	Logger::info("Console initalize edildi");
 
+
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	//=========================================================
 	//Window Init
 	//=========================================================
@@ -115,9 +118,8 @@ bool Engine::initSystems() {
 	//=========================================================
 	//VFS
 	//=========================================================
-
-	vfs.MountDirectory("nvs1/");
 	vfs.MountYPAK("nvs1/gbpak.ypak");
+	vfs.MountDirectory("nvs1/");
 
 	//=========================================================
 	//Renderer Init
@@ -216,6 +218,9 @@ bool Engine::initSystems() {
 //Game Loop
 //=========================================================
 void Engine::gameLoop() {
+	const float FIXED_DELTA_TIME = 1.0f / 100.0f; // Fizik ve kamera 100 Hz'de çalışsın
+	float accumulator = 0.0f;
+
 	while (running) {
 		//=========================================================
 		// DELTATIME
@@ -225,15 +230,16 @@ void Engine::gameLoop() {
 			static_cast<float>(currentCounter - lastCounter) /
 			static_cast<float>(SDL_GetPerformanceFrequency());
 		lastCounter = currentCounter;
+		if (deltaTime > 0.1f) deltaTime = 0.1f;
 
 		Time::Update(deltaTime);
+		accumulator += deltaTime;
 
 		glm::vec3 oldPos = g_Camera.position;
 
 		//=========================================================
         // Input / Update
         //=========================================================
-		KeyInput::Update(running, g_Camera, deltaTime);
 		Console::Update(deltaTime);
 		NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
 
@@ -247,21 +253,36 @@ void Engine::gameLoop() {
 			LoadMapFromMemory(mapBuffer, newMapName);
 		}
 
-		g_Camera.Update(deltaTime);
-		if (g_State == GameState::Playing) {
-			UpdatePlayerPhysics(deltaTime, oldPos); 
-			BotManager::Update(deltaTime);
+		//=========================================================
+		// FIXED UPDATE DÖNGÜSÜ (Kamera ve Fizik)
+		//=========================================================
+		while (accumulator >= FIXED_DELTA_TIME) {
+			glm::vec3 oldPos = g_Camera.position;
+
+			KeyInput::Update(running, g_Camera, FIXED_DELTA_TIME);
+			g_Camera.Update(FIXED_DELTA_TIME);
+
+			if (g_State == GameState::Playing) {
+				UpdatePlayerPhysics(FIXED_DELTA_TIME, oldPos);
+				BotManager::Update(FIXED_DELTA_TIME);
+			}
+
+			accumulator -= FIXED_DELTA_TIME;
 		}
-		else if (g_State == GameState::MenuLive) {
-			MainMenu::Update(deltaTime); 
+
+		float alpha = accumulator / FIXED_DELTA_TIME;
+
+		if (g_State == GameState::MenuLive) {
+			MainMenu::Update(deltaTime);
 		}
- 
-		RenderFrame();
+
+		// Çizim fonksiyonuna bu alphayı gönderiyoruz:
+		RenderFrame(alpha);
 	}
 }
 
 
-void Engine::RenderFrame() {
+void Engine::RenderFrame(float alpha) {
 	renderer.BeginFrame(g_Camera);
 
 	if (g_State == GameState::MenuLive || g_State == GameState::Playing || g_State == GameState::Paused) {

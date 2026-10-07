@@ -63,9 +63,12 @@ void Camera::ProcessMouseMovement(float xOffset, float yOffset) {
 	}
 }
 
-glm::mat4 Camera::GetViewMatrix() const {
-	glm::vec3 eyePos = GetEyePosition();
-	return glm::lookAt(eyePos, eyePos + Forward(), Up());
+glm::dmat4 Camera::GetViewMatrix() const {
+	glm::dvec3 eyePos = glm::dvec3(GetEyePosition());
+	glm::dvec3 forward = glm::dvec3(Forward());
+	glm::dvec3 up = glm::dvec3(Up());
+
+	return glm::lookAt(eyePos, eyePos + forward, up);
 }
 
 glm::vec3 Camera::Up() const {

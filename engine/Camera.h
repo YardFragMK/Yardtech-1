@@ -53,7 +53,7 @@ public:
 	// impactSpeed: iniş anindaki dikey hizin buyuklugu, darbenin siddetini olceklendirir.
 	void TriggerLandingShake(float shakeAmount);
 
-	glm::mat4 GetViewMatrix() const;
+	glm::dmat4 GetViewMatrix() const;
 	float roll = 0.0f;
 	float targetRoll = 0.0f;
 	float maxRoll = 7.0f;

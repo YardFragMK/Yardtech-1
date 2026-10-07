@@ -14,8 +14,8 @@ static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height)
     GLuint tex = 0;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -224,9 +224,9 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
     }
 }
 
-void BSPMapRenderer::ComputeFaceAABB(const BSPRenderFace& rf, glm::vec3& outMins, glm::vec3& outMaxs) {
-    outMins = glm::vec3(FLT_MAX);
-    outMaxs = glm::vec3(-FLT_MAX);
+void BSPMapRenderer::ComputeFaceAABB(const BSPRenderFace& rf, glm::dvec3& outMins, glm::dvec3& outMaxs) {
+    outMins = glm::dvec3(DBL_MAX);
+    outMaxs = glm::dvec3(-DBL_MAX);
     for (const auto& p : rf.positions) {
         if (p.x < outMins.x) outMins.x = p.x;
         if (p.y < outMins.y) outMins.y = p.y;
@@ -251,8 +251,8 @@ int BSPMapRenderer::GetOrCreateCell(const glm::vec3& faceCenter, std::unordered_
     if (it != cellIndexMap.end()) return it->second;
 
     WorldGridCell cell;
-    cell.mins = glm::vec3(cx * GRID_CELL_SIZE, cy * GRID_CELL_SIZE, cz * GRID_CELL_SIZE);
-    cell.maxs = cell.mins + glm::vec3(GRID_CELL_SIZE);
+    cell.mins = glm::dvec3(cx * GRID_CELL_SIZE, cy * GRID_CELL_SIZE, cz * GRID_CELL_SIZE);
+    cell.maxs = cell.mins + glm::dvec3(GRID_CELL_SIZE);
 
     m_worldCells.push_back(std::move(cell));
     int idx = static_cast<int>(m_worldCells.size()) - 1;
@@ -276,7 +276,7 @@ void BSPMapRenderer::BuildRenderFaces() {
             GLuint glTex = m_textureIdByMiptex[ti.miptex];
             glm::ivec2 texSize = m_textureSizeByMiptex[ti.miptex];
 
-            std::vector<glm::vec3> rawPositions;
+            std::vector<glm::dvec3> rawPositions;
             std::vector<double> rawS, rawT;
             double minS = DBL_MAX, maxS = -DBL_MAX, minT = DBL_MAX, maxT = -DBL_MAX;
 
@@ -294,7 +294,7 @@ void BSPMapRenderer::BuildRenderFaces() {
                     + static_cast<double>(raw[2]) * ti.vecs[1][2]
                     + ti.vecs[1][3];
 
-                rawPositions.push_back(ConvertCoord(raw));
+                rawPositions.push_back(glm::dvec3(ConvertCoord(raw)));
                 rawS.push_back(s);
                 rawT.push_back(t);
 
@@ -315,8 +315,8 @@ void BSPMapRenderer::BuildRenderFaces() {
 
             for (size_t vi = 0; vi < rawPositions.size(); vi++) {
                 rf.texcoords.push_back(glm::vec2(
-                    static_cast<float>(rawS[vi] / texSize.x),
-                    static_cast<float>(rawT[vi] / texSize.y)
+                    (rawS[vi] / texSize.x),
+                    (rawT[vi] / texSize.y)
                 ));
             }
 
@@ -340,24 +340,24 @@ void BSPMapRenderer::BuildRenderFaces() {
                     rf.glLightmap = CreateGLLightmapTexture(lmData, lightW, lightH);
 
                     for (size_t vi = 0; vi < rawPositions.size(); vi++) {
-                        float lu = static_cast<float>((rawS[vi] - texMinS + 8.0) / (lightW * 16.0));
-                        float lv = static_cast<float>((rawT[vi] - texMinT + 8.0) / (lightH * 16.0));
+                        double lu = ((rawS[vi] - texMinS + 8.0) / (lightW * 16.0));
+                        double lv = ((rawT[vi] - texMinT + 8.0) / (lightH * 16.0));
                         rf.lightUVs.push_back(glm::vec2(lu, lv));
                     }
                 }
             }
 
             if (m == 0) {
-                glm::vec3 faceCenter(0.0f);
+                glm::dvec3 faceCenter(0.0f);
                 for (const auto& p : rf.positions) faceCenter += p;
-                faceCenter /= static_cast<float>(rf.positions.size());
+                faceCenter /= static_cast<double>(rf.positions.size());
 
-                int cellIdx = GetOrCreateCell(faceCenter, cellIndexMap);
+                int cellIdx = GetOrCreateCell(glm::vec3(faceCenter), cellIndexMap);
 
-                glm::vec3 faceMins, faceMaxs;
+                glm::dvec3 faceMins, faceMaxs;
                 ComputeFaceAABB(rf, faceMins, faceMaxs);
-                glm::vec3& cellMins = m_worldCells[cellIdx].mins;
-                glm::vec3& cellMaxs = m_worldCells[cellIdx].maxs;
+                glm::dvec3& cellMins = m_worldCells[cellIdx].mins;
+                glm::dvec3& cellMaxs = m_worldCells[cellIdx].maxs;
                 if (faceMins.x < cellMins.x) cellMins.x = faceMins.x;
                 if (faceMins.y < cellMins.y) cellMins.y = faceMins.y;
                 if (faceMins.z < cellMins.z) cellMins.z = faceMins.z;
@@ -413,18 +413,18 @@ static void DrawRenderFace(const BSPRenderFace& rf) {
         glAlphaFunc(GL_GREATER, 0.5f);
     }
 
-    glBegin(GL_POLYGON);
+    glBegin(GL_TRIANGLE_FAN); // GL_POLYGON yerine GL_TRIANGLE_FAN 
     for (size_t i = 0; i < rf.positions.size(); i++) {
         if (glMultiTexCoord2f_) {
-            glMultiTexCoord2f_(GL_TEXTURE0, rf.texcoords[i].x, rf.texcoords[i].y);
+            glMultiTexCoord2f_(GL_TEXTURE0, static_cast<float>(rf.texcoords[i].x), static_cast<float>(rf.texcoords[i].y));
             if (hasLightmap) {
-                glMultiTexCoord2f_(GL_TEXTURE1, rf.lightUVs[i].x, rf.lightUVs[i].y);
+                glMultiTexCoord2f_(GL_TEXTURE1, static_cast<float>(rf.lightUVs[i].x), static_cast<float>(rf.lightUVs[i].y));
             }
         }
         else {
-            glTexCoord2f(rf.texcoords[i].x, rf.texcoords[i].y);
+            glTexCoord2d(rf.texcoords[i].x, rf.texcoords[i].y);
         }
-        glVertex3f(rf.positions[i].x, rf.positions[i].y, rf.positions[i].z);
+        glVertex3d(rf.positions[i].x, rf.positions[i].y, rf.positions[i].z);
     }
     glEnd();
 
@@ -459,7 +459,7 @@ void BSPMapRenderer::RenderWorld() const {
 void BSPMapRenderer::RenderWorld(const Frustum& frustum) const {
     glEnable(GL_TEXTURE_2D);
     for (const auto& cell : m_worldCells) {
-        if (!frustum.IntersectsAABB(cell.mins, cell.maxs)) continue;
+        if (!frustum.IntersectsAABB(glm::dvec3(cell.mins), glm::dvec3(cell.maxs))) continue;
         for (const auto& rf : cell.faces) DrawRenderFace(rf);
     }
     glDisable(GL_TEXTURE_2D);
@@ -503,7 +503,7 @@ void BSPMapRenderer::RenderBrushEntities(const std::vector<Entity>& entities) co
         }
 
         glPushMatrix();
-        glTranslatef(origin.x, origin.y, origin.z);
+        glTranslated(static_cast<double>(origin.x), static_cast<double>(origin.y), static_cast<double>(origin.z));
         RenderModel(modelIndex);
         glPopMatrix();
     }
@@ -526,10 +526,10 @@ void BSPMapRenderer::RenderBrushEntities(const std::vector<Entity>& entities, co
         glm::vec3 worldMins = m_modelAABBMins[modelIndex] + origin;
         glm::vec3 worldMaxs = m_modelAABBMaxs[modelIndex] + origin;
 
-        if (!frustum.IntersectsAABB(worldMins, worldMaxs)) continue;
+        if (!frustum.IntersectsAABB(glm::dvec3(worldMins), glm::dvec3(worldMaxs))) continue;
 
         glPushMatrix();
-        glTranslatef(origin.x, origin.y, origin.z);
+        glTranslated(static_cast<double>(origin.x), static_cast<double>(origin.y), static_cast<double>(origin.z));
         RenderModel(modelIndex);
         glPopMatrix();
     }

@@ -12,9 +12,9 @@
 #include "GLExtensions.h"
 
 struct BSPRenderFace {
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec2> texcoords;
-    std::vector<glm::vec2> lightUVs;
+    std::vector<glm::dvec3> positions;
+    std::vector<glm::dvec2> texcoords;
+    std::vector<glm::dvec2> lightUVs;
     GLuint glTexture = 0;
     GLuint glLightmap = 0;
     bool isMasked = false;
@@ -22,8 +22,8 @@ struct BSPRenderFace {
 };
 
 struct WorldGridCell {
-    glm::vec3 mins{ 0.0f };
-    glm::vec3 maxs{ 0.0f };
+    glm::dvec3 mins{ 0.0f };
+    glm::dvec3 maxs{ 0.0f };
     std::vector<BSPRenderFace> faces;
 };
 
@@ -83,7 +83,7 @@ private:
     std::string ExtractWorldspawnWadKey() const;
     void LoadExternalWads(const std::vector<std::string>& wadSearchDirs);
 
-    static void ComputeFaceAABB(const BSPRenderFace& rf, glm::vec3& outMins, glm::vec3& outMaxs);
+    static void ComputeFaceAABB(const BSPRenderFace& rf, glm::dvec3& outMins, glm::dvec3& outMaxs);
     int GetOrCreateCell(const glm::vec3& faceCenter, std::unordered_map<long long, int>& cellIndexMap);
 
     void Reset();

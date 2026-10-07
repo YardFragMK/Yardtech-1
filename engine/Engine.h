@@ -22,7 +22,7 @@ private:
 	bool running=true;
 	Uint64 lastCounter = 0;
 	Window window1;
-	void RenderFrame();
+	void RenderFrame(float alpha);
 
 };
 

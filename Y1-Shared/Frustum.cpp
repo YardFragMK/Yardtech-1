@@ -1,6 +1,6 @@
 #include "Frustum.h"
 
-Frustum Frustum::FromViewProjection(const glm::mat4& m) {
+Frustum Frustum::FromViewProjection(const glm::dmat4& m) {
     Frustum f;
 
     // Gribb-Hartmann yontemi. glm mat4 sutun-major oldugu icin m[col][row] ile erisiliyor.
@@ -19,9 +19,9 @@ Frustum Frustum::FromViewProjection(const glm::mat4& m) {
     };
 
     for (int i = 0; i < 6; i++) {
-        glm::vec3 n(raw[i].x, raw[i].y, raw[i].z);
-        float len = glm::length(n);
-        if (len < 1e-8f) len = 1e-8f;
+        glm::dvec3 n(raw[i].x, raw[i].y, raw[i].z);
+        double len = glm::length(n);
+        if (len < 1e-12f) len = 1e-12f;
         f.planes[i].normal = n / len;
         f.planes[i].d = raw[i].w / len;
     }
@@ -29,10 +29,10 @@ Frustum Frustum::FromViewProjection(const glm::mat4& m) {
     return f;
 }
 
-bool Frustum::IntersectsAABB(const glm::vec3& mins, const glm::vec3& maxs) const {
+bool Frustum::IntersectsAABB(const glm::dvec3& mins, const glm::dvec3& maxs) const {
     for (const auto& plane : planes) {
         // AABB'nin bu duzlem normaline gore "en ileri" kosesini bul (positive vertex)
-        glm::vec3 p;
+        glm::dvec3 p;
         p.x = (plane.normal.x >= 0.0f) ? maxs.x : mins.x;
         p.y = (plane.normal.y >= 0.0f) ? maxs.y : mins.y;
         p.z = (plane.normal.z >= 0.0f) ? maxs.z : mins.z;

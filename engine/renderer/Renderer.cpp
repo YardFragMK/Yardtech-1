@@ -6,6 +6,8 @@ bool Renderer::Init(int width, int height) {
 	m_windowHeight = height;
 
 	glEnable(GL_DEPTH_TEST);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glEnable(GL_MULTISAMPLE);
 	LoadGLExtensions();
 
 	glGenTextures(1, &m_retroTexture);
@@ -22,16 +24,16 @@ void Renderer::ApplyProjection(int width, int height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	glm::mat4 projection = glm::perspective(
-		glm::radians(75.0f), //FOV
-		(float)width / (float)height,
-		0.1f,   //near plane
-		10000.0f  //far plane
+	glm::dmat4 projection = glm::perspective(
+		glm::radians(75.0), //FOV
+		(double)width / (double)height,
+		1.0,   //near plane
+		8192.0  //far plane
 	);
 
 	m_lastProjection = projection;
 
-	glLoadMatrixf(glm::value_ptr(projection));
+	glLoadMatrixd(glm::value_ptr(projection));
 	glMatrixMode(GL_MODELVIEW);
 }
 
@@ -52,9 +54,9 @@ void Renderer::BeginFrame(const Camera& camera) {
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glLoadIdentity();
 
-	glm::mat4 view = camera.GetViewMatrix();
+	glm::dmat4 view = camera.GetViewMatrix();
 	m_lastView = view;
-	glLoadMatrixf(glm::value_ptr(view));
+	glLoadMatrixd(glm::value_ptr(view));
 }
 
 void Renderer::EndFrame(){
@@ -65,10 +67,14 @@ void Renderer::EndFrame(){
 		glViewport(0, 0, m_windowWidth, m_windowHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
+
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
 		glOrtho(0, m_windowWidth, 0, m_windowHeight, -1, 1);
+
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
@@ -88,6 +94,8 @@ void Renderer::EndFrame(){
 		glMatrixMode(GL_PROJECTION); glPopMatrix();
 		glMatrixMode(GL_MODELVIEW); glPopMatrix();
 
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
 	}
 }
 

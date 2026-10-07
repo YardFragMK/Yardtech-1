@@ -21,8 +21,8 @@ public:
 	 void SetRetroMode(bool enable);
 	 bool IsRetroMode() const { return m_retroMode; }
 
-	 const glm::mat4& GetProjectionMatrix() const { return m_lastProjection; }
-	 const glm::mat4& GetViewMatrix() const { return m_lastView; }
+	 const glm::dmat4 GetProjectionMatrix() const { return m_lastProjection; }
+	 const glm::dmat4 GetViewMatrix() const { return m_lastView; }
 
 private:
 	GLuint m_retroTexture = 0;
@@ -32,8 +32,8 @@ private:
 	const int RETRO_WIDTH = 320;
 	const int RETRO_HEIGHT = 240;
 
-	glm::mat4 m_lastProjection = glm::mat4(1.0f);
-	glm::mat4 m_lastView = glm::mat4(1.0f);
+	glm::dmat4 m_lastProjection = glm::mat4(1.0f);
+	glm::dmat4 m_lastView = glm::mat4(1.0f);
 
 	void ApplyProjection(int width, int height);
 };
