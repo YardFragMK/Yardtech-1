@@ -66,8 +66,6 @@ bool Engine::initSystems() {
 	Logger::info("Console initalize edildi");
 
 
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	//=========================================================
 	//Window Init
 	//=========================================================

@@ -28,7 +28,7 @@ void Renderer::ApplyProjection(int width, int height) {
 		glm::radians(75.0), //FOV
 		(double)width / (double)height,
 		1.0,   //near plane
-		8192.0  //far plane
+		8192.0  //far plane maybe 16384
 	);
 
 	m_lastProjection = projection;

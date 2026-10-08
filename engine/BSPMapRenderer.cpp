@@ -14,8 +14,8 @@ static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height)
     GLuint tex = 0;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -411,6 +411,9 @@ static void DrawRenderFace(const BSPRenderFace& rf) {
     if (useAlphaTest) {
         glEnable(GL_ALPHA_TEST);
         glAlphaFunc(GL_GREATER, 0.5f);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     glBegin(GL_TRIANGLE_FAN); // GL_POLYGON yerine GL_TRIANGLE_FAN 
@@ -430,6 +433,8 @@ static void DrawRenderFace(const BSPRenderFace& rf) {
 
     if (useAlphaTest) {
         glDisable(GL_ALPHA_TEST);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_BLEND);
     }
 
     if (rf.glTexture == 0) {
