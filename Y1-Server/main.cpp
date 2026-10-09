@@ -2,6 +2,7 @@
 #include <NetProtocol.h>
 #include <BSPMap.h>
 #include "ServerConsole.h"
+#include "VFSypak.h"
 #include <unordered_map>
 #include <cstdio>
 #include <cstring>
@@ -11,6 +12,7 @@ static constexpr float SERVER_GRAVITY = 900.0f;
 static constexpr float SERVER_JUMPFORCE = 250.0f;
 
 static BSPMap g_serverMap;
+static VirtualFileSystem g_serverVFS;
 static ENetHost* g_server = nullptr;
 static std::unordered_map<ENetPeer*, PlayerPhysicsState> g_playerStates;
 static size_t g_maxClients = NetProtocol::MAX_CLIENTS;
@@ -26,8 +28,8 @@ static void ExecuteServerCommand(const std::string& line) {
     if (cmd == "server_changemap") {
         std::string mapName;
         if (iss >> mapName) {
-            std::string path = "nvs1/map/" + mapName + ".bsp";
-            if (g_serverMap.Load(path)) {
+            std::vector<uint8_t> mapBuffer = g_serverVFS.ReadFile("map/" + mapName + ".bsp");
+            if (!mapBuffer.empty() && g_serverMap.LoadFromMemory(mapBuffer)) {
                 printf("Harita degistirildi: %s\n", mapName.c_str());
 
                 for (auto& pair : g_playerStates) {
@@ -73,20 +75,23 @@ static void ExecuteServerCommand(const std::string& line) {
 }
 
 int main() {
-    printf("Yardtech-1 Dedicated Server alpha 0.03\n");
+    printf("Yardtech-1 Dedicated Server alpha 0.04\n");
     printf("======================================\n");
-    printf("Komutlar: server_changemap <mapname>, server_changemaxclientnumber <number>, server_status\n");
+    printf("Komutlar: server_changemap <mapname>\n\t  server_changemaxclientnumber <number>\n\t  server_status\n");
+
+    g_serverVFS.MountYPAK("nvs1/gbpak.ypak");
+    g_serverVFS.MountDirectory("nvs1/");
 
     if (enet_initialize() != 0) {
         printf("WARNING-> ENet baslatilamadi.\n");
         return 1;
     }
-
-    if (!g_serverMap.Load("nvs1/map/firstmap.bsp")) {
+    std::vector<uint8_t> mapBuffer = g_serverVFS.ReadFile("map/firstmap.bsp");
+    if (mapBuffer.empty() || !g_serverMap.LoadFromMemory(mapBuffer)) {
         printf("WARNING-> harita yuklenemedi, collision devre disi kalacak.\n");
     }
     else {
-        printf("Harita yuklendi.\n");
+        printf("Test haritasi yuklendi. Server'i yapilandirin...\n");
     }
 
     ENetAddress address;

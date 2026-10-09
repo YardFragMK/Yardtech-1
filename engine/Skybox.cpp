@@ -2,9 +2,34 @@
 #include "TGALoader.h"
 #include "console/Console.h"
 #include "GLExtensions.h"
+#include "VFSypak.h"
 #include <vector>
+#include <algorithm>
 
 Skybox g_Skybox;
+extern VirtualFileSystem vfs;
+
+static GLuint UploadSkyTextureFromBuffer(const std::vector<uint8_t>& buffer) {
+    if (buffer.empty()) return 0;
+
+    std::vector<uint8_t> pixels;
+    int w = 0, h = 0;
+
+    if (!LoadTGAFromMemory(buffer, pixels, w, h)) return 0;
+
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
 
 static GLuint UploadSkyTexture(const std::string& path) {
     std::vector<uint8_t> pixels;
@@ -40,17 +65,32 @@ bool Skybox::Load(const std::string& skyname) {
 
     bool anyLoaded = false;
     for (int i = 0; i < 6; i++) {
-        std::string path = "nvs1/gfx/env/" + skyname + suffixes[i] + ".tga";
-        m_faceTex[i] = UploadSkyTexture(path);
-        if (m_faceTex[i] != 0) anyLoaded = true;
+        std::string nameLower = skyname;
+        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+
+        std::string virtualPath = "gfx/env/" + nameLower + suffixes[i] + ".tga";
+
+        std::vector<uint8_t> fileBuffer = vfs.ReadFile(virtualPath);
+
+        m_faceTex[i] = UploadSkyTextureFromBuffer(fileBuffer);
+
+        if (m_faceTex[i] != 0) {
+            anyLoaded = true;
+        }
+        else {
+            std::string fallbackPath = "gfx/env/" + skyname + suffixes[i] + ".tga";
+            std::vector<uint8_t> fallbackBuffer = vfs.ReadFile(fallbackPath);
+            m_faceTex[i] = UploadSkyTextureFromBuffer(fallbackBuffer);
+            if (m_faceTex[i] != 0) anyLoaded = true;
+        }
     }
 
     if (!anyLoaded) {
-        Console::Log("WARNING-> skybox yuklenemedi: " + skyname);
+        Console::Log("WARNING-> skybox yuklenemedi (VFS): " + skyname);
         return false;
     }
 
-    Console::Log("Skybox yuklendi: " + skyname);
+    Console::Log("Skybox VFS(.ypak) uzerinden yuklendi: " + skyname);
     m_loaded = true;
     return true;
 }
@@ -70,7 +110,7 @@ void Skybox::Render(const glm::vec3& cameraPos) const {
     if (!m_loaded) return;
 
     glPushMatrix();
-    glTranslatef(cameraPos.x, cameraPos.y, cameraPos.z);
+    glTranslated(static_cast<double>(cameraPos.x), static_cast<double>(cameraPos.y), static_cast<double>(cameraPos.z));
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
@@ -78,15 +118,21 @@ void Skybox::Render(const glm::vec3& cameraPos) const {
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     float s = SIZE;
-    glm::vec2 uvs[4] = { glm::vec2(0,1), glm::vec2(1,1), glm::vec2(1,0), glm::vec2(0,0) };
-    glm::vec2 uvsRot[4] = { glm::vec2(0,0), glm::vec2(1,0), glm::vec2(1,1), glm::vec2(0,1) }; // Bir tık daha (270 derece) döndürülmüş UV
+    float eps = 0.0005f;
+    float low = 0.0f + eps;
+    float high = 1.0f - eps;
 
-    { glm::vec3 v[4] = { {s,-s,-s},{s,-s,s},{s,s,s},{s,s,-s} };       DrawSkyFace(m_faceTex[0], v, uvs); } // +X rt
-    { glm::vec3 v[4] = { {-s,-s,s},{-s,-s,-s},{-s,s,-s},{-s,s,s} };   DrawSkyFace(m_faceTex[1], v, uvs); } // -X lf
-    { glm::vec3 v[4] = { {-s,s,s},{s,s,s},{s,s,-s},{-s,s,-s} };       DrawSkyFace(m_faceTex[2], v, uvsRot); } // +Y up (Döndürüldü)
-    { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,-s,s},{-s,-s,s} };   DrawSkyFace(m_faceTex[3], v, uvsRot); } // -Y dn (Döndürüldü)
-    { glm::vec3 v[4] = { {s,-s,s},{-s,-s,s},{-s,s,s},{s,s,s} };       DrawSkyFace(m_faceTex[4], v, uvs); } // +Z bk
-    { glm::vec3 v[4] = { {-s,-s,-s},{s,-s,-s},{s,s,-s},{-s,s,-s} };   DrawSkyFace(m_faceTex[5], v, uvs); } // -Z ft
+    glm::vec2 uvs[4] = { {low, high}, {high, high}, {high, low}, {low, low} };
+    glm::vec2 uvsUp[4] = { {low, low}, {high, low}, {high, high}, {low, high} };
+    glm::vec2 uvsDn[4] = { {low, high}, {high, high}, {high, low}, {low, low} };
+
+   
+    { glm::vec3 v[4] = { {s,-s,-s}, {s,-s,s}, {s,s,s}, {s,s,-s} };       DrawSkyFace(m_faceTex[0], v, uvs); } // Right (+X) -> rt
+    { glm::vec3 v[4] = { {-s,-s,s}, {-s,-s,-s}, {-s,s,-s}, {-s,s,s} };   DrawSkyFace(m_faceTex[1], v, uvs); } // Left (-X) -> lf
+    { glm::vec3 v[4] = { {-s,s,s}, {s,s,s}, {s,s,-s}, {-s,s,-s} };       DrawSkyFace(m_faceTex[2], v, uvsUp); } // Up (+Y) -> up 
+    { glm::vec3 v[4] = { {-s,-s,-s}, {s,-s,-s}, {s,-s,s}, {-s,-s,s} };   DrawSkyFace(m_faceTex[3], v, uvsDn); } // Down (-Y) -> dn 
+    { glm::vec3 v[4] = { {s,-s,s}, {-s,-s,s}, {-s,s,s}, {s,s,s} };       DrawSkyFace(m_faceTex[4], v, uvs); } // Back (+Z) -> bk
+    { glm::vec3 v[4] = { {-s,-s,-s}, {s,-s,-s}, {s,s,-s}, {-s,s,-s} };   DrawSkyFace(m_faceTex[5], v, uvs); } // Front (-Z) -> ft
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
