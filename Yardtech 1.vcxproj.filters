@@ -126,6 +126,15 @@
     <ClCompile Include="engine\EngineInterfaces.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\Level.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\InputBridge.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\EngineHostInterfaces.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h">
@@ -234,6 +243,12 @@
       <Filter>Header Files\game src</Filter>
     </ClInclude>
     <ClInclude Include="engine\ModuleLoader.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Level.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\InputBridge.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

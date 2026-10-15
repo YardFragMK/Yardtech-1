@@ -35,14 +35,16 @@
 #include"UIWindow.h"
 #include"../game/src/BotManager.h"
 #include "ModuleLoader.h"
+#include "Level.h"
 
 Renderer renderer;
 BSPMap g_Map;
 VirtualFileSystem vfs;
 
-Engine::~Engine(){
+Engine::~Engine() {
 	NetClient::Disconnect();
 	enet_deinitialize();
+	UnloadLevel();
 	UnloadGameModules();
 
 	if (glContext) {
@@ -53,7 +55,7 @@ Engine::~Engine(){
 	}
 	SDL_Quit();
 }
- 
+
 //=========================================================
 //Engine 
 //=========================================================
@@ -65,7 +67,6 @@ bool Engine::initSystems() {
 	}
 
 	Console::Init();
-	LoadGameModules("nvs1");
 	Logger::info("Console initalize edildi");
 
 
@@ -102,7 +103,7 @@ bool Engine::initSystems() {
 	if (SDL_GL_MakeCurrent(window1.getWindow(), glContext) != 0) {
 		Logger::error(SDL_GetError());
 		return false;
-	} 
+	}
 	Logger::info("window ve glContext birbirine baglandi.");
 
 	/*
@@ -126,11 +127,20 @@ bool Engine::initSystems() {
 	//=========================================================
 	//Renderer Init
 	//=========================================================
-	if (!renderer.Init(windowWidth, windowHeight)){
+	if (!renderer.Init(windowWidth, windowHeight)) {
 		Logger::error("Renderer initialize edilemedi.");
 		return false;
 	}
 	Logger::info("Renderer initialize edildi.");
+
+	//=========================================================
+	// Oyun modulleri (client.dll / server.dll)
+	//=========================================================
+	// Moduller pencere, GL context ve VFS hazir olduktan sonra yuklenir;
+	// client.dll ileride Init sirasinda GL kaynaklari olusturacaktir.
+	if (!LoadGameModules("nvs1")) {
+		Logger::error("Oyun modulleri tam olarak yuklenemedi (client.dll/server.dll).");
+	}
 
 	//=========================================================
 	// Bitmap Font
@@ -163,22 +173,18 @@ bool Engine::initSystems() {
 	const float btnSpacing = 68.0f;
 	const float topMargin = 30.0f;
 
-	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", [this]() {
-		std::vector<uint8_t> mapBuffer = vfs.ReadFile("map/firstmap.bsp");
-		if (LoadMapFromMemory(mapBuffer, "firstmap")) {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", []() {
+		// Basarisiz yuklemede LoadLevel hatayi kendisi loglar; oyun durumuna
+		// yalnizca harita basariyla yuklendiyse gecilir.
+		if (LoadLevel("firstmap")) {
 			BotManager::Init();
 			EnterPlaying();
 		}
-		else {
-			Logger::error("Harita yukleme basarisiz.");
-		}
-		BotManager::Init();
-		EnterPlaying();
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 1, btnW, btnH, "LOAD GAME", []() {
 		Console::Log("Load game henuz baglanmadi");
 		});
-	MainMenu::AddButton(btnX, topMargin + btnSpacing *2, btnW, btnH, "FIND SERVERS", []() {
+	MainMenu::AddButton(btnX, topMargin + btnSpacing * 2, btnW, btnH, "FIND SERVERS", []() {
 		ServerMenu::Open();
 		});
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 3, btnW, btnH, "NEW MULTIPLAYER GAME", []() {
@@ -240,8 +246,8 @@ void Engine::gameLoop() {
 		glm::vec3 oldPos = g_Camera.position;
 
 		//=========================================================
-        // Input / Update
-        //=========================================================
+		// Input / Update
+		//=========================================================
 		Console::Update(deltaTime);
 		NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
 
@@ -251,8 +257,11 @@ void Engine::gameLoop() {
 		// Playing disindaki durumlarda (orn. Paused) da gecerli olmalidir.
 		std::string newMapName;
 		if (NetClient::PollMapChange(newMapName)) {
-			std::vector<uint8_t> mapBuffer = vfs.ReadFile("map/" + newMapName + ".bsp");
-			LoadMapFromMemory(mapBuffer, newMapName);
+			LoadLevel(newMapName);
+		}
+
+		if (IBaseClientDLL* client = GetClientDLL()) {
+			client->Update(deltaTime);
 		}
 
 		//=========================================================
@@ -267,6 +276,14 @@ void Engine::gameLoop() {
 			if (g_State == GameState::Playing) {
 				UpdatePlayerPhysics(FIXED_DELTA_TIME, oldPos);
 				BotManager::Update(FIXED_DELTA_TIME);
+
+				// Yerel oyun mantigi yalnizca bir sunucuya bagli degilken
+				// calisir; baglandiginda otoriter simulasyon uzaktaki sunucudadir.
+				if (!NetClient::IsConnected()) {
+					if (IServerGameDLL* server = GetServerDLL()) {
+						server->GameFrame(FIXED_DELTA_TIME);
+					}
+				}
 			}
 
 			accumulator -= FIXED_DELTA_TIME;
@@ -297,6 +314,10 @@ void Engine::RenderFrame(float alpha) {
 		g_MapRenderer.RenderWorld(frustum);
 		g_MapRenderer.RenderBrushEntities(g_Map.GetEntities(), frustum);
 		BotManager::Render();
+
+		if (IBaseClientDLL* client = GetClientDLL()) {
+			client->RenderScene();
+		}
 	}
 
 	renderer.EndFrame();
@@ -314,6 +335,13 @@ void Engine::RenderFrame(float alpha) {
 
 	Settings::Render(windowWidth, windowHeight);
 	ServerMenu::Render(windowWidth, windowHeight);
+
+	// client.dll arayuzu (ileride YGUI) konsoldan once cizilir; konsol her
+	// zaman en ustte kalir.
+	if (IBaseClientDLL* client = GetClientDLL()) {
+		client->RenderUI(windowWidth, windowHeight);
+	}
+
 	Console::Render(windowWidth, windowHeight);
 
 	SDL_GL_SwapWindow(window1.getWindow());
@@ -323,5 +351,5 @@ void Engine::windowsError(const std::wstring& message, const std::wstring& title
 	int rnvalue = MessageBoxW(NULL, message.c_str(), title.c_str(),
 		MB_ICONERROR | MB_OK | MB_APPLMODAL | MB_TOPMOST);
 
-		exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }

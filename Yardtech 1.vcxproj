@@ -94,6 +94,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>;$(SolutionDir)Y1-Shared</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,6 +113,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>;$(SolutionDir)Y1-Shared</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,7 +130,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)Y1-Shared</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -150,7 +152,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)Y1-Shared</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -171,11 +173,14 @@
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
+    <ClCompile Include="engine\EngineHostInterfaces.cpp" />
     <ClCompile Include="engine\EngineInterfaces.cpp" />
     <ClCompile Include="engine\GameState.cpp" />
     <ClCompile Include="engine\GLExtensions.cpp" />
     <ClCompile Include="engine\HUD.cpp" />
+    <ClCompile Include="engine\InputBridge.cpp" />
     <ClCompile Include="engine\KeyInput.cpp" />
+    <ClCompile Include="engine\Level.cpp" />
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\MainMenu.cpp" />
     <ClCompile Include="engine\MapLoader.cpp" />
@@ -209,7 +214,9 @@
     <ClInclude Include="engine\GameState.h" />
     <ClInclude Include="engine\GLExtensions.h" />
     <ClInclude Include="engine\HUD.h" />
+    <ClInclude Include="engine\InputBridge.h" />
     <ClInclude Include="engine\KeyInput.h" />
+    <ClInclude Include="engine\Level.h" />
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\MainMenu.h" />
     <ClInclude Include="engine\MapLoader.h" />

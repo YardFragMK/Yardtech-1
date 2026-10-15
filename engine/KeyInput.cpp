@@ -10,6 +10,7 @@
 #include "PauseMenu.h"
 #include "Settings.h"
 #include "ServerMenu.h"
+#include "InputBridge.h"
 
 void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 {
@@ -17,6 +18,7 @@ void KeyInput::Update(bool& running, Camera& camera, float deltaTime)
 
     while (SDL_PollEvent(&event)) {
         Console::HandleEvent(event);
+        ForwardEventToClient(event, Console::IsOpen());
 
         if (!Console::IsOpen()) {
             if (event.type == SDL_MOUSEMOTION) {
