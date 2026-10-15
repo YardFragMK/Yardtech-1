@@ -50,7 +50,7 @@ void Renderer::BeginFrame(const Camera& camera) {
 
 
 	glClearColor(0.08f, 0.01f, 0.01f, 0.85f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Sadece glClear(GL_DEPTH_BUFFER_BIT); olursa hall of mirrrors efekt olur.
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glLoadIdentity();
 

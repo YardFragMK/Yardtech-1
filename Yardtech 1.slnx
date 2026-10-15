@@ -3,7 +3,9 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="Y1-Server/Y1-Server.vcxproj" Id="1be09be7-da56-4855-a76c-fa1c3680a6d6" />
   <Project Path="Y1-Shared/Y1-Shared.vcxproj" Id="da8ca0d0-19c1-4cf7-8d98-18db9192c376" />
   <Project Path="Yardtech 1.vcxproj" Id="a0dffa10-b809-49f1-8af3-62bbe341033d" />
+  <Project Path="ycilentdll/ycilentdll.vcxproj" Id="20aa7535-f562-4d88-80ab-2b03d3fa0d77" />
+  <Project Path="ydedicatedserver/ydedicatedserver.vcxproj" Id="2adc68e6-4426-4b69-8010-848f0735bc52" />
+  <Project Path="yserverdll/yserverdll.vcxproj" Id="26b4f96d-995b-4fd0-9297-4dde578496f8" />
 </Solution>

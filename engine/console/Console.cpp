@@ -38,7 +38,7 @@ static bool RequireSingleplayer(const std::string& cmdName) {
 }
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.61");
+    Log("Yardtech-1 version: alpha 0.62");
     Log("=============================");
 }
 
@@ -175,12 +175,12 @@ void Console::ExecuteCommand() {
             // Engine.cpp tarafından içi doldurulan asıl global vfs nesnesinden dosyayı oku
             std::vector<uint8_t> mapBuffer = vfs.ReadFile(fullVfsPath);
             if (mapBuffer.empty()) {
-                Log("WARNING -> Paket (gbpak.ypak) icinde harita bulunamadi: " + fullVfsPath);
+                Log("WARNING-> Paket (.ypak) icinde harita bulunamadi: " + fullVfsPath);
                 return;
             }
 
             if (LoadMapFromMemory(mapBuffer, value)) {
-                Log("Harita basariyla yuklendi: " + value);
+                Log("Harita yuklendi: " + value);
 
                 // Oyunu oynanış durumuna geçir ve kamerayı player_start konumuna bağla
                 EnterPlaying();

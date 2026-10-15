@@ -24,7 +24,7 @@
     <ProjectGuid>{a0dffa10-b809-49f1-8af3-62bbe341033d}</ProjectGuid>
     <RootNamespace>Yardtech1</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Y1-Client</ProjectName>
+    <ProjectName>ylauncher</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,10 +74,18 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SOLUTION_DIR)extern/SDL2/lib/x64;$(SOLUTION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
+    <TargetName>Goblet of Blood</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SOLUTION_DIR)extern/SDL2/include;$(SOLUTION_DIR)extern/glad/include;$(SolutionDir)extern/enet/include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SOLUTION_DIR)extern/SDL2/lib/x64;$(SOLUTION_DIR)extern/enet/lib;$(LibraryPath)</LibraryPath>
+    <TargetName>Goblet of Blood</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>Goblet of Blood</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>Goblet of Blood</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -163,6 +171,7 @@
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
+    <ClCompile Include="engine\EngineInterfaces.cpp" />
     <ClCompile Include="engine\GameState.cpp" />
     <ClCompile Include="engine\GLExtensions.cpp" />
     <ClCompile Include="engine\HUD.cpp" />
@@ -170,6 +179,7 @@
     <ClCompile Include="engine\Logger.cpp" />
     <ClCompile Include="engine\MainMenu.cpp" />
     <ClCompile Include="engine\MapLoader.cpp" />
+    <ClCompile Include="engine\ModuleLoader.cpp" />
     <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
@@ -203,6 +213,7 @@
     <ClInclude Include="engine\Logger.h" />
     <ClInclude Include="engine\MainMenu.h" />
     <ClInclude Include="engine\MapLoader.h" />
+    <ClInclude Include="engine\ModuleLoader.h" />
     <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />

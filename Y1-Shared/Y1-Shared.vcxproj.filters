@@ -16,6 +16,12 @@
     <Filter Include="Source Files\extern">
       <UniqueIdentifier>{43f6d29e-6646-44a5-957c-013a7b007c87}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\interface">
+      <UniqueIdentifier>{146fc6e8-eead-463c-94e0-87e1da81f098}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\interface">
+      <UniqueIdentifier>{2143051f-fdbf-4423-989c-42c2a8131bcd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSPFormat.h">
@@ -48,6 +54,27 @@
     <ClInclude Include="VFSypak.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ienginecommon.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="iclientdll.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="buttoncodes.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="interface.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="iservergamedll.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="iworldquery.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="netentity.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BSPMap.cpp">
@@ -76,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="..\extern\miniz\miniz.c">
       <Filter>Source Files\extern</Filter>
+    </ClCompile>
+    <ClCompile Include="interface.cpp">
+      <Filter>Source Files\interface</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -34,6 +34,7 @@
 #include"ServerMenu.h"
 #include"UIWindow.h"
 #include"../game/src/BotManager.h"
+#include "ModuleLoader.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -42,6 +43,7 @@ VirtualFileSystem vfs;
 Engine::~Engine(){
 	NetClient::Disconnect();
 	enet_deinitialize();
+	UnloadGameModules();
 
 	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
@@ -63,6 +65,7 @@ bool Engine::initSystems() {
 	}
 
 	Console::Init();
+	LoadGameModules("nvs1");
 	Logger::info("Console initalize edildi");
 
 
@@ -117,6 +120,7 @@ bool Engine::initSystems() {
 	//VFS
 	//=========================================================
 	vfs.MountYPAK("nvs1/gbpak.ypak");
+	vfs.MountYPAK("nvs1/zhlpak.ypak"); //Test files
 	vfs.MountDirectory("nvs1/");
 
 	//=========================================================

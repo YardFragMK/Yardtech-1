@@ -22,8 +22,15 @@
     <ClInclude Include="BSPFormat.h" />
     <ClInclude Include="BSPMap.h" />
     <ClInclude Include="BSPReader.h" />
+    <ClInclude Include="buttoncodes.h" />
     <ClInclude Include="EntityParser.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="iclientdll.h" />
+    <ClInclude Include="ienginecommon.h" />
+    <ClInclude Include="interface.h" />
+    <ClInclude Include="iservergamedll.h" />
+    <ClInclude Include="iworldquery.h" />
+    <ClInclude Include="netentity.h" />
     <ClInclude Include="NetProtocol.h" />
     <ClInclude Include="PlayerMovement.h" />
     <ClInclude Include="TGALoader.h" />
@@ -36,6 +43,7 @@
     <ClCompile Include="BSPReader.cpp" />
     <ClCompile Include="EntityParser.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="interface.cpp" />
     <ClCompile Include="PlayerMovement.cpp" />
     <ClCompile Include="TGALoader.cpp" />
     <ClCompile Include="VFSypak.cpp" />
@@ -47,6 +55,7 @@
     <ProjectGuid>{da8ca0d0-19c1-4cf7-8d98-18db9192c376}</ProjectGuid>
     <RootNamespace>Y1Shared</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>yshared</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

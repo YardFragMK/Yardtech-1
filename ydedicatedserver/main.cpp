@@ -1,4 +1,6 @@
 #include <enet/enet.h>
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
 #include <NetProtocol.h>
 #include <BSPMap.h>
 #include "ServerConsole.h"

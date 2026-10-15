@@ -4,17 +4,8 @@
 #include <glm/glm.hpp>
 #include "BSPFormat.h"
 #include "EntityParser.h"
+#include "iworldquery.h"
 
-// Bir trace (raycast/sweep) sonucu, engine-space (Y-up) uzayinda doner.
-struct TraceResult {
-    bool startSolid = false;
-    bool allSolid = true;
-    bool inOpen = false;
-    bool inWater = false;
-    float fraction = 1.0f;
-    glm::vec3 endPos{ 0.0f };
-    glm::vec3 planeNormal{ 0.0f, 1.0f, 0.0f };
-};
 
 // Yalnizca collision ve entity verisiyle ilgilenen, hicbir grafik API'sine
 // (OpenGL, Direct3D vb.) bagimliligi olmayan BSP okuyucu. Hem sunucunun
