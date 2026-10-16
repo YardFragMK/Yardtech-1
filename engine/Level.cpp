@@ -2,14 +2,13 @@
 #include "Engine.h"
 #include "MapLoader.h"
 #include "ModuleLoader.h"
+#include "LocalGame.h"
 #include "Logger.h"
 #include <vector>
 
-using IClientDLLPtr = IBaseClientDLL*;
-using IServerDLLPtr = IServerGameDLL*;
-
 namespace {
     std::string s_levelName;
+    bool s_serverLevelActive = false;
 }
 
 const std::string& GetCurrentLevelName() {
@@ -19,13 +18,21 @@ const std::string& GetCurrentLevelName() {
 void UnloadLevel() {
     if (s_levelName.empty()) return;
 
-    if (IClientDLLPtr client = GetClientDLL()) client->LevelShutdown();
-    if (IServerDLLPtr server = GetServerDLL()) server->LevelShutdown();
+    if (IBaseClientDLL* client = GetClientDLL()) client->LevelShutdown();
+
+    if (s_serverLevelActive) {
+        if (IServerGameDLL* server = GetServerDLL()) {
+            server->ClientDisconnect(0);
+            server->LevelShutdown();
+        }
+        s_serverLevelActive = false;
+    }
 
     s_levelName.clear();
+    LocalGame_Reset();
 }
 
-bool LoadLevel(const std::string& mapName) {
+bool LoadLevel(const std::string& mapName, bool runLocalServer) {
     UnloadLevel();
 
     std::vector<uint8_t> buffer = vfs.ReadFile("map/" + mapName + ".bsp");
@@ -34,18 +41,28 @@ bool LoadLevel(const std::string& mapName) {
         return false;
     }
 
-    // Server once baslatilir: client, LevelInit sirasinda dunyaya ve
-    // server'in urettigi entity'lere guvenebilmelidir.
-    if (IServerDLLPtr server = GetServerDLL()) {
-        if (!server->LevelInit(mapName.c_str())) {
-            Logger::error("server.dll LevelInit basarisiz: " + mapName);
-            return false;
+    LocalGame_Reset();
+
+    // Seviye adi server baslatilmadan once atanir: IWorldQuery::GetMapName
+    // server'in LevelInit'i sirasinda da gecerli olmalidir.
+    s_levelName = mapName;
+
+    if (runLocalServer) {
+        if (IServerGameDLL* server = GetServerDLL()) {
+            if (!server->LevelInit(mapName.c_str())) {
+                Logger::error("server.dll LevelInit basarisiz: " + mapName);
+                s_levelName.clear();
+                return false;
+            }
+
+            // Yerel oyunda tek oyuncu 0 numarali slota baglanir.
+            server->ClientConnect(0, "Player");
+            server->ClientPutInServer(0);
+            s_serverLevelActive = true;
         }
     }
 
-    s_levelName = mapName;
-
-    if (IClientDLLPtr client = GetClientDLL()) {
+    if (IBaseClientDLL* client = GetClientDLL()) {
         client->LevelInit(mapName.c_str());
     }
     return true;

@@ -1,10 +1,14 @@
 #pragma once
+#include <glm/glm.hpp>
 #include "interface.h"
 #include "iworldquery.h"
 #include "netentity.h"
+#include "playerstats.h"
 #include "PlayerMovement.h"
 
-#define SERVER_GAME_DLL_INTERFACE_VERSION "ServerGameDLL001"
+// Arayuz degistiginde versiyon artirilir; eski ve yeni modullerin yanlis
+// eslesmesi GetInterface'in nullptr donmesiyle yakalanir.
+#define SERVER_GAME_DLL_INTERFACE_VERSION "ServerGameDLL002"
 #define ENGINE_SERVER_INTERFACE_VERSION "EngineServer001"
 
 // server.dll'in engine'den kullandigi hizmetler (exe veya dedicated exe uygular).
@@ -17,7 +21,6 @@ public:
     virtual void ChangeLevel(const char* mapName) = 0;
     virtual void DisconnectClient(int clientIndex, const char* reason) = 0;
 
-    // Oyuna ozel mesajlar; engine icerigi yorumlamaz.
     virtual void SendMessageToClient(int clientIndex, const void* data, int size, bool reliable) = 0;
     virtual void BroadcastMessage(const void* data, int size, bool reliable) = 0;
 };
@@ -28,7 +31,6 @@ public:
     virtual bool DLLInit(CreateInterfaceFn engineFactory) = 0;
     virtual void DLLShutdown() = 0;
 
-    // Harita yuklendikten sonra cagrilir; entity listesi IWorldQuery'den okunur.
     virtual bool LevelInit(const char* mapName) = 0;
     virtual void LevelShutdown() = 0;
 
@@ -38,9 +40,15 @@ public:
     virtual void ClientPutInServer(int clientIndex) = 0;
     virtual void ClientDisconnect(int clientIndex) = 0;
 
+    // Oyuncu hareket simulasyonu: Faz 3'te server'a tasinacak, simdilik kullanilmiyor.
     virtual void RunPlayerCommand(int clientIndex, const PlayerInputCommand& command, float frameTime) = 0;
     virtual bool GetPlayerState(int clientIndex, PlayerPhysicsState* outState) = 0;
 
-    // Replikasyon: engine her tick bu listeyi client'lara iletir.
+    // Faz 2a: hareket server'a tasinana kadar, host oyuncunun goz konumunu ve
+    // hizini server'a bildirir (botlarin hedefleme/isabet hesaplari icin).
+    virtual void SetPlayerView(int clientIndex, const glm::vec3& eyePosition, float moveSpeed) = 0;
+    virtual void RunPlayerActions(int clientIndex, const PlayerActionCommand& actions) = 0;
+    virtual bool GetPlayerStats(int clientIndex, PlayerStats* outStats) = 0;
+
     virtual int GetEntityStates(NetEntityState* outStates, int maxCount) = 0;
 };

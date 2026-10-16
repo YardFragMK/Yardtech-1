@@ -8,7 +8,7 @@
 #include <GL/glu.h>
 #include"../Camera.h"
 #include"BSPReader.h"
-#include"../MapLoader.h"
+#include"../Level.h"
 #include"../NetClient.h"
 #include"VFSypak.h"
 #include"../GameState.h"
@@ -38,7 +38,7 @@ static bool RequireSingleplayer(const std::string& cmdName) {
 }
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.62");
+    Log("Yardtech-1 version: alpha 0.63");
     Log("=============================");
 }
 
@@ -169,24 +169,13 @@ void Console::ExecuteCommand() {
                 value = value.substr(0, value.size() - 4);
             }
 
-            // gbpak.ypak paketi içindeki sanal harita yolu
-            std::string fullVfsPath = "map/" + value + ".bsp";
-
-            // Engine.cpp tarafından içi doldurulan asıl global vfs nesnesinden dosyayı oku
-            std::vector<uint8_t> mapBuffer = vfs.ReadFile(fullVfsPath);
-            if (mapBuffer.empty()) {
-                Log("WARNING-> Paket (.ypak) icinde harita bulunamadi: " + fullVfsPath);
-                return;
-            }
-
-            if (LoadMapFromMemory(mapBuffer, value)) {
+            // LoadLevel haritayı VFS'ten okur, server.dll ve client.dll'e bildirir.
+            if (LoadLevel(value)) {
                 Log("Harita yuklendi: " + value);
-
-                // Oyunu oynanış durumuna geçir ve kamerayı player_start konumuna bağla
                 EnterPlaying();
             }
             else {
-                Log("WARNING-> Harita yuklenirken bellek/render hatasi olustu.");
+                Log("WARNING-> Harita yuklenemedi: " + value);
             }
         }
         else {

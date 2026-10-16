@@ -33,9 +33,10 @@
 #include"BSPMapRenderer.h"
 #include"ServerMenu.h"
 #include"UIWindow.h"
-#include"../game/src/BotManager.h"
 #include "ModuleLoader.h"
 #include "Level.h"
+#include "LocalGame.h"
+#include "EntityRenderer.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -175,9 +176,9 @@ bool Engine::initSystems() {
 
 	MainMenu::AddButton(btnX, topMargin + btnSpacing * 0, btnW, btnH, "NEW GAME", []() {
 		// Basarisiz yuklemede LoadLevel hatayi kendisi loglar; oyun durumuna
-		// yalnizca harita basariyla yuklendiyse gecilir.
+		// yalnizca harita basariyla yuklendiyse gecilir. Botlar server.dll'in
+		// LevelInit'inde haritadaki entity'lerden olusturulur.
 		if (LoadLevel("firstmap")) {
-			BotManager::Init();
 			EnterPlaying();
 		}
 		});
@@ -255,9 +256,10 @@ void Engine::gameLoop() {
 		// kopyasini da guncellemeli. Bu kontrol NetClient::Update'in disinda,
 		// gameLoop'un kendisinde yapiliyor cunku multiplayer sirasinda
 		// Playing disindaki durumlarda (orn. Paused) da gecerli olmalidir.
+		// Uzak sunucu oyunu yonettigi icin yerel server.dll baslatilmaz.
 		std::string newMapName;
 		if (NetClient::PollMapChange(newMapName)) {
-			LoadLevel(newMapName);
+			LoadLevel(newMapName, false);
 		}
 
 		if (IBaseClientDLL* client = GetClientDLL()) {
@@ -275,14 +277,12 @@ void Engine::gameLoop() {
 
 			if (g_State == GameState::Playing) {
 				UpdatePlayerPhysics(FIXED_DELTA_TIME, oldPos);
-				BotManager::Update(FIXED_DELTA_TIME);
 
-				// Yerel oyun mantigi yalnizca bir sunucuya bagli degilken
-				// calisir; baglandiginda otoriter simulasyon uzaktaki sunucudadir.
+				// Yerel oyun mantigi (server.dll) yalnizca bir sunucuya bagli
+				// degilken calisir; baglandiginda otoriter simulasyon uzaktaki
+				// sunucudadir.
 				if (!NetClient::IsConnected()) {
-					if (IServerGameDLL* server = GetServerDLL()) {
-						server->GameFrame(FIXED_DELTA_TIME);
-					}
+					LocalGame_Tick(FIXED_DELTA_TIME);
 				}
 			}
 
@@ -313,7 +313,7 @@ void Engine::RenderFrame(float alpha) {
 
 		g_MapRenderer.RenderWorld(frustum);
 		g_MapRenderer.RenderBrushEntities(g_Map.GetEntities(), frustum);
-		BotManager::Render();
+		EntityRenderer_Render(LocalGame_GetEntities());
 
 		if (IBaseClientDLL* client = GetClientDLL()) {
 			client->RenderScene();

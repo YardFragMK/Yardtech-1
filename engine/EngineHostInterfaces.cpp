@@ -8,7 +8,6 @@
 #include "NetClient.h"
 #include "BSPMap.h"
 #include "console/Console.h"
-#include "../game/src/BotManager.h"
 #include <SDL.h>
 
 // Exe'nin (oyun host'unun) DLL'lere sundugu IWorldQuery, IEngineClient ve
@@ -71,7 +70,6 @@ public:
     void StartListenServer(const char* mapName) override {
         if (mapName == nullptr) return;
         if (LoadLevel(mapName)) {
-            BotManager::Init(); // bot yonetimi server.dll'e tasininca bu satir kalkacak
             EnterPlaying();
         }
     }

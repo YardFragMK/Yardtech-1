@@ -75,6 +75,9 @@
     <ClInclude Include="netentity.h">
       <Filter>Header Files\interface</Filter>
     </ClInclude>
+    <ClInclude Include="playerstats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BSPMap.cpp">

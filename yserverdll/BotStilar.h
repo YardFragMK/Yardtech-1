@@ -3,13 +3,13 @@
 
 class BotStilar : public e_BotBase {
 public:
-    void SpawnAt(const glm::vec3& spawnPosition, int difficulty);
+    void SpawnAt(const glm::vec3& spawnPosition, int difficulty, int32_t id);
 
     void Spawn() override;
     void Live(float deltaTime) override;
     void Run(float deltaTime) override;
     void Shoot() override;
-    void Render() const override;
+    uint16_t GetClassId() const override;
 
 private:
     enum class State { Cooldown, Firing, Jumping };

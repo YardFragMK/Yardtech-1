@@ -1,64 +1,38 @@
 #pragma once
-#include"Weapons.h"
-#include"../../engine/console/Console.h"
+#include "playerstats.h"
 
-enum Weapon {
-	PISTOL=0,
-	SHOTGUN=1
-};
-
+// Client tarafindaki oyuncu "aynasi". Oyun durumunun sahibi artik server.dll'dir;
+// bu sinif her tick'te server'dan gelen istatistikleri tutar ve HUD gibi
+// tuketicilerin eski arayuzu (alanlar ve getter'lar) kullanmasini saglar.
+// Silah eylemleri dogrudan uygulanmaz, server'a iletilmek uzere kuyruga alinir.
 class Player {
 public:
 	int maxHealth = 200;
 	int maxArmor = 200;
 	int Health = 200;
 	int Armor = 200;
-	int Damage;
 	int CurrentWeapon = PISTOL;
-	bool RGDitem = true;
+	bool RGDitem = true; // client tarafi ozelligi: havada sert inis izni
 
-	int GetCurrentBullet() const {
-		return (CurrentWeapon == PISTOL) ? pistol.WBullet : shotgun.WBullet;
-	}
-	int GetCurrentMaxBullet() const {
-		return (CurrentWeapon == PISTOL) ? pistol.WmaxBullet : shotgun.WmaxBullet;
-	}
-	int GetCurrentAmmo() const {
-		return (CurrentWeapon == PISTOL) ? pistol.WAmmo : shotgun.WAmmo;
-	}
+	int GetCurrentBullet() const { return m_bullets; }
+	int GetCurrentMaxBullet() const { return m_maxBullets; }
+	int GetCurrentAmmo() const { return m_reserveAmmo; }
+	bool IsReloading() const { return m_isReloading; }
 
-	void takeDamage(int enemyDamage);
-	void attack(int attacknumber);
-	void death();
+	void SwitchWeapon(int weaponIndex);
+	void ReloadCurrentWeapon();
+	void attack(int attackNumber);
 
-	// --- silah gecisi ---
-	void SwitchWeapon(int weaponIndex) {
-		if (weaponIndex != PISTOL && weaponIndex != SHOTGUN) return;
-		//if (CurrentWeapon == weaponIndex) return;
+	// Silah zamanlayicilari server'da calisir; ayna tarafinda yapilacak is yok.
+	void UpdateWeapons(float deltaTime) { (void)deltaTime; }
 
-		// silah degisirken pompalinin devam eden reload'i varsa iptal et
-		// (klasik FPS davranisi: silah degistirince reload kesilir)
-		shotgun.isReloading = false;
+	void ApplyStats(const PlayerStats& stats);
 
-		CurrentWeapon = weaponIndex;
-	}
-
-	// --- reload baslat (R tusu) ---
-	void ReloadCurrentWeapon() {
-		if (CurrentWeapon == PISTOL) {
-			pistol.Reload(); 
-		}
-		else {
-			shotgun.StartReload(); // zamanli, tek tek
-		}
-	}
-
-	// --- her frame cagrilmali ---
-	void UpdateWeapons(float deltaTime) {
-		shotgun.UpdateReload(deltaTime);
-	}
 private:
-	Pistol pistol;
-	Shotgun shotgun;
+	int m_bullets = 10;
+	int m_maxBullets = 15;
+	int m_reserveAmmo = 10;
+	bool m_isReloading = false;
 };
+
 extern Player g_Player;

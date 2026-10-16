@@ -33,6 +33,7 @@
     <ClInclude Include="netentity.h" />
     <ClInclude Include="NetProtocol.h" />
     <ClInclude Include="PlayerMovement.h" />
+    <ClInclude Include="playerstats.h" />
     <ClInclude Include="TGALoader.h" />
     <ClInclude Include="VFSypak.h" />
     <ClInclude Include="WadFile.h" />

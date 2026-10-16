@@ -1,56 +1,113 @@
 #include "pch.h"
+#include <string>
 #include "iservergamedll.h"
 #include "ienginecommon.h"
+#include "ServerContext.h"
+#include "BotManager.h"
 
-// server.dll'in Faz 1 iskeleti. Hem oyun exe'si (tek oyunculu / listen server)
-// hem dedicated server tarafindan yuklenir; bu yuzden host'a ozgu hicbir sey
+// server.dll'in gercek gerceklestirmesi. Hem oyun exe'si (tek oyunculu/listen
+// server) hem dedicated server tarafindan yuklenir; host'a ozgu hicbir sey
 // bilmez, yalnizca arayuzleri kullanir.
-namespace {
-    IEngineConsole* s_console = nullptr;
-    IEngineServer* s_engine = nullptr;
-
-    void LogLine(const char* message) {
-        if (s_console != nullptr) s_console->Print(message);
-    }
-}
-
 class ServerGameDLL : public IServerGameDLL {
 public:
     bool DLLInit(CreateInterfaceFn engineFactory) override {
-        s_console = GetInterface<IEngineConsole>(engineFactory, ENGINE_CONSOLE_INTERFACE_VERSION);
-        s_engine = GetInterface<IEngineServer>(engineFactory, ENGINE_SERVER_INTERFACE_VERSION);
+        ServerContext& ctx = Ctx();
+        ctx.console = GetInterface<IEngineConsole>(engineFactory, ENGINE_CONSOLE_INTERFACE_VERSION);
+        ctx.engine = GetInterface<IEngineServer>(engineFactory, ENGINE_SERVER_INTERFACE_VERSION);
 
-        if (s_console == nullptr) return false;
+        if (ctx.console == nullptr) return false;
 
-        LogLine("server.dll: DLLInit basarili");
-        if (s_engine == nullptr) {
-            LogLine("server.dll: IEngineServer henuz engine tarafindan saglanmiyor (Faz 1)");
-        }
+        ctx.Log("server.dll: DLLInit basarili");
+        if (ctx.engine == nullptr) ctx.Log("server.dll: IEngineServer saglanamadi");
         return true;
     }
 
     void DLLShutdown() override {
-        LogLine("server.dll: DLLShutdown");
-        s_console = nullptr;
-        s_engine = nullptr;
+        ServerContext& ctx = Ctx();
+        ctx.Log("server.dll: DLLShutdown");
+        BotManager::Shutdown();
+        ctx.world = nullptr;
+        ctx.engine = nullptr;
+        ctx.console = nullptr;
     }
 
     bool LevelInit(const char* mapName) override {
-        LogLine((std::string("server.dll: LevelInit ") + (mapName ? mapName : "")).c_str());
+        ServerContext& ctx = Ctx();
+
+        ctx.world = (ctx.engine != nullptr) ? ctx.engine->GetWorld() : nullptr;
+        if (ctx.world == nullptr) {
+            ctx.Log("server.dll: dunya sorgu arayuzu yok, LevelInit basarisiz");
+            return false;
+        }
+
+        for (PlayerSlot& slot : ctx.slots) slot = PlayerSlot();
+
+        BotManager::Init();
+        ctx.Log((std::string("server.dll: LevelInit ") + (mapName ? mapName : "")).c_str());
         return true;
     }
-    void LevelShutdown() override { LogLine("server.dll: LevelShutdown"); }
 
-    void GameFrame(float) override {}
+    void LevelShutdown() override {
+        ServerContext& ctx = Ctx();
+        BotManager::Shutdown();
+        for (PlayerSlot& slot : ctx.slots) slot = PlayerSlot();
+        ctx.world = nullptr;
+        ctx.Log("server.dll: LevelShutdown");
+    }
 
-    bool ClientConnect(int, const char*) override { return true; }
+    void GameFrame(float frameTime) override {
+        for (PlayerSlot& slot : Ctx().slots) {
+            if (slot.connected) slot.player.Update(frameTime);
+        }
+        BotManager::Update(frameTime);
+    }
+
+    bool ClientConnect(int clientIndex, const char*) override {
+        PlayerSlot* slot = Ctx().GetSlot(clientIndex);
+        if (slot == nullptr) return false;
+
+        *slot = PlayerSlot();
+        slot->connected = true;
+        return true;
+    }
+
     void ClientPutInServer(int) override {}
-    void ClientDisconnect(int) override {}
 
+    void ClientDisconnect(int clientIndex) override {
+        if (PlayerSlot* slot = Ctx().GetSlot(clientIndex)) *slot = PlayerSlot();
+    }
+
+    // Oyuncu hareketi Faz 3'te server'a tasinacak.
     void RunPlayerCommand(int, const PlayerInputCommand&, float) override {}
     bool GetPlayerState(int, PlayerPhysicsState*) override { return false; }
 
-    int GetEntityStates(NetEntityState*, int) override { return 0; }
+    void SetPlayerView(int clientIndex, const glm::vec3& eyePosition, float moveSpeed) override {
+        PlayerSlot* slot = Ctx().GetSlot(clientIndex);
+        if (slot == nullptr || !slot->connected) return;
+
+        slot->eyePosition = eyePosition;
+        slot->moveSpeed = moveSpeed;
+    }
+
+    void RunPlayerActions(int clientIndex, const PlayerActionCommand& actions) override {
+        PlayerSlot* slot = Ctx().GetSlot(clientIndex);
+        if (slot == nullptr || !slot->connected) return;
+
+        slot->player.ApplyActions(actions);
+    }
+
+    bool GetPlayerStats(int clientIndex, PlayerStats* outStats) override {
+        PlayerSlot* slot = Ctx().GetSlot(clientIndex);
+        if (slot == nullptr || !slot->connected || outStats == nullptr) return false;
+
+        *outStats = slot->player.GetStats();
+        return true;
+    }
+
+    int GetEntityStates(NetEntityState* outStates, int maxCount) override {
+        if (outStates == nullptr || maxCount <= 0) return 0;
+        return BotManager::CollectEntityStates(outStates, maxCount);
+    }
 };
 
 EXPOSE_SINGLE_INTERFACE(ServerGameDLL, IServerGameDLL, SERVER_GAME_DLL_INTERFACE_VERSION);
