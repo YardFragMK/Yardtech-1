@@ -7,8 +7,9 @@ enum ConVarFlags : int {
     CVAR_SINGLEPLAYER_ONLY = 1 << 0, // sunucuya bagliyken reddedilir
     CVAR_SERVER_ONLY = 1 << 1,       // yalnizca dedicated server konsolundan
     CVAR_CLIENT_ONLY = 1 << 2,
-    CVAR_CHEAT = 1 << 3,
-    CVAR_ARCHIVE = 1 << 4            // config dosyasina kaydedilir
+    CVAR_CHEAT = 1 << 3,             // nvs_cheats kapaliysa reddedilir
+    CVAR_ARCHIVE = 1 << 4,           // config dosyasina kaydedilir
+    CVAR_DEVELOPER = 1 << 5          // nvs_developer kapaliysa reddedilir
 };
 
 typedef void (*ConCommandFn)(int argc, const char* const* argv);

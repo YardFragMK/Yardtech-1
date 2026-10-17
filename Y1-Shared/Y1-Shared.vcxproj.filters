@@ -78,6 +78,9 @@
     <ClInclude Include="playerstats.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="viewsetup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BSPMap.cpp">
@@ -109,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="interface.cpp">
       <Filter>Source Files\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerMovementBSP.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

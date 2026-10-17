@@ -7,7 +7,11 @@
 #include "GameState.h"
 #include "NetClient.h"
 #include "BSPMap.h"
+#include "Settings.h"
+#include "ServerMenu.h"
 #include "console/Console.h"
+#include "console/CVar.h"
+#include <cstring>
 #include <SDL.h>
 
 // Exe'nin (oyun host'unun) DLL'lere sundugu IWorldQuery, IEngineClient ve
@@ -62,10 +66,34 @@ public:
         SDL_ShowCursor(capture ? SDL_DISABLE : SDL_ENABLE);
     }
 
+    bool IsGameplayInputActive() override {
+        return g_State == GameState::Playing
+            && !Console::IsOpen()
+            && !Settings::IsOpen()
+            && !ServerMenu::IsOpen();
+    }
+
     IWorldQuery* GetWorld() override { return GetWorldQuery(); }
     const char* GetLevelName() override { return GetCurrentLevelName().c_str(); }
     bool IsInGame() override { return g_State == GameState::Playing || g_State == GameState::Paused; }
     bool IsConnectedToServer() override { return NetClient::IsConnected(); }
+
+    float GetCvarFloat(const char* name, float defaultValue) override {
+        if (name == nullptr) return defaultValue;
+        if (std::strcmp(name, "nvs_gravity") == 0) return g_CVar.nvs_gravity;
+        if (std::strcmp(name, "nvs_jumpforce") == 0) return g_CVar.nvs_jumpforce;
+        if (std::strcmp(name, "nvs_mastervolume") == 0) return g_CVar.nvs_mastervolume;
+        if (std::strcmp(name, "nvs_musicvolume") == 0) return g_CVar.nvs_musicvolume;
+        return defaultValue;
+    }
+
+    int GetCvarInt(const char* name, int defaultValue) override {
+        if (name == nullptr) return defaultValue;
+        if (std::strcmp(name, "cm_noclip") == 0) return g_CVar.cm_noclip ? 1 : 0;
+        if (std::strcmp(name, "nvs_cheats") == 0) return g_CVar.nvs_cheats ? 1 : 0;
+        if (std::strcmp(name, "nvs_developer") == 0) return g_CVar.nvs_developer;
+        return defaultValue;
+    }
 
     void StartListenServer(const char* mapName) override {
         if (mapName == nullptr) return;
@@ -81,7 +109,7 @@ public:
     void Disconnect() override { NetClient::Disconnect(); }
 
     void ClientCmd(const char* command) override {
-        // Konsol komut ayristiricisina baglanma Faz 2'de yapilacak.
+        // Konsol komut ayristiricisina baglanma devir asamasinda yapilacak.
         Console::Log(std::string("ClientCmd henuz baglanmadi: ") + (command != nullptr ? command : ""));
     }
 
@@ -107,7 +135,7 @@ public:
         Console::Log(std::string("DisconnectClient henuz baglanmadi: ") + (reason != nullptr ? reason : ""));
     }
 
-    // Oyun mesajlari Faz 3'te yerel loopback ve ENet'e baglanacak.
+    // Oyun mesajlari, yerel loopback ve ENet'e baglanana kadar bos birakildi.
     void SendMessageToClient(int, const void*, int, bool) override {}
     void BroadcastMessage(const void*, int, bool) override {}
 };

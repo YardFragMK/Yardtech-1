@@ -1,5 +1,5 @@
 #include "PlayerMovement.h"
-#include "BSPMap.h"
+#include "iworldquery.h"
 #include <cmath>
 
 using namespace PlayerPhysicsConstants;
@@ -7,7 +7,7 @@ using namespace PlayerPhysicsConstants;
 PlayerPhysicsEvents SimulatePlayerPhysics(
     PlayerPhysicsState& state,
     const PlayerInputCommand& input,
-    BSPMap& map,
+    const IWorldQuery& map,
     float deltaTime,
     float gravity,
     float jumpforce)
@@ -71,8 +71,8 @@ PlayerPhysicsEvents SimulatePlayerPhysics(
         state.verticalVelocity = 0.0f;
     }
 
-    // Oyuncunun havaya nasil ciktigi (ziplayarak mi, sert inisle mi) artik
-    // state icinde, oyuncuya ozel olarak tutuluyor.
+    // Oyuncunun havaya nasil ciktigi (ziplayarak mi, sert inisle mi) state
+    // icinde, oyuncuya ozel olarak tutuluyor.
     if (input.jumpPressed && state.onGround) {
         state.verticalVelocity = jumpforce;
         state.onGround = false;
@@ -88,7 +88,7 @@ PlayerPhysicsEvents SimulatePlayerPhysics(
     else if (state.onGround) {
         if (input.ctrlHeld && !state.isCrouching) {
             // Origin'i asagi kaydiriyoruz ki ayaklar ayni zemin yukseklikginde
-            // kalsin. tickStartPos'u da ayni miktarda kaydirmazsa, asagidaki
+            // kalsin. tickStartPos'u da ayni miktarda kaydirmazsak, asagidaki
             // SlideMove onu yanlis hull-uzayinda yorumlar ve haritanin altina iter.
             state.position.y -= HULL_DIFF;
             tickStartPos.y -= HULL_DIFF;

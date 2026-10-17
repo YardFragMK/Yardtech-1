@@ -1,15 +1,18 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "playerstats.h"
 
-// Ileri bildirim: gercek tanim BSPMap.h icinde. Bu dosyanin BSPMap'e
-// header seviyesinde bagimli olmasina gerek yok, sadece referans/pointer
-// gecirilecek.
+// Ileri bildirimler: bu dosyanin harita siniflarina header seviyesinde
+// bagimli olmasina gerek yok, sadece referans gecirilecek.
 class BSPMap;
+class IWorldQuery;
 
 // Bir oyuncunun fizik simulasyonu icin gereken tum durumu tasir. Ne client'a
 // ne server'a ozgu bir kavram icermez -- sadece sayilar ve bayraklar. Hem
-// server'in yetkili simulasyonunda hem client'in tahmininde (prediction)
-// ayni struct kullanilir.
+// server'in yetkili simulasyonunda hem client'in tahminde (prediction)
+// ayni struct kullanilir. Havada nasil kalindigi (ziplama/sert inis) bilgisi de
+// burada tutulur; her tick'te yeniden olusturulan bir state bu bayraklari
+// kaybeder ve inis olaylari hic tetiklenmez, bu yuzden state kalici tutulmalidir.
 struct PlayerPhysicsState {
     glm::vec3 position{ 0.0f };
     float verticalVelocity = 0.0f;
@@ -33,8 +36,12 @@ struct PlayerInputCommand {
     float moveForwardAxis = 0.0f; // -1..1, W/S
     float moveRightAxis = 0.0f;   // -1..1, D/A
     float moveSpeed = 320.0f;
-    bool canHardSlam = true;    // eski "g_Player.RGDitem" karsiligi, cagiran taraf karar verir
+    bool canHardSlam = true;
     float pitch = 0.0f;
+
+    // Silah eylemleri (atis, reload, silah degistirme); fizikte kullanilmaz,
+    // oyun mantigini (server.dll) besler.
+    PlayerActionCommand actions;
 };
 
 // Fizigin bu tick'te urettigi olaylar. Cagiran taraf (client) bunlari gorsel
@@ -45,9 +52,7 @@ struct PlayerPhysicsEvents {
     bool hardSlamLanded = false;
 };
 
-// GoldSrc hull yari-yukseklikleri. Baska dosyalarin da (orn. client-side
-// render/eye-height hesaplari) ihtiyac duyabilecegi sabitler oldugu icin
-// burada, public olarak tanimli.
+// GoldSrc hull yari-yukseklikleri.
 namespace PlayerPhysicsConstants {
     constexpr float HALF_STAND = 36.0f;
     constexpr float HALF_CROUCH = 18.0f;
@@ -58,7 +63,19 @@ namespace PlayerPhysicsConstants {
 
 // Bir tick'lik fizik simulasyonunu kosturur. state icindeki degerleri yerinde
 // gunceller, o tick'te olusan olaylari dondurur. Hicbir global degiskene
-// (kamera, konsol, cvar, SDL) dokunmaz -- tum girdisini parametrelerden alir.
+// (kamera, konsol, cvar, SDL) dokunmaz; harita erisimi IWorldQuery uzerindendir.
+PlayerPhysicsEvents SimulatePlayerPhysics(
+    PlayerPhysicsState& state,
+    const PlayerInputCommand& input,
+    const IWorldQuery& map,
+    float deltaTime,
+    float gravity,
+    float jumpforce
+);
+
+// Uyumluluk: BSPMap'i dogrudan tutan kodlar (dedicated server, NetClient
+// reconciliation) icin. Gerceklestirmesi PlayerMovementBSP.cpp'dedir; bu
+// sayede yalnizca bunu kullanan moduller BSPMap kodunu link eder.
 PlayerPhysicsEvents SimulatePlayerPhysics(
     PlayerPhysicsState& state,
     const PlayerInputCommand& input,

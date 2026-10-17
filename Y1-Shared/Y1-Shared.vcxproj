@@ -36,6 +36,7 @@
     <ClInclude Include="playerstats.h" />
     <ClInclude Include="TGALoader.h" />
     <ClInclude Include="VFSypak.h" />
+    <ClInclude Include="viewsetup.h" />
     <ClInclude Include="WadFile.h" />
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +47,7 @@
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="PlayerMovement.cpp" />
+    <ClCompile Include="PlayerMovementBSP.cpp" />
     <ClCompile Include="TGALoader.cpp" />
     <ClCompile Include="VFSypak.cpp" />
     <ClCompile Include="WadFile.cpp" />
