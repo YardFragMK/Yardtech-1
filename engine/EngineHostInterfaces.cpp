@@ -109,8 +109,7 @@ public:
     void Disconnect() override { NetClient::Disconnect(); }
 
     void ClientCmd(const char* command) override {
-        // Konsol komut ayristiricisina baglanma devir asamasinda yapilacak.
-        Console::Log(std::string("ClientCmd henuz baglanmadi: ") + (command != nullptr ? command : ""));
+        if (command != nullptr) Console::ExecuteLine(command);
     }
 
     void Quit() override {

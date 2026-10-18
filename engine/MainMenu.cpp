@@ -1,7 +1,6 @@
 #include "MainMenu.h"
 #include "TGALoader.h"
 #include "BitmapFont.h"
-#include "Camera.h"
 #include "GameState.h"
 #include <cmath>
 #include "GLExtensions.h"
@@ -87,15 +86,18 @@ void MainMenu::HandleMouseClick(int mx, int my) {
 }
 
 void MainMenu::UpdateLiveCamera(float deltaTime) {
-    // Yavasca donen, sabit bir noktada duran "idle" kamera -- haritayi sergiler.
-    // g_Camera.position, harita yuklenirken (player_start ya da senin ayarladigin
-    // sabit bir menu-kamera noktasi) zaten dogru yerde olmali.
+    // Yavasca donen "idle" kamera: yalnizca yaw ilerletilir. Konum ve diger
+    // bilgiler client.dll'in sagladigi gorunumden (harita acildigindaki
+    // oyuncu baslangici) gelir.
     const float ORBIT_SPEED = 6.0f;
     s_liveCamYaw += ORBIT_SPEED * deltaTime;
     if (s_liveCamYaw > 360.0f) s_liveCamYaw -= 360.0f;
+}
 
-    g_Camera.yaw = s_liveCamYaw;
-    g_Camera.pitch = -5.0f;
+void MainMenu::ApplyLiveView(ViewSetup& view) {
+    view.yaw = s_liveCamYaw;
+    view.pitch = -5.0f;
+    view.roll = 0.0f;
 }
 
 void MainMenu::Update(float deltaTime) {

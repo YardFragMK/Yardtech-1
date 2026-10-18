@@ -168,10 +168,9 @@
   <ItemGroup>
     <ClCompile Include="engine\BitmapFont.cpp" />
     <ClCompile Include="engine\BSPMapRenderer.cpp" />
-    <ClCompile Include="engine\Camera.cpp" />
-    <ClCompile Include="engine\ClientPlayerController.cpp" />
     <ClCompile Include="engine\console\Console.cpp" />
     <ClCompile Include="engine\console\CVar.cpp" />
+    <ClCompile Include="engine\ConVarRegistry.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\EngineHostInterfaces.cpp" />
     <ClCompile Include="engine\EngineInterfaces.cpp" />
@@ -205,10 +204,9 @@
   <ItemGroup>
     <ClInclude Include="engine\BitmapFont.h" />
     <ClInclude Include="engine\BSPMapRenderer.h" />
-    <ClInclude Include="engine\Camera.h" />
-    <ClInclude Include="engine\ClientPlayerController.h" />
     <ClInclude Include="engine\console\Console.h" />
     <ClInclude Include="engine\console\CVar.h" />
+    <ClInclude Include="engine\ConVarRegistry.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\EntityRenderer.h" />
     <ClInclude Include="engine\GameState.h" />

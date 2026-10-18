@@ -2,7 +2,6 @@
 #include"Windows.h"
 #include"Window.h"
 #include"SDL.h"
-#include"Camera.h"
 #include"renderer/Renderer.h"
 #include"BSPMap.h"
 #include"VFSypak.h"

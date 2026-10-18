@@ -4,6 +4,7 @@
 #include <functional>
 #include <windows.h>
 #include <GL/gl.h>
+#include "viewsetup.h"
 
 struct MenuButton {
     float x, y, w, h;
@@ -28,6 +29,10 @@ public:
     // MenuStatic arkaplan resmi (TGA). Basarisiz olursa duz koyu renge duser.
     static bool LoadBackgroundImage(const std::string& tgaPath);
     static bool LoadBackgroundImageFromMemory(const std::vector<uint8_t>& buffer);
+
+    // MenuLive'da dunyayi cizerken kullanilan, yavasca donen menu kamerasi:
+    // client.dll'in verdigi konum korunur, sadece bakis acilari ustune yazilir.
+    static void ApplyLiveView(ViewSetup& view);
 
 private:
     static void UpdateLiveCamera(float deltaTime);

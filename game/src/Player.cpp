@@ -1,19 +1,6 @@
 #include "Player.h"
-#include "../../engine/LocalGame.h"
 
 Player g_Player;
-
-void Player::SwitchWeapon(int weaponIndex) {
-	LocalGame_QueueSwitchWeapon(weaponIndex);
-}
-
-void Player::ReloadCurrentWeapon() {
-	LocalGame_QueueReload();
-}
-
-void Player::attack(int attackNumber) {
-	LocalGame_QueueAttack(attackNumber);
-}
 
 void Player::ApplyStats(const PlayerStats& stats) {
 	Health = stats.health;

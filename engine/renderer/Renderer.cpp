@@ -16,19 +16,19 @@ bool Renderer::Init(int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	ApplyProjection(width, height);
+	//ApplyProjection(width, height, view);
 	return true;
 }
 
-void Renderer::ApplyProjection(int width, int height) {
+void Renderer::ApplyProjection(int width, int height, const ViewSetup& view) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
 	glm::dmat4 projection = glm::perspective(
-		glm::radians(75.0), //FOV
+		glm::radians(static_cast<double>(view.fovY)),
 		(double)width / (double)height,
-		1.0,   //near plane
-		8192.0  //far plane maybe 16384
+		static_cast<double>(view.zNear),
+		static_cast<double>(view.zFar)
 	);
 
 	m_lastProjection = projection;
@@ -37,14 +37,14 @@ void Renderer::ApplyProjection(int width, int height) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void Renderer::BeginFrame(const Camera& camera) {
+void Renderer::BeginFrame(const ViewSetup& view) {
 	if (m_retroMode) {
 		glViewport(0, 0, RETRO_WIDTH, RETRO_HEIGHT);
-		ApplyProjection(RETRO_WIDTH, RETRO_HEIGHT);
+		ApplyProjection(RETRO_WIDTH, RETRO_HEIGHT, view);
 	}
 	else {
 		glViewport(0, 0, m_windowWidth, m_windowHeight);
-		ApplyProjection(m_windowWidth, m_windowHeight);
+		ApplyProjection(m_windowWidth, m_windowHeight, view);
 	}
 
 
@@ -54,9 +54,9 @@ void Renderer::BeginFrame(const Camera& camera) {
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glLoadIdentity();
 
-	glm::dmat4 view = camera.GetViewMatrix();
-	m_lastView = view;
-	glLoadMatrixd(glm::value_ptr(view));
+	glm::dmat4 viewMatrix = BuildViewMatrix(view);
+	m_lastView = viewMatrix;
+	glLoadMatrixd(glm::value_ptr(viewMatrix));
 }
 
 void Renderer::EndFrame(){

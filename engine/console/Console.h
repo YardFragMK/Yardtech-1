@@ -16,6 +16,7 @@ public:
 	static void Render(int windowWidth, int windowHeight);
 	static void Log(const std::string& line);
 	static void DrawTextAt(float x, float y, const std::string& text, float r = 1.0f, float g = 1.0f, float b = 1.0f);
+	static void ExecuteLine(const std::string& line);
 
 private:
 	static void ExecuteCommand();

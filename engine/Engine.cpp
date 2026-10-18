@@ -11,7 +11,6 @@
 #include"Window.h"
 #include"console/Console.h"
 #include"renderer/Renderer.h"
-#include"Camera.h"
 #include"BSPReader.h"
 #include"BSPMap.h"
 #include"BSPFormat.h"
@@ -20,7 +19,7 @@
 #include"../game/src/Player.h"
 #include"EntityParser.h"
 #include"PlayerMovement.h"
-#include"ClientPlayerController.h"
+#include"viewsetup.h"
 #include"Skybox.h"
 #include"HUD.h"
 #include"GameState.h"
@@ -224,10 +223,48 @@ bool Engine::initSystems() {
 }
 
 //=========================================================
+// Sabit tick: client.dll komutu uretir ve yerel oyuncuya uygular; ardindan
+// komut ya uzak sunucuya (ENet) ya da yerel server.dll'e iletilir.
+//=========================================================
+static void RunFixedTick(float frameTime) {
+	IBaseClientDLL* client = GetClientDLL();
+	if (client == nullptr) return;
+
+	PlayerInputCommand cmd;
+	client->CreateMove(frameTime, &cmd);
+
+	const bool playing = (g_State == GameState::Playing);
+	const bool connected = NetClient::IsConnected();
+
+	// Sunucudan gelen onayli durum, bu tick'in tahmininden once uygulanir.
+	if (playing && connected && NetClient::HasReconciledState()) {
+		client->ReceivePlayerState(NetClient::GetReconciledState(), 0);
+	}
+
+	client->RunCommand(cmd, frameTime);
+
+	if (!playing) return;
+
+	if (connected) {
+		// Girdi oyuna ait degilken (konsol vb.) sunucuya komut gonderilmez.
+		if (!cmd.consoleOpen) {
+			NetClient::SendInputCommand(cmd, frameTime);
+		}
+	}
+	else {
+		// Yerel oyun mantigi (server.dll) yalnizca bir sunucuya bagli degilken
+		// calisir; baglandiginda otoriter simulasyon uzaktaki sunucudadir.
+		ViewSetup view;
+		client->GetView(&view);
+		LocalGame_Tick(frameTime, cmd.actions, view.origin, cmd.moveSpeed);
+	}
+}
+
+//=========================================================
 //Game Loop
 //=========================================================
 void Engine::gameLoop() {
-	const float FIXED_DELTA_TIME = 1.0f / 100.0f; // Fizik ve kamera 100 Hz'de çalışsın
+	const float FIXED_DELTA_TIME = 1.0f / 100.0f; // Fizik ve kamera 100 Hz'de calissin
 	float accumulator = 0.0f;
 
 	while (running) {
@@ -244,8 +281,6 @@ void Engine::gameLoop() {
 		Time::Update(deltaTime);
 		accumulator += deltaTime;
 
-		glm::vec3 oldPos = g_Camera.position;
-
 		//=========================================================
 		// Input / Update
 		//=========================================================
@@ -253,39 +288,26 @@ void Engine::gameLoop() {
 		NetClient::Update(g_CVar.nvs_gravity, g_CVar.nvs_jumpforce);
 
 		// Sunucu haritayi degistirdiyse, client kendi (render+collision)
-		// kopyasini da guncellemeli. Bu kontrol NetClient::Update'in disinda,
-		// gameLoop'un kendisinde yapiliyor cunku multiplayer sirasinda
-		// Playing disindaki durumlarda (orn. Paused) da gecerli olmalidir.
-		// Uzak sunucu oyunu yonettigi icin yerel server.dll baslatilmaz.
+		// kopyasini da guncellemeli. Uzak sunucu oyunu yonettigi icin yerel
+		// server.dll baslatilmaz.
 		std::string newMapName;
 		if (NetClient::PollMapChange(newMapName)) {
 			LoadLevel(newMapName, false);
 		}
+
+		// Olaylar frame basina bir kez islenir (sabit tick'lerin icinde degil):
+		// yuksek FPS'te tick calismayan frame'lerde olaylar beklemez.
+		KeyInput::Update(running);
 
 		if (IBaseClientDLL* client = GetClientDLL()) {
 			client->Update(deltaTime);
 		}
 
 		//=========================================================
-		// FIXED UPDATE DÖNGÜSÜ (Kamera ve Fizik)
+		// FIXED UPDATE DONGUSU (kamera ve fizik)
 		//=========================================================
 		while (accumulator >= FIXED_DELTA_TIME) {
-			glm::vec3 oldPos = g_Camera.position;
-
-			KeyInput::Update(running, g_Camera, FIXED_DELTA_TIME);
-			g_Camera.Update(FIXED_DELTA_TIME);
-
-			if (g_State == GameState::Playing) {
-				UpdatePlayerPhysics(FIXED_DELTA_TIME, oldPos);
-
-				// Yerel oyun mantigi (server.dll) yalnizca bir sunucuya bagli
-				// degilken calisir; baglandiginda otoriter simulasyon uzaktaki
-				// sunucudadir.
-				if (!NetClient::IsConnected()) {
-					LocalGame_Tick(FIXED_DELTA_TIME);
-				}
-			}
-
+			RunFixedTick(FIXED_DELTA_TIME);
 			accumulator -= FIXED_DELTA_TIME;
 		}
 
@@ -295,17 +317,26 @@ void Engine::gameLoop() {
 			MainMenu::Update(deltaTime);
 		}
 
-		// Çizim fonksiyonuna bu alphayı gönderiyoruz:
 		RenderFrame(alpha);
 	}
 }
 
 
 void Engine::RenderFrame(float alpha) {
-	renderer.BeginFrame(g_Camera);
+	// Kamera client.dll'indir; MenuLive'da yalnizca bakis acilari menu
+	// kamerasindan gelir.
+	ViewSetup view;
+	if (IBaseClientDLL* client = GetClientDLL()) {
+		client->GetView(&view);
+	}
+	if (g_State == GameState::MenuLive) {
+		MainMenu::ApplyLiveView(view);
+	}
+
+	renderer.BeginFrame(view);
 
 	if (g_State == GameState::MenuLive || g_State == GameState::Playing || g_State == GameState::Paused) {
-		g_Skybox.Render(g_Camera.GetEyePosition());
+		g_Skybox.Render(view.origin);
 
 		Frustum frustum = Frustum::FromViewProjection(
 			renderer.GetProjectionMatrix() * renderer.GetViewMatrix()

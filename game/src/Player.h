@@ -1,10 +1,10 @@
 #pragma once
 #include "playerstats.h"
 
-// Client tarafindaki oyuncu "aynasi". Oyun durumunun sahibi artik server.dll'dir;
-// bu sinif her tick'te server'dan gelen istatistikleri tutar ve HUD gibi
-// tuketicilerin eski arayuzu (alanlar ve getter'lar) kullanmasini saglar.
-// Silah eylemleri dogrudan uygulanmaz, server'a iletilmek uzere kuyruga alinir.
+// Client tarafindaki oyuncu "aynasi". Oyun durumunun sahibi server.dll'dir; bu
+// sinif her tick'te server'dan gelen istatistikleri tutar ve HUD gibi tuketicilerin
+// alanlari ve getter'lari okumasini saglar. Silah eylemleri artik client.dll'de
+// komuta cevrilir (PlayerInputCommand::actions), burada eylem metodu yoktur.
 class Player {
 public:
 	int maxHealth = 200;
@@ -12,19 +12,12 @@ public:
 	int Health = 200;
 	int Armor = 200;
 	int CurrentWeapon = PISTOL;
-	bool RGDitem = true; // client tarafi ozelligi: havada sert inis izni
+	bool RGDitem = true;
 
 	int GetCurrentBullet() const { return m_bullets; }
 	int GetCurrentMaxBullet() const { return m_maxBullets; }
 	int GetCurrentAmmo() const { return m_reserveAmmo; }
 	bool IsReloading() const { return m_isReloading; }
-
-	void SwitchWeapon(int weaponIndex);
-	void ReloadCurrentWeapon();
-	void attack(int attackNumber);
-
-	// Silah zamanlayicilari server'da calisir; ayna tarafinda yapilacak is yok.
-	void UpdateWeapons(float deltaTime) { (void)deltaTime; }
 
 	void ApplyStats(const PlayerStats& stats);
 

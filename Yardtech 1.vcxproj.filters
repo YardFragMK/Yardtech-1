@@ -57,9 +57,6 @@
     <ClCompile Include="engine\console\Console.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Camera.cpp">
-      <Filter>Source Files\engine src</Filter>
-    </ClCompile>
     <ClCompile Include="game\src\PolyBreakable.cpp">
       <Filter>Source Files\game src</Filter>
     </ClCompile>
@@ -91,9 +88,6 @@
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
     <ClCompile Include="engine\PauseMenu.cpp">
-      <Filter>Source Files\engine src</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\ClientPlayerController.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
     <ClCompile Include="engine\NetClient.cpp">
@@ -132,11 +126,11 @@
     <ClCompile Include="engine\EntityRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="engine\ConVarRegistry.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engine\Camera.h">
-      <Filter>Header Files\engine src</Filter>
-    </ClInclude>
     <ClInclude Include="engine\console\Console.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
@@ -206,9 +200,6 @@
     <ClInclude Include="engine\PauseMenu.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
-    <ClInclude Include="engine\ClientPlayerController.h">
-      <Filter>Header Files\engine src</Filter>
-    </ClInclude>
     <ClInclude Include="engine\NetClient.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
@@ -237,6 +228,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="engine\EntityRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ConVarRegistry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -5,13 +5,13 @@
 //#include<glad/glad.h>
 #include<glm/glm.hpp>
 #include<glm/gtc/type_ptr.hpp>
-#include"../Camera.h"
+#include"viewsetup.h"
 #include"../console/Console.h"
 
 class Renderer {
 public:
 	 bool Init(int width, int height);
-	 void BeginFrame(const Camera& camera);
+	 void BeginFrame(const ViewSetup& view);
 	 void EndFrame();
 	 void DrawTestTriangle();
 
@@ -35,5 +35,5 @@ private:
 	glm::dmat4 m_lastProjection = glm::mat4(1.0f);
 	glm::dmat4 m_lastView = glm::mat4(1.0f);
 
-	void ApplyProjection(int width, int height);
+	void ApplyProjection(int width, int height, const ViewSetup& view);
 };

@@ -11,8 +11,8 @@ struct ViewSetup {
     float pitch = 0.0f;
     float roll = 0.0f;
     float fovY = 75.0f;
-    float zNear = 0.1f;
-    float zFar = 10000.0f;
+    float zNear = 1.0f;
+    float zFar = 8192.0f;
 };
 
 inline glm::vec3 ViewForward(const ViewSetup& view) {

@@ -1,6 +1,6 @@
 #include "Settings.h"
 #include "BitmapFont.h"
-#include "Camera.h"
+#include "ConVarRegistry.h"
 #include "console/CVar.h"
 #include "renderer/Renderer.h"
 #include "HUD.h"
@@ -42,15 +42,21 @@ void Settings::BuildControls() {
         });
 
     // --- GAMEPLAY ---
-    s_sliders[(int)Category::Gameplay].push_back({
-        "MOUSE SENSITIVITY", &g_Camera.mouseSensitivity, 0.02f, 0.5f, 40.0f, 130.0f, 320.0f
-        });
-    s_toggles[(int)Category::Gameplay].push_back({
-        "DOOM VIEW BOB",
-        []() { return g_Camera.viewBobStyle == 1; },
-        [](bool v) { g_Camera.viewBobStyle = v ? 1 : 0; },
-        40.0f, 220.0f
-        });
+    // Fare hassasiyeti ve yurume sallanmasi client.dll'in kaydettigi degiskenlerdir;
+    // client.dll yuklenemediyse bu kontroller eklenmez.
+    if (float* sensitivity = ConVarRegistry::FindFloat("cm_sensitivity")) {
+        s_sliders[(int)Category::Gameplay].push_back({
+            "MOUSE SENSITIVITY", sensitivity, 0.02f, 0.5f, 40.0f, 130.0f, 320.0f
+            });
+    }
+    if (int* bobStyle = ConVarRegistry::FindInt("cm_viewbobstyle")) {
+        s_toggles[(int)Category::Gameplay].push_back({
+            "DOOM VIEW BOB",
+            [bobStyle]() { return *bobStyle == 1; },
+            [bobStyle](bool v) { *bobStyle = v ? 1 : 0; },
+            40.0f, 220.0f
+            });
+    }
     s_toggles[(int)Category::Gameplay].push_back({
         "DOOM HUD STYLE",
         []() { return HUD::doomBarEnabled; },

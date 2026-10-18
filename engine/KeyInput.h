@@ -1,11 +1,8 @@
 #pragma once
-#include<SDL.h>
-#include"Camera.h"
 
-
+// SDL olaylarini frame basina bir kez isler: olaylari client.dll'e iletir,
+// menu/konsol/ESC davranisini yonetir. Kamera ve oyun girdisi client.dll'dedir.
 class KeyInput {
 public:
-	static void Update(bool& running, Camera& camera, float deltaTime);
-private:
-
+	static void Update(bool& running);
 };

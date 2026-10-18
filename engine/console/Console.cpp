@@ -6,7 +6,7 @@
 #include <windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include"../Camera.h"
+#include"../ConVarRegistry.h"
 #include"BSPReader.h"
 #include"../Level.h"
 #include"../NetClient.h"
@@ -38,7 +38,7 @@ static bool RequireSingleplayer(const std::string& cmdName) {
 }
 
 void Console::Init() {
-    Log("Yardtech-1 version: alpha 0.63");
+    Log("Yardtech-1 version: alpha 0.64");
     Log("=============================");
 }
 
@@ -88,15 +88,19 @@ void Console::HandleEvent(const SDL_Event& event) {
 }
 
 void Console::ExecuteCommand() {
-    std::istringstream iss(s_input);
+    ExecuteLine(s_input);
+}
+
+void Console::ExecuteLine(const std::string& line) {
+    std::istringstream iss(line);
     std::string cmd;
     iss >> cmd;
 
     if (cmd == "nvs_cheats") {
         if (!RequireSingleplayer(cmd)) return;
         int value;
-        if (iss >> value) { 
-            if(value == 1 || value == 0) g_CVar.nvs_cheatsF(value);
+        if (iss >> value) {
+            if (value == 1 || value == 0) g_CVar.nvs_cheatsF(value);
             else Log("Usage: nvs_cheats <0/1>");
         }
         else Log("Usage: nvs_cheats <0/1>");
@@ -105,36 +109,11 @@ void Console::ExecuteCommand() {
     else if (cmd == "cm_noclip") {
         if (!RequireSingleplayer(cmd)) return;
         int value;
-        if (iss >> value) { 
+        if (iss >> value) {
             if (value == 1 || value == 0) g_CVar.cm_noclipF(value);
             else Log("Usage: cm_noclip <0/1>");
         }
         else Log("Usage: cm_noclip <0/1>");
-    }
-
-    else if (cmd == "cm_speed") {
-        if (!RequireSingleplayer(cmd)) return;
-        float value;
-        if (iss >> value) g_CVar.cm_speedF(value);
-        else Log("Usage: cm_speed <value>");
-    }
-
-    else if (cmd == "cm_sensitivity") {
-        float value;
-        if (iss >> value) g_CVar.cm_sensitivityF(value);
-        else Log("Usage: cm_sensitivity <value>");
-    }
-
-    else if (cmd == "cm_rollmax") {
-        float value;
-        if (iss >> value) g_CVar.cm_rollmaxF(value);
-        else Log("Usage: cm_rollmax <value>");
-    }
-
-    else if (cmd == "cm_rollspeed") {
-        float value;
-        if (iss >> value) g_CVar.cm_rollspeedF(value);
-        else Log("Usage: cm_rollspeed <value>");
     }
 
     else if (cmd == "nvs_developer") {
@@ -156,7 +135,7 @@ void Console::ExecuteCommand() {
         std::string value;
         if (iss >> value) {
 
-            // Kullanıcı yanlışlıkla "map/" veya "map\" yazarak girdiyse temizle
+            // Kullanici yanlislikla "map/" veya "map\" yazarak girdiyse temizle
             if (value.rfind("map/", 0) == 0) {
                 value = value.substr(4);
             }
@@ -164,12 +143,12 @@ void Console::ExecuteCommand() {
                 value = value.substr(4);
             }
 
-            // Kullanıcı sonuna ".bsp" uzantısı eklediyse temizle
+            // Kullanici sonuna ".bsp" uzantisi eklediyse temizle
             if (value.size() > 4 && value.substr(value.size() - 4) == ".bsp") {
                 value = value.substr(0, value.size() - 4);
             }
 
-            // LoadLevel haritayı VFS'ten okur, server.dll ve client.dll'e bildirir.
+            // LoadLevel haritayi VFS'ten okur, server.dll ve client.dll'e bildirir.
             if (LoadLevel(value)) {
                 Log("Harita yuklendi: " + value);
                 EnterPlaying();
@@ -182,7 +161,7 @@ void Console::ExecuteCommand() {
             Log("Usage: map <harita_adi>");
         }
     }
-    
+
     else if (cmd == "r_retromode") {
         int value;
         if (iss >> value) {
@@ -207,15 +186,6 @@ void Console::ExecuteCommand() {
             g_CVar.nvs_jumpforceF(value);
         }
     }
-    
-    else if (cmd == "cm_viewbobstyle") {
-        int value;
-        if (iss >> value) {
-            if (value == 1 || value == 0) g_CVar.cm_viewbobstyleF(value);
-            else Log("Usage: cm_viewbobstyle <0/1>");
-        }
-        else Log("Usage: cm_viewbobstyle <0/1>");
-    }
 
     else if (cmd == "nvs_doombarenabled") {
         int value;
@@ -226,10 +196,11 @@ void Console::ExecuteCommand() {
         else Log("Usage: nvs_doombarenabled <0/1>");
     }
 
-    else {
+    // Engine'in sabit komutlari disindakiler (client.dll'in kaydettigi
+    // cm_sensitivity, cm_speed vb.) kayit defterinde aranir.
+    else if (!ConVarRegistry::TryExecute(line)) {
         Log("Unknown command");
     }
-
 }
 
 void Console::Log(const std::string& line) {

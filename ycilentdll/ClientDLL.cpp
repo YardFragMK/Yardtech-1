@@ -36,12 +36,17 @@ public:
             return false;
         }
 
-        m_cmSpeed = m_console->RegisterFloat("cm_speed", 320.0f, "Oyuncu hareket hizi", CVAR_DEVELOPER);
+        m_cmSpeed = m_console->RegisterFloat("cm_speed", 320.0f, "Oyuncu hareket hizi", CVAR_DEVELOPER | CVAR_SINGLEPLAYER_ONLY);
         m_sensitivity = m_console->RegisterFloat("cm_sensitivity", 0.1f, "Fare hassasiyeti", CVAR_ARCHIVE);
         m_rollMax = m_console->RegisterFloat("cm_rollmax", 7.0f, "Yanal harekette en buyuk kamera yatmasi (derece)", CVAR_DEVELOPER);
         m_rollSpeed = m_console->RegisterFloat("cm_rollspeed", 8.0f, "Kamera yatma hizi", CVAR_DEVELOPER);
         m_bobStyle = m_console->RegisterInt("cm_viewbobstyle", 1, "Yurume sallanma stili (0 yumusak, 1 Doom)", CVAR_ARCHIVE);
 
+        if (m_cmSpeed == nullptr || m_sensitivity == nullptr || m_rollMax == nullptr ||
+            m_rollSpeed == nullptr || m_bobStyle == nullptr) {
+            Log("client.dll: cvar kaydi basarisiz");
+            return false;
+        }
         Log("client.dll: Init basarili, cvar'lar kaydedildi");
         return true;
     }
