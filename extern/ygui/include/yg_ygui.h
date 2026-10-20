@@ -35,4 +35,30 @@ namespace YGUI {
     YGUI_API void AddMouseWheelEvent(float wheelX, float wheelY);
     YGUI_API void AddKeyEvent(int keycode, bool down);
     YGUI_API void AddInputCharacter(unsigned int codepoint);
+
+    // Ekran-uzayi cizim ilkelleri (HUD gibi pencere gerektirmeyen katmanlar icin).
+    // Koordinatlar piksel, orijin sol-ust. Cizimler tum pencerelerin ARKASINDA kalir.
+    YGUI_API void ScreenFillRect(float x, float y, float w, float h, float r, float g, float b, float a);
+    YGUI_API void ScreenRect(float x, float y, float w, float h, float r, float g, float b, float a, float thickness = 1.0f);
+    YGUI_API void ScreenLine(float x0, float y0, float x1, float y1, float r, float g, float b, float a, float thickness = 1.0f);
+    // xyPairs: x0,y0,x1,y1,... ; noktalar saat yonunde ve konveks olmali (en fazla 16 nokta).
+    YGUI_API void ScreenConvexPoly(const float* xyPairs, int pointCount, float r, float g, float b, float a);
+    // Cizilen metnin genisligini dondurur. size: font boyutu (piksel).
+    YGUI_API float ScreenText(float x, float y, const char* text, float size, float r, float g, float b, float a);
+    YGUI_API float ScreenTextWidth(const char* text, float size);
+
+    // --- Menu yerlesimi ve ek kontroller ---
+    // Sonraki pencerenin konumu. pivot (0..1): (0.5, 0.5) pencerenin merkezini verilen noktaya koyar.
+    YGUI_API void SetNextWindowPos(float x, float y, float pivotX = 0.0f, float pivotY = 0.0f);
+    // Sonraki pencerenin boyutu. Eksenlerden biri 0 ise o eksen icerige gore otomatik boyutlanir.
+    YGUI_API void SetNextWindowSize(float width, float height);
+    // Liste satiri ve sekme icin secilebilir oge. Tiklaninca true doner; width/height 0 ise otomatik.
+    YGUI_API bool DrawSelectable(const char* label, bool selected, float width = 0.0f, float height = 0.0f);
+    // Ayni satirda, pencerenin sol kenarindan offsetX pikselde devam eder (sutun hizalama).
+    YGUI_API void SameLineAt(float offsetX);
+
+    constexpr int YGUI_ICON_LOCK = 0;
+    constexpr int YGUI_ICON_SHIELD = 1;
+    // size x size yer kaplayan basit bir simge cizer; a <= 0 ise yalnizca yer ayirir.
+    YGUI_API void DrawIcon(int iconId, float size, float r, float g, float b, float a);
 }

@@ -1,11 +1,9 @@
 #pragma once
 
-// Sunucu listeleme paneli: Internet/Lan/History/Favorite sekmeleri, her
-// sekmenin kendi (su an placeholder) sunucu listesi, kilit/anti-hile
-// ikonlari, harita adi ve oyuncu sayisi sutunlari, fare tekerlegiyle
-// kaydirma. Gercek bir sunucu kesfi (LAN broadcast, master server sorgusu)
-// henuz yok -- satirlar ornek veriyle doldurulmus, gorunum ve etkilesim
-// iskeleti calisir durumda.
+// Sunucu listeleme penceresi: YGUI ile cizilir. Internet/Lan/History/Favorite
+// sekmeleri, her sekmenin kendi (su an placeholder) sunucu listesi, kilit ve
+// anti-hile simgeleri, harita adi ve oyuncu sayisi sutunlari. Kaydirmayi ImGui
+// yonetir. Gercek sunucu kesfi henuz yok; satirlar ornek veriyle doldurulur.
 class ServerMenu {
 public:
     static void Init();
@@ -13,9 +11,6 @@ public:
     static void Close();
     static bool IsOpen();
 
-    static void HandleMouseMove(int mx, int my);
-    static void HandleMouseClick(int mx, int my);
-    static void HandleMouseWheel(int delta);
-
+    // YGUI::NewFrame ile YGUI::EndFrame arasinda cagrilmalidir.
     static void Render(int windowWidth, int windowHeight);
 };

@@ -129,6 +129,9 @@
     <ClCompile Include="engine\ConVarRegistry.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\YguiBridge.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\console\Console.h">
@@ -232,6 +235,9 @@
     </ClInclude>
     <ClInclude Include="engine\ConVarRegistry.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\YguiBridge.h">
+      <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

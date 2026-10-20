@@ -130,14 +130,13 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)Y1-Shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)extern/ygui/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
-;ws2_32.lib
-;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib;ws2_32.lib;winmm.lib;ygui.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern/ygui/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -152,14 +151,13 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)Y1-Shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)extern/ygui/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib
-;ws2_32.lib
-;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glu32.lib;enet.lib;ws2_32.lib;winmm.lib;ygui.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern/ygui/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -195,6 +193,7 @@
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\UIWindow.cpp" />
     <ClCompile Include="engine\Window.cpp" />
+    <ClCompile Include="engine\YguiBridge.cpp" />
     <ClCompile Include="extern\glad\src\glad.c" />
     <ClCompile Include="game\src\GLBModel.cpp" />
     <ClCompile Include="game\src\Player.cpp" />
@@ -229,6 +228,7 @@
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="engine\UIWindow.h" />
     <ClInclude Include="engine\Window.h" />
+    <ClInclude Include="engine\YguiBridge.h" />
     <ClInclude Include="game\src\e_ItemBase.h" />
     <ClInclude Include="game\src\e_PolyBase.h" />
     <ClInclude Include="game\src\e_TriggerBase.h" />

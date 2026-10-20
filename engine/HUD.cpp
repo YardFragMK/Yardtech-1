@@ -154,14 +154,12 @@ void HUD::Render(int windowWidth, int windowHeight) {
         RenderDoomBar(windowWidth, windowHeight);
     }
     else {
-        // --- mevcut HUD, artik sadece ikon + yazi (glow/dikdortgen yok) ---
+        // --- mevcut HUD: ikon + yazi (glow/dikdortgen yok) ---
         float baseY = static_cast<float>(windowHeight) - 60.0f;
         const float numberHeight = 34.0f;
 
-        //const float amberR = 0.95f, amberG = 0.65f, amberB = 0.15f;
-        //const float bloodR = 0.85f, bloodG = 0.15f, bloodB = 0.1f;
         const float amberR = 0.5f, amberG = 0.5f, amberB = 0.5f;
-        const float bloodR = 0.5f, bloodG = 0.5f, bloodB =0.5f;
+        const float bloodR = 0.5f, bloodG = 0.5f, bloodB = 0.5f;
         bool lowHealth = g_Player.Health < (g_Player.maxHealth / 4);
         float hR = lowHealth ? bloodR : amberR;
         float hG = lowHealth ? bloodG : amberG;
@@ -177,7 +175,7 @@ void HUD::Render(int windowWidth, int windowHeight) {
         DrawShieldIcon(armorX + 14.0f, baseY - 10.0f, 14.0f, amberR, amberG, amberB);
         g_HudFont.DrawText(armorX + 40.0f, baseY - 30.0f, std::to_string(g_Player.Armor), numberHeight, amberR, amberG, amberB);
 
-        // --- SAG ALT: Mermi (sarjordeki / rezerv sarjor sayisi) ---
+        // --- SAG ALT: sarjordeki mermi + yedek ---
         int curBullet = g_Player.GetCurrentBullet();
         int maxBullet = g_Player.GetCurrentMaxBullet();
         int curAmmo = g_Player.GetCurrentAmmo();

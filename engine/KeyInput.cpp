@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "ServerMenu.h"
 #include "InputBridge.h"
+#include "YguiBridge.h"
 #include <SDL.h>
 
 void KeyInput::Update(bool& running)
@@ -15,23 +16,30 @@ void KeyInput::Update(bool& running)
     while (SDL_PollEvent(&event)) {
         Console::HandleEvent(event);
 
-        // Oyun girdisi (bakis, hareket, atis, silah tuslari) client.dll'e gider;
-        // client, girdinin oyuna ait olup olmadigina kendisi karar verir.
+        // Oyun girdisi client.dll'e, menu girdisi YGUI'ye gider. YGUI penceresi
+        // yokken olaylar ImGui tarafinda zararsizca yok sayilir.
         ForwardEventToClient(event, Console::IsOpen());
+        ForwardEventToYgui(event, Console::IsOpen());
 
-        if (!Console::IsOpen()) {
+        // Ayarlar veya sunucu listesi acikken altindaki FFP menulere girdi gitmez.
+        const bool modalOpen = Settings::IsOpen() || ServerMenu::IsOpen();
+
+        if (!Console::IsOpen() && !modalOpen) {
             if (event.type == SDL_MOUSEMOTION) {
-                if (ServerMenu::IsOpen()) {
-                    ServerMenu::HandleMouseMove(event.motion.x, event.motion.y);
-                }
-                else if (Settings::IsOpen()) {
-                    Settings::HandleMouseMove(event.motion.x, event.motion.y);
-                }
-                else if (g_State == GameState::Paused) {
+                if (g_State == GameState::Paused) {
                     PauseMenu::HandleMouseMove(event.motion.x, event.motion.y);
                 }
                 else if (g_State != GameState::Playing) {
                     MainMenu::HandleMouseMove(event.motion.x, event.motion.y);
+                }
+            }
+
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                if (g_State == GameState::Paused) {
+                    PauseMenu::HandleMouseClick(event.button.x, event.button.y);
+                }
+                else if (g_State != GameState::Playing) {
+                    MainMenu::HandleMouseClick(event.button.x, event.button.y);
                 }
             }
         }
@@ -61,31 +69,6 @@ void KeyInput::Update(bool& running)
 
             if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
                 Console::Toggle();
-            }
-        }
-
-        if (!Console::IsOpen()) {
-            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-                if (ServerMenu::IsOpen()) {
-                    ServerMenu::HandleMouseClick(event.button.x, event.button.y);
-                }
-                else if (Settings::IsOpen()) {
-                    Settings::HandleMouseDown(event.button.x, event.button.y);
-                }
-                else if (g_State == GameState::Paused) {
-                    PauseMenu::HandleMouseClick(event.button.x, event.button.y);
-                }
-                else if (g_State != GameState::Playing) {
-                    MainMenu::HandleMouseClick(event.button.x, event.button.y);
-                }
-            }
-
-            if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-                Settings::HandleMouseUp();
-            }
-
-            if (event.type == SDL_MOUSEWHEEL && ServerMenu::IsOpen()) {
-                ServerMenu::HandleMouseWheel(event.wheel.y);
             }
         }
     }

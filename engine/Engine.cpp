@@ -36,6 +36,7 @@
 #include "Level.h"
 #include "LocalGame.h"
 #include "EntityRenderer.h"
+#include"yg_ygui.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -46,7 +47,7 @@ Engine::~Engine() {
 	enet_deinitialize();
 	UnloadLevel();
 	UnloadGameModules();
-
+	YGUI::Shutdown();
 	if (glContext) {
 		SDL_GL_DeleteContext(glContext);
 	}
@@ -132,6 +133,12 @@ bool Engine::initSystems() {
 		return false;
 	}
 	Logger::info("Renderer initialize edildi.");
+
+	//=========================================================
+	// YGUI (arayuz kutuphanesi)
+	//=========================================================
+	YGUI::Initialize();
+	Logger::info("YGUI initialize edildi.");
 
 	//=========================================================
 	// Oyun modulleri (client.dll / server.dll)
@@ -317,12 +324,12 @@ void Engine::gameLoop() {
 			MainMenu::Update(deltaTime);
 		}
 
-		RenderFrame(alpha);
+		RenderFrame(alpha, deltaTime);
 	}
 }
 
 
-void Engine::RenderFrame(float alpha) {
+void Engine::RenderFrame(float alpha, float deltaTime) {
 	// Kamera client.dll'indir; MenuLive'da yalnizca bakis acilari menu
 	// kamerasindan gelir.
 	ViewSetup view;
@@ -353,19 +360,26 @@ void Engine::RenderFrame(float alpha) {
 
 	renderer.EndFrame();
 
-	if (g_State == GameState::Playing) {
+
+	if (g_State == GameState::Playing || g_State == GameState::Paused) {
 		HUD::Render(windowWidth, windowHeight);
 	}
-	else if (g_State == GameState::Paused) {
-		HUD::Render(windowWidth, windowHeight);
+
+
+	if (g_State == GameState::Paused) {
 		PauseMenu::Render(windowWidth, windowHeight);
 	}
-	else {
+	else if (g_State != GameState::Playing) {
 		MainMenu::Render(windowWidth, windowHeight);
 	}
 
+	// YGUI karesi: HUD cizim komutlari uretir, EndFrame bunlari ekrana basar.
+	// Henuz YGUI'ye gecmemis (FFP) menuler HUD'un USTUNE cizilmeli ki pause
+	// karartmasi HUD'u da karartsin; bu yuzden EndFrame hemen cagrilir.
+	YGUI::NewFrame(deltaTime, static_cast<float>(windowWidth), static_cast<float>(windowHeight));
 	Settings::Render(windowWidth, windowHeight);
 	ServerMenu::Render(windowWidth, windowHeight);
+	YGUI::EndFrame();
 
 	// client.dll arayuzu (ileride YGUI) konsoldan once cizilir; konsol her
 	// zaman en ustte kalir.
