@@ -81,6 +81,9 @@
     <ClInclude Include="viewsetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ienginesound.h">
+      <Filter>Header Files\interface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BSPMap.cpp">

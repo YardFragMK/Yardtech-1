@@ -7,6 +7,7 @@
 #include <vector>
 #include "iclientdll.h"
 #include "ienginecommon.h"
+#include "ienginesound.h"
 #include "buttoncodes.h"
 #include "ClientCamera.h"
 
@@ -18,6 +19,35 @@ namespace {
         std::istringstream stream(text);
         stream >> x >> y >> z;
         return glm::vec3(x, z, -y);
+    }
+    IEngineSound* s_sound = nullptr;
+    IEngineConsole* s_commandConsole = nullptr;
+    const ClientCamera* s_commandCamera = nullptr;
+
+    // snd_play <yol>: konumsuz (2B) ses calar. Ornek: snd_play sound/test.wav
+    void CmdSoundPlay(int argc, const char* const* argv) {
+        if (s_sound == nullptr || s_commandConsole == nullptr) return;
+        if (argc < 2) {
+            s_commandConsole->Print("Usage: snd_play <ses dosyasi yolu>");
+            return;
+        }
+        if (s_sound->Play2D(argv[1], 1.0f, SOUND_CHANNEL_SFX, false) == 0) {
+            s_commandConsole->Print((std::string("Ses calinamadi: ") + argv[1]).c_str());
+        }
+    }
+
+    // snd_play3d <yol>: sesi oyuncunun 300 birim sagina koyar; panlama ve sonumleme test edilir.
+    void CmdSoundPlay3D(int argc, const char* const* argv) {
+        if (s_sound == nullptr || s_commandConsole == nullptr || s_commandCamera == nullptr) return;
+        if (argc < 2) {
+            s_commandConsole->Print("Usage: snd_play3d <ses dosyasi yolu>");
+            return;
+        }
+
+        const glm::vec3 position = s_commandCamera->GetEyePosition() + s_commandCamera->Right() * 300.0f;
+        if (s_sound->Play3D(argv[1], position.x, position.y, position.z, 1.0f, false) == 0) {
+            s_commandConsole->Print((std::string("Ses calinamadi: ") + argv[1]).c_str());
+        }
     }
 }
 
@@ -36,6 +66,13 @@ public:
             return false;
         }
 
+        // Ses hizmeti isteğe bağlıdır; yoksa oyun sessiz çalışmaya devam eder.
+        m_sound = GetInterface<IEngineSound>(engineFactory, ENGINE_SOUND_INTERFACE_VERSION);
+        s_sound = m_sound;
+        s_commandConsole = m_console;
+        s_commandCamera = &m_camera;
+        m_console->RegisterCommand("snd_play", CmdSoundPlay, "Konumsuz ses calar: snd_play <yol>", CVAR_NONE);
+        m_console->RegisterCommand("snd_play3d", CmdSoundPlay3D, "Oyuncunun sagindan 3B ses calar: snd_play3d <yol>", CVAR_NONE);
         m_cmSpeed = m_console->RegisterFloat("cm_speed", 320.0f, "Oyuncu hareket hizi", CVAR_DEVELOPER | CVAR_SINGLEPLAYER_ONLY);
         m_sensitivity = m_console->RegisterFloat("cm_sensitivity", 0.1f, "Fare hassasiyeti", CVAR_ARCHIVE);
         m_rollMax = m_console->RegisterFloat("cm_rollmax", 7.0f, "Yanal harekette en buyuk kamera yatmasi (derece)", CVAR_DEVELOPER);
@@ -56,6 +93,11 @@ public:
         m_world = nullptr;
         m_engine = nullptr;
         m_console = nullptr;
+        if (m_sound != nullptr) m_sound->StopAll();
+        m_sound = nullptr;
+        s_sound = nullptr;
+        s_commandConsole = nullptr;
+        s_commandCamera = nullptr;
     }
 
     void LevelInit(const char* mapName) override {
@@ -94,6 +136,7 @@ public:
     }
 
     void LevelShutdown() override {
+        if (m_sound != nullptr) m_sound->StopAll();
         m_world = nullptr;
         m_entities.clear();
         Log("client.dll: LevelShutdown");
@@ -103,7 +146,9 @@ public:
         if (!down || !InputActive()) return;
 
         switch (buttonCode) {
-        case BUTTON_MOUSE_LEFT:  m_pendingActions.attack1Count++; break;
+        case BUTTON_MOUSE_LEFT:  m_pendingActions.attack1Count++;
+            m_sound->Play2D("sound/test_fire.wav", 1.0f, SOUND_CHANNEL_SFX, false);
+            break;
         case BUTTON_MOUSE_RIGHT: m_pendingActions.attack2Count++; break;
         case '1': m_pendingActions.switchToWeapon = PISTOL; break;
         case '2': m_pendingActions.switchToWeapon = SHOTGUN; break;
@@ -194,7 +239,13 @@ public:
         m_camera.UpdateViewBob(frameTime, horizontalSpeed, m_state.onGround, *m_bobStyle);
     }
 
-    void Update(float) override {}
+    void Update(float) override {
+        if (m_sound == nullptr) return;
+
+        const glm::vec3 eye = m_camera.GetEyePosition();
+        const glm::vec3 forward = m_camera.Forward();
+        m_sound->SetListener(eye.x, eye.y, eye.z, forward.x, forward.y, forward.z);
+    }
 
     void GetView(ViewSetup* outView) override {
         m_camera.FillView(outView);
@@ -233,6 +284,7 @@ private:
 
     IEngineConsole* m_console = nullptr;
     IEngineClient* m_engine = nullptr;
+    IEngineSound* m_sound = nullptr;
     IWorldQuery* m_world = nullptr;
 
     float* m_cmSpeed = nullptr;

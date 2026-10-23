@@ -130,7 +130,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)extern/ygui/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)extern/ygui/include;$(SolutionDir)extern/miniaudio</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,7 +151,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)extern/ygui/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\extern\glm;$(SolutionDir)Y1-Shared\;$(SolutionDir)extern/ygui/include;$(SolutionDir)extern/miniaudio</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -190,6 +190,7 @@
     <ClCompile Include="engine\ServerMenu.cpp" />
     <ClCompile Include="engine\Settings.cpp" />
     <ClCompile Include="engine\Skybox.cpp" />
+    <ClCompile Include="engine\SoundSystem.cpp" />
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\UIWindow.cpp" />
     <ClCompile Include="engine\Window.cpp" />

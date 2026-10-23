@@ -27,6 +27,7 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="iclientdll.h" />
     <ClInclude Include="ienginecommon.h" />
+    <ClInclude Include="ienginesound.h" />
     <ClInclude Include="interface.h" />
     <ClInclude Include="iservergamedll.h" />
     <ClInclude Include="iworldquery.h" />
