@@ -16,6 +16,9 @@ bool Renderer::Init(int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// GLSL fonksiyonlari LoadGLExtensions ile yuklendikten ve VFS baglandiktan sonra.
+	m_postProcess.Init(width, height);
+
 	//ApplyProjection(width, height, view);
 	return true;
 }
@@ -38,6 +41,8 @@ void Renderer::ApplyProjection(int width, int height, const ViewSetup& view) {
 }
 
 void Renderer::BeginFrame(const ViewSetup& view) {
+	m_lastViewSetup = view;
+
 	if (m_retroMode) {
 		glViewport(0, 0, RETRO_WIDTH, RETRO_HEIGHT);
 		ApplyProjection(RETRO_WIDTH, RETRO_HEIGHT, view);
@@ -59,7 +64,7 @@ void Renderer::BeginFrame(const ViewSetup& view) {
 	glLoadMatrixd(glm::value_ptr(viewMatrix));
 }
 
-void Renderer::EndFrame(){
+void Renderer::EndFrame() {
 	if (m_retroMode) {
 		glBindTexture(GL_TEXTURE_2D, m_retroTexture);
 		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, RETRO_WIDTH, RETRO_HEIGHT, 0);
@@ -82,10 +87,10 @@ void Renderer::EndFrame(){
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, m_retroTexture);
 		glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 0.0f); glVertex2f(0.0f, 0.0f);
-			glTexCoord2f(1.0f, 0.0f); glVertex2f((float)m_windowWidth, 0.0f);
-			glTexCoord2f(1.0f, 1.0f); glVertex2f((float)m_windowWidth, (float)m_windowHeight);
-			glTexCoord2f(0.0f, 1.0f); glVertex2f(0.0f, (float)m_windowHeight);
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(0.0f, 0.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f((float)m_windowWidth, 0.0f);
+		glTexCoord2f(1.0f, 1.0f); glVertex2f((float)m_windowWidth, (float)m_windowHeight);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(0.0f, (float)m_windowHeight);
 		glEnd();
 
 		glDisable(GL_TEXTURE_2D);
@@ -97,13 +102,16 @@ void Renderer::EndFrame(){
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);
 	}
+
+	// Tam ekran efektleri en son uygulanir (retro modda yukseltilmis goruntuye).
+	m_postProcess.Apply(m_lastView, m_lastProjection, m_lastViewSetup);
 }
 
 void Renderer::DrawTestTriangle() {
 	glBegin(GL_TRIANGLES);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0, -5.0);
-		glTexCoord2f(1.0f,0.0f); glVertex3f(1.0f, -1.0, -5.0);
-		glTexCoord2f(0.5f,1.0f); glVertex3f(0.0f, 1.0, -5.0);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0, -5.0);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0, -5.0);
+	glTexCoord2f(0.5f, 1.0f); glVertex3f(0.0f, 1.0, -5.0);
 	glEnd();
 }
 
@@ -116,5 +124,3 @@ void Renderer::SetRetroMode(bool enable) {
 		Console::Log("retromode has been shut down");
 	}
 }
-
-

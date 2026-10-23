@@ -32,6 +32,12 @@ void Settings::DrawGraphicsTab() {
     if (YGUI::DrawCheckBox("RETRO MODE", &retroMode)) {
         renderer.SetRetroMode(retroMode);
     }
+    if (float* crt = ConVarRegistry::FindFloat("r_crt")) {
+        YGUI::DrawSliderFloat("CRT EFFECT", crt, 0.0f, 1.0f);
+    }
+    if (float* dream = ConVarRegistry::FindFloat("r_dream")) {
+        YGUI::DrawSliderFloat("DREAM EFFECT", dream, 0.0f, 1.0f);
+    }
 }
 
 void Settings::DrawSoundTab() {

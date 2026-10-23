@@ -135,6 +135,15 @@
     <ClCompile Include="engine\SoundSystem.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\renderer\ShaderProgram.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\renderer\ShaderLibrary.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\renderer\PostProcess.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\console\Console.h">
@@ -240,6 +249,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="engine\YguiBridge.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\renderer\ShaderProgram.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\renderer\ShaderLibrary.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\renderer\PostProcess.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>
