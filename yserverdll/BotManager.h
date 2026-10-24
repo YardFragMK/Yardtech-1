@@ -16,6 +16,8 @@ public:
 
     static void Update(float deltaTime);
     static void SpawnProjectile(const glm::vec3& origin, const glm::vec3& direction, float speed, int damage);
+    // Silah sistemi (Combat) vurus testi icin botlara erisir.
+    static std::vector<std::unique_ptr<e_BotBase>>& GetBots() { return s_bots; }
 
     // Canli bot ve mermileri replikasyon icin entity durumlarina cevirir.
     static int CollectEntityStates(NetEntityState* outStates, int maxCount);

@@ -4,6 +4,7 @@
 #include "ienginecommon.h"
 #include "ServerContext.h"
 #include "BotManager.h"
+#include "Combat.h"
 
 // server.dll'in gercek gerceklestirmesi. Hem oyun exe'si (tek oyunculu/listen
 // server) hem dedicated server tarafindan yuklenir; host'a ozgu hicbir sey
@@ -25,6 +26,7 @@ public:
     void DLLShutdown() override {
         ServerContext& ctx = Ctx();
         ctx.Log("server.dll: DLLShutdown");
+        Combat::Reset();
         BotManager::Shutdown();
         ctx.world = nullptr;
         ctx.engine = nullptr;
@@ -42,6 +44,7 @@ public:
 
         for (PlayerSlot& slot : ctx.slots) slot = PlayerSlot();
 
+        Combat::Reset();
         BotManager::Init();
         ctx.Log((std::string("server.dll: LevelInit ") + (mapName ? mapName : "")).c_str());
         return true;
@@ -49,6 +52,7 @@ public:
 
     void LevelShutdown() override {
         ServerContext& ctx = Ctx();
+        Combat::Reset();
         BotManager::Shutdown();
         for (PlayerSlot& slot : ctx.slots) slot = PlayerSlot();
         ctx.world = nullptr;
@@ -56,9 +60,14 @@ public:
     }
 
     void GameFrame(float frameTime) override {
-        for (PlayerSlot& slot : Ctx().slots) {
-            if (slot.connected) slot.player.Update(frameTime);
+        ServerContext& ctx = Ctx();
+
+        for (int i = 0; i < ServerContext::MAX_PLAYERS; i++) {
+            PlayerSlot& slot = ctx.slots[i];
+            if (slot.connected) slot.player.Think(frameTime, i, slot.eyePosition);
         }
+
+        Combat::Update(frameTime);
         BotManager::Update(frameTime);
     }
 
@@ -93,7 +102,7 @@ public:
         PlayerSlot* slot = Ctx().GetSlot(clientIndex);
         if (slot == nullptr || !slot->connected) return;
 
-        slot->player.ApplyActions(actions);
+        slot->player.QueueActions(actions);
     }
 
     bool GetPlayerStats(int clientIndex, PlayerStats* outStats) override {
@@ -106,7 +115,10 @@ public:
 
     int GetEntityStates(NetEntityState* outStates, int maxCount) override {
         if (outStates == nullptr || maxCount <= 0) return 0;
-        return BotManager::CollectEntityStates(outStates, maxCount);
+
+        int count = BotManager::CollectEntityStates(outStates, maxCount);
+        count += Combat::CollectEntityStates(outStates + count, maxCount - count);
+        return count;
     }
 };
 

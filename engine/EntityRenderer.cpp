@@ -1,4 +1,5 @@
 #include "EntityRenderer.h"
+#include "WeaponEffects.h"
 #include "../game/src/GLBModel.h"
 #include <windows.h>
 #include <GL/gl.h>
@@ -73,4 +74,6 @@ void EntityRenderer_Render(const std::vector<NetEntityState>& entities) {
 		default: break;
 		}
 	}
+	// Oyuncu silahlarinin mermileri ve etkileri.
+	WeaponEffects_Render(entities);
 }

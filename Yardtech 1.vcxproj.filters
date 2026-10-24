@@ -147,6 +147,9 @@
     <ClCompile Include="engine\renderer\DynamicLights.cpp">
       <Filter>Source Files\engine src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\WeaponEffects.cpp">
+      <Filter>Source Files\engine src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\console\Console.h">
@@ -264,6 +267,9 @@
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
     <ClInclude Include="engine\renderer\DynamicLights.h">
+      <Filter>Header Files\engine src</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\WeaponEffects.h">
       <Filter>Header Files\engine src</Filter>
     </ClInclude>
   </ItemGroup>

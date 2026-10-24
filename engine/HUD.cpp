@@ -190,6 +190,26 @@ void HUD::Render(int windowWidth, int windowHeight) {
         cursorX += g_HudFont.DrawText(cursorX, ammoY, "+", numberHeight, 0.5f, 0.5f, 0.5f);
         g_HudFont.DrawText(cursorX, ammoY, std::to_string(curAmmo), numberHeight, 0.6f, 0.6f, 0.6f);
 
+        // Testere donusu / lastgun sarji: mermi sayisinin ustunde ince bir cubuk.
+        const float charge = g_Player.GetCharge();
+        if (charge > 0.001f) {
+            const float barW = 160.0f, barH = 8.0f;
+            const float barX = ammoX + 12.0f, barY = ammoY - 18.0f;
+
+            glDisable(GL_TEXTURE_2D);
+            glColor4f(0.1f, 0.1f, 0.1f, 0.8f);
+            glBegin(GL_QUADS);
+            glVertex2f(barX, barY); glVertex2f(barX + barW, barY);
+            glVertex2f(barX + barW, barY + barH); glVertex2f(barX, barY + barH);
+            glEnd();
+
+            glColor4f(0.85f, 0.2f, 0.1f, 0.95f);
+            glBegin(GL_QUADS);
+            glVertex2f(barX, barY); glVertex2f(barX + barW * charge, barY);
+            glVertex2f(barX + barW * charge, barY + barH); glVertex2f(barX, barY + barH);
+            glEnd();
+        }
+
         (void)maxBullet;
     }
 

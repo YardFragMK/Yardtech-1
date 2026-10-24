@@ -145,13 +145,21 @@ public:
     void OnButtonEvent(int buttonCode, bool down) override {
         if (!down || !InputActive()) return;
 
+        // 1..9 -> silah 0..8, 0 -> silah 9
+        if (buttonCode >= '1' && buttonCode <= '9') {
+            m_pendingActions.switchToWeapon = buttonCode - '1';
+            return;
+        }
+        if (buttonCode == '0') {
+            m_pendingActions.switchToWeapon = LASTGUN;
+            return;
+        }
+
         switch (buttonCode) {
         case BUTTON_MOUSE_LEFT:  m_pendingActions.attack1Count++;
             m_sound->Play2D("sound/test_fire.wav", 1.0f, SOUND_CHANNEL_SFX, false);
             break;
         case BUTTON_MOUSE_RIGHT: m_pendingActions.attack2Count++; break;
-        case '1': m_pendingActions.switchToWeapon = PISTOL; break;
-        case '2': m_pendingActions.switchToWeapon = SHOTGUN; break;
         case 'R': m_pendingActions.reloadCount++; break;
         default: break;
         }
@@ -204,6 +212,11 @@ public:
         m_spaceWasDown = spaceNow;
         m_ctrlWasDown = ctrlNow;
 
+        cmd.actions.aimYaw = m_camera.yaw;
+        cmd.actions.aimPitch = m_camera.pitch;
+        cmd.actions.attack1Held = active && m_engine->IsButtonDown(BUTTON_MOUSE_LEFT);
+        cmd.actions.attack2Held = active && m_engine->IsButtonDown(BUTTON_MOUSE_RIGHT);
+
         *outCommand = cmd;
     }
 
@@ -249,6 +262,7 @@ public:
 
     void GetView(ViewSetup* outView) override {
         m_camera.FillView(outView);
+        if (outView != nullptr) outView->fovY += m_stats.fovBoost;
     }
 
     void ReceiveEntityStates(const NetEntityState* states, int count) override {

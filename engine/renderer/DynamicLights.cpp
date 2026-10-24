@@ -48,10 +48,39 @@ void DynamicLights::CollectFromEntities(const std::vector<NetEntityState>& entit
     const float intensity = (s_intensity != nullptr) ? *s_intensity : 1.4f;
 
     for (const NetEntityState& entity : entities) {
-        if (entity.classId != ENT_CLASS_PROJECTILE) continue;
-
-        // Enerji topu: kirmizimsi turuncu isik.
-        Add(entity.origin, glm::vec3(1.0f, 0.25f, 0.12f) * intensity, radius);
+        switch (entity.classId) {
+        case ENT_CLASS_PROJECTILE: // botlarin enerji topu
+            Add(entity.origin, glm::vec3(1.0f, 0.25f, 0.12f) * intensity, radius);
+            break;
+        case ENT_CLASS_ROCKET:
+            Add(entity.origin, glm::vec3(1.0f, 0.55f, 0.15f) * 1.6f, 280.0f);
+            break;
+        case ENT_CLASS_LAVA_BOMB:
+            Add(entity.origin, glm::vec3(1.0f, 0.4f, 0.1f) * 1.4f, 220.0f);
+            break;
+        case ENT_CLASS_STAPLE_BALL:
+            Add(entity.origin, glm::vec3(0.2f, 0.7f, 1.0f), 170.0f);
+            break;
+        case ENT_CLASS_LAST_BALL:
+            Add(entity.origin, glm::vec3(0.5f, 1.0f, 0.7f) * 2.2f, 700.0f);
+            break;
+        case ENT_CLASS_LAVA_POOL:
+            Add(entity.origin + glm::vec3(0.0f, 40.0f, 0.0f), glm::vec3(1.0f, 0.35f, 0.06f) * 1.1f,
+                static_cast<float>(entity.flags) * 1.6f);
+            break;
+        case ENT_CLASS_EXPLOSION: {
+            // Parlak flas, omru boyunca sonuyor (yas santisaniye cinsinden).
+            const float age = static_cast<float>(entity.health) / 100.0f;
+            const float fade = 1.0f - age / EXPLOSION_EFFECT_LIFE;
+            if (fade > 0.0f) {
+                Add(entity.origin, glm::vec3(1.0f, 0.7f, 0.3f) * (3.0f * fade),
+                    static_cast<float>(entity.flags) * 1.5f);
+            }
+            break;
+        }
+        default:
+            break;
+        }
     }
 }
 

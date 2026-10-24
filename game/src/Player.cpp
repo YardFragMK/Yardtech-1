@@ -12,4 +12,5 @@ void Player::ApplyStats(const PlayerStats& stats) {
 	m_maxBullets = stats.maxBullets;
 	m_reserveAmmo = stats.reserveAmmo;
 	m_isReloading = stats.isReloading;
+	m_charge = stats.charge;
 }

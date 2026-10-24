@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "BotStilar.h"
 #include "BotManager.h"
+#include "Combat.h"
 #include "ServerContext.h"
 #include <algorithm>
 #include <cmath>
@@ -122,6 +123,9 @@ void BotStilar::Run(float deltaTime) {
 void BotStilar::Shoot() {
     PlayerSlot* target = Ctx().FindNearestPlayer(position);
     if (target == nullptr) return;
+
+    // Sis bulutunun icindeki oyuncu botlar icin gorunmezdir.
+    if (Combat::IsPositionObscured(target->eyePosition)) return;
 
     glm::vec3 toTarget = target->eyePosition - position;
     if (glm::length(toTarget) < 0.0001f) return;

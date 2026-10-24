@@ -197,6 +197,7 @@
     <ClCompile Include="engine\SoundSystem.cpp" />
     <ClCompile Include="engine\Time.cpp" />
     <ClCompile Include="engine\UIWindow.cpp" />
+    <ClCompile Include="engine\WeaponEffects.cpp" />
     <ClCompile Include="engine\Window.cpp" />
     <ClCompile Include="engine\YguiBridge.cpp" />
     <ClCompile Include="extern\glad\src\glad.c" />
@@ -236,6 +237,7 @@
     <ClInclude Include="engine\Skybox.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="engine\UIWindow.h" />
+    <ClInclude Include="engine\WeaponEffects.h" />
     <ClInclude Include="engine\Window.h" />
     <ClInclude Include="engine\YguiBridge.h" />
     <ClInclude Include="game\src\e_ItemBase.h" />
