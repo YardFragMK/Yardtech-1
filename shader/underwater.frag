@@ -1,11 +1,13 @@
 #version 120
 
-// Su alti: sinusoidal goruntu dalgalanmasi, mavi-yesil renk, bulaniklik, kenar karartmasi ve
+// Su alti: sinusoidal goruntu dalgalanmasi, siviya gore renk, bulaniklik, kenar karartmasi ve
 // isik (caustic) titresimleri.
 uniform sampler2D uScene;
 uniform vec2  uResolution;
 uniform float uTime;
 uniform float uIntensity;   // 0..1
+uniform vec3  uTint;        // su: mavi-yesil, asit: yesil, lav: turuncu-kirmizi
+uniform float uDensity;     // kenar karartmasi ve renk karisimi (lavda yuksek)
 
 void main() {
     vec2 uv = gl_TexCoord[0].st;
@@ -26,18 +28,17 @@ void main() {
              + texture2D(uScene, suv + vec2(0.0, px.y)).rgb * 0.15
              + texture2D(uScene, suv - vec2(0.0, px.y)).rgb * 0.15;
 
-    // Renk: grilesip mavi-yesil tona kayar
-    vec3 tint = vec3(0.35, 0.65, 0.75);
+    // Renk: grilesip siviya ozgu tona kayar
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(col, lum * tint * 1.3, 0.55 * uIntensity);
+    col = mix(col, lum * uTint * 1.3, clamp(0.55 * uDensity, 0.0, 0.9) * uIntensity);
 
     // Isik bantlari
     float caustic = pow(max(0.0, sin(uv.x * 30.0 + t * 2.0) * sin(uv.y * 26.0 - t * 1.7)), 3.0);
-    col += caustic * 0.08 * uIntensity * tint;
+    col += caustic * 0.08 * uIntensity * uTint;
 
-    // Bulanik su: kenarlar kararir
+    // Kenarlar kararir
     vec2 cc = uv - 0.5;
-    col *= clamp(1.0 - dot(cc, cc) * 1.2 * uIntensity, 0.0, 1.0);
+    col *= clamp(1.0 - dot(cc, cc) * 1.2 * uDensity * uIntensity, 0.0, 1.0);
 
     gl_FragColor = vec4(col, 1.0);
 }

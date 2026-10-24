@@ -11,6 +11,15 @@
 #include "Frustum.h"
 #include "GLExtensions.h"
 
+// Sivi yuzey turu, texture adindan cikarilir ('!' veya '*' ile baslayan adlar).
+enum class FaceLiquid : uint8_t {
+    None = 0,
+    Water,
+    Acid,   // adinda slime, acid, toxic veya goo gecenler
+    Lava,   // adinda lava gecenler
+    Blood   // adinda blood gecenler
+};
+
 struct BSPRenderFace {
     std::vector<glm::dvec3> positions;
     std::vector<glm::dvec2> texcoords;
@@ -19,6 +28,12 @@ struct BSPRenderFace {
     GLuint glLightmap = 0;
     bool isMasked = false;
     bool isSky = false;
+    FaceLiquid liquid = FaceLiquid::None;
+
+    // Dinamik isik icin: yuzeyin on yuz normali, merkezi ve merkezden en uzak kose mesafesi.
+    glm::dvec3 normal{ 0.0, 1.0, 0.0 };
+    glm::dvec3 center{ 0.0 };
+    double radius = 0.0;
 };
 
 struct WorldGridCell {
@@ -57,6 +72,8 @@ private:
     std::vector<GLuint> m_textureIdByMiptex;
     std::vector<glm::ivec2> m_textureSizeByMiptex;
     std::vector<bool> m_isMaskedByMiptex;
+    std::vector<bool> m_isSkyByMiptex;
+    std::vector<FaceLiquid> m_liquidByMiptex;
     std::vector<uint8_t> m_lightingData;
     std::vector<WadFile> m_wads;
 

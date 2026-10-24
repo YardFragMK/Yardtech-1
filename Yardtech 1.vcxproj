@@ -186,6 +186,7 @@
     <ClCompile Include="engine\ModuleLoader.cpp" />
     <ClCompile Include="engine\NetClient.cpp" />
     <ClCompile Include="engine\PauseMenu.cpp" />
+    <ClCompile Include="engine\renderer\DynamicLights.cpp" />
     <ClCompile Include="engine\renderer\PostProcess.cpp" />
     <ClCompile Include="engine\renderer\Renderer.cpp" />
     <ClCompile Include="engine\renderer\ShaderLibrary.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="engine\ModuleLoader.h" />
     <ClInclude Include="engine\NetClient.h" />
     <ClInclude Include="engine\PauseMenu.h" />
+    <ClInclude Include="engine\renderer\DynamicLights.h" />
     <ClInclude Include="engine\renderer\PostProcess.h" />
     <ClInclude Include="engine\renderer\Renderer.h" />
     <ClInclude Include="engine\renderer\ShaderLibrary.h" />

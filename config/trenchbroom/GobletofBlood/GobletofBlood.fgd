@@ -70,10 +70,10 @@
 	targetname(target_source) : "Isim"
 ]
 
-// Motor, collision testlerinde (BSPMap::TraceLine) classname'i "poly_illusionary"
+// Motor, collision testlerinde (BSPMap::TraceLine) classname'i "func_illusionary"
 // olan brush entity'leri otomatik olarak solid-disi sayiyor -- yani bu entity
 // zaten TANINIYOR ve dogru davraniyor, gorsel olarak var ama icinden gecilebiliyor.
-@SolidClass = poly_illusionary : "Gorunur ama Gecirgen Brush (collision'siz)"
+@SolidClass = func_illusionary : "Gorunur ama Gecirgen Brush (collision'siz)"
 [
 	targetname(target_source) : "Isim"
 ]
@@ -90,9 +90,8 @@
 // Bot/dusman spawn noktasi. Model, glTF/GLB formatinda yuklenir (bkz. GLBModel).
 // difficulty, Health/Damage tablosundan hangi zorluk satirinin secilecegini
 // belirler: 0=kolay(70hp/15dmg) 1=orta-kolay(90hp/25dmg) 2=orta(100hp/40dmg) 3=zor(150hp/50dmg)
-@PointClass size(-16 -32 -16, 16 32 16) color(150 20 20) = bot_stilar : "Stilar"
+@PointClass size(-16 -16 -36, 16 16 36) color(150 20 20)  model({ "path": "nvs1/models/stilar.glb" }) = bot_stilar : "Stilar"
 [
-	model(studio) : "Model Dosyasi" : "nvs1/models/stilar/stilar.glb"
 	difficulty(choices) : "Zorluk Seviyesi" : 1 =
 	[
 		0 : "Kolay (70 HP / 15 DMG)"
@@ -108,4 +107,13 @@
 [
 	message(string) : "Ses Dosyasi Yolu"
 	volume(integer) : "Ses Seviyesi (0-10)" : 10
+]
+
+// Kara delik: isigi buker. Ekran uzayi efektidir;
+// gorus hatti duvarla kesilince yumusakca kaybolur. Haritada en fazla 16, ayni anda
+// ekranda en buyuk gorunen 4 tanesi cizilir.
+@PointClass size(-16 -16 -16, 16 16 16) color(20 20 20) = fx_blackhole : "Kara Delik (isigi bukerek ekrani carpitir)"
+[
+	radius(integer) : "Olay ufku yaricapi (birim)" : 64
+	strength(string) : "Bukme siddeti (0.1 - 4.0)" : "1.0"
 ]

@@ -1,14 +1,80 @@
 #include "BSPMap.h"
 #include "BSPReader.h"
+#include <cstring>
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
+
+namespace {
+    // Diskteki dugum ve yaprak kayitlari. BSPFormat.h'a bagimli olmamak icin burada
+    // (GoldSrc BSP v30 duzeniyle) tanimlidir.
+#pragma pack(push, 1)
+    struct DiskNode {
+        int32_t planenum;
+        int16_t children[2]; // >= 0: dugum indeksi, < 0: -1 - yaprak indeksi
+        int16_t mins[3];
+        int16_t maxs[3];
+        uint16_t firstface;
+        uint16_t numfaces;
+    };
+
+    struct DiskLeaf {
+        int32_t contents;
+        int32_t visofs;
+        int16_t mins[3];
+        int16_t maxs[3];
+        uint16_t firstmarksurface;
+        uint16_t nummarksurfaces;
+        uint8_t ambientLevel[4];
+    };
+#pragma pack(pop)
+
+    static_assert(sizeof(DiskNode) == 24, "DiskNode boyutu BSP v30 ile uyusmuyor");
+    static_assert(sizeof(DiskLeaf) == 28, "DiskLeaf boyutu BSP v30 ile uyusmuyor");
+
+    // GoldSrc lump sirasi: 0 entities, 1 planes, 2 textures, 3 vertexes, 4 visibility,
+    // 5 nodes, 6 texinfo, 7 faces, 8 lighting, 9 clipnodes, 10 leafs, ...
+    constexpr int LUMP_INDEX_NODES = 5;
+    constexpr int LUMP_INDEX_LEAFS = 10;
+
+    // Yaprak icerik degerleri (Quake/GoldSrc).
+    constexpr int kContentsWater = -3;
+    constexpr int kContentsSlime = -4;
+    constexpr int kContentsLava = -5;
+    constexpr int kContentsCurrentFirst = -9;  // -9 .. -14: su akintilari
+    constexpr int kContentsCurrentLast = -14;
+
+    // Quake'in Mod_MakeHull0 yontemi: dugum agaci, yapraklari "icerik" degeri olan
+    // bir clipnode agacina cevrilir; boylece nokta hull'u diger hull'larla ayni
+    // kodla (HullPointContents/RecursiveHullCheck) gezilebilir.
+    std::vector<BSPClipNode_t> MakeHull0(const std::vector<DiskNode>& nodes, const std::vector<DiskLeaf>& leafs) {
+        std::vector<BSPClipNode_t> hull(nodes.size());
+
+        for (size_t i = 0; i < nodes.size(); i++) {
+            hull[i].planenum = nodes[i].planenum;
+
+            for (int side = 0; side < 2; side++) {
+                const int child = nodes[i].children[side];
+                if (child >= 0) {
+                    hull[i].children[side] = static_cast<int16_t>(child);
+                }
+                else {
+                    const size_t leafIndex = static_cast<size_t>(-1 - child);
+                    const int contents = (leafIndex < leafs.size()) ? leafs[leafIndex].contents : CONTENTS_SOLID;
+                    hull[i].children[side] = static_cast<int16_t>(contents);
+                }
+            }
+        }
+        return hull;
+    }
+}
 
 void BSPMap::Reset() {
     m_models.clear();
     m_entities.clear();
     m_planes.clear();
     m_clipnodes.clear();
+    m_hull0Nodes.clear();
     m_skyName.clear();
 }
 
@@ -55,6 +121,10 @@ bool BSPMap::Load(const std::string& bspPath) {
     m_planes = ReadLump<BSPPlane_t>(file, header.lumps[LUMP_PLANES]);
     m_clipnodes = ReadLump<BSPClipNode_t>(file, header.lumps[LUMP_CLIPNODES]);
 
+    const std::vector<DiskNode> nodes = ReadLump<DiskNode>(file, header.lumps[LUMP_INDEX_NODES]);
+    const std::vector<DiskLeaf> leafs = ReadLump<DiskLeaf>(file, header.lumps[LUMP_INDEX_LEAFS]);
+    m_hull0Nodes = MakeHull0(nodes, leafs);
+
     return true;
 }
 
@@ -73,9 +143,14 @@ int BSPMap::ParseBrushModelIndex(const std::string& modelStr) {
     return std::atoi(modelStr.c_str() + 1);
 }
 
-int BSPMap::HullPointContents(int num, const glm::vec3& p) const {
+int BSPMap::HullPointContents(const std::vector<BSPClipNode_t>& nodes, int num, const glm::vec3& p) const {
     while (num >= 0) {
-        const BSPClipNode_t& node = m_clipnodes[num];
+        // Bozuk/kotu niyetli haritalara karsi sinir denetimi.
+        if (static_cast<size_t>(num) >= nodes.size()) return CONTENTS_EMPTY;
+
+        const BSPClipNode_t& node = nodes[num];
+        if (node.planenum < 0 || static_cast<size_t>(node.planenum) >= m_planes.size()) return CONTENTS_EMPTY;
+
         const BSPPlane_t& plane = m_planes[node.planenum];
 
         float d;
@@ -91,7 +166,7 @@ int BSPMap::HullPointContents(int num, const glm::vec3& p) const {
     return num;
 }
 
-bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
+bool BSPMap::RecursiveHullCheck(const std::vector<BSPClipNode_t>& nodes, int rootNode, int num, float p1f, float p2f,
     const glm::vec3& p1, const glm::vec3& p2, TraceResult& trace) const {
     if (num < 0) {
         if (num != CONTENTS_SOLID) {
@@ -105,7 +180,15 @@ bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
         return true;
     }
 
-    const BSPClipNode_t& node = m_clipnodes[num];
+    // Gecersiz dugum/duzlem indeksi: acik alan sayilir, iz surdurulur.
+    if (static_cast<size_t>(num) >= nodes.size() ||
+        nodes[num].planenum < 0 || static_cast<size_t>(nodes[num].planenum) >= m_planes.size()) {
+        trace.allSolid = false;
+        trace.inOpen = true;
+        return true;
+    }
+
+    const BSPClipNode_t& node = nodes[num];
     const BSPPlane_t& plane = m_planes[node.planenum];
 
     float t1, t2;
@@ -119,9 +202,9 @@ bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
     }
 
     if (t1 >= 0.0f && t2 >= 0.0f)
-        return RecursiveHullCheck(rootNode, node.children[0], p1f, p2f, p1, p2, trace);
+        return RecursiveHullCheck(nodes, rootNode, node.children[0], p1f, p2f, p1, p2, trace);
     if (t1 < 0.0f && t2 < 0.0f)
-        return RecursiveHullCheck(rootNode, node.children[1], p1f, p2f, p1, p2, trace);
+        return RecursiveHullCheck(nodes, rootNode, node.children[1], p1f, p2f, p1, p2, trace);
 
     int side = (t1 < 0.0f) ? 1 : 0;
     const float DIST_EPSILON = 0.03125f;
@@ -132,11 +215,11 @@ bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
     float midf = p1f + (p2f - p1f) * frac;
     glm::vec3 mid = p1 + (p2 - p1) * frac;
 
-    if (!RecursiveHullCheck(rootNode, node.children[side], p1f, midf, p1, mid, trace))
+    if (!RecursiveHullCheck(nodes, rootNode, node.children[side], p1f, midf, p1, mid, trace))
         return false;
 
-    if (HullPointContents(node.children[side ^ 1], mid) != CONTENTS_SOLID)
-        return RecursiveHullCheck(rootNode, node.children[side ^ 1], midf, p2f, mid, p2, trace);
+    if (HullPointContents(nodes, node.children[side ^ 1], mid) != CONTENTS_SOLID)
+        return RecursiveHullCheck(nodes, rootNode, node.children[side ^ 1], midf, p2f, mid, p2, trace);
 
     if (trace.allSolid)
         return false;
@@ -148,7 +231,7 @@ bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
         trace.planeNormal = -glm::vec3(plane.normal[0], plane.normal[1], plane.normal[2]);
     }
 
-    while (HullPointContents(rootNode, mid) == CONTENTS_SOLID) {
+    while (HullPointContents(nodes, rootNode, mid) == CONTENTS_SOLID) {
         frac -= 0.1f;
         if (frac < 0.0f) {
             trace.fraction = midf;
@@ -164,7 +247,8 @@ bool BSPMap::RecursiveHullCheck(int rootNode, int num, float p1f, float p2f,
     return false;
 }
 
-TraceResult BSPMap::TraceHull(int headnode, const glm::vec3& start, const glm::vec3& end) const {
+TraceResult BSPMap::TraceHull(const std::vector<BSPClipNode_t>& nodes, int headnode,
+    const glm::vec3& start, const glm::vec3& end) const {
     TraceResult trace;
     trace.fraction = 1.0f;
     trace.allSolid = true;
@@ -173,7 +257,7 @@ TraceResult BSPMap::TraceHull(int headnode, const glm::vec3& start, const glm::v
     glm::vec3 bspEnd = ConvertToBSP(end);
     trace.endPos = bspEnd;
 
-    RecursiveHullCheck(headnode, headnode, 0.0f, 1.0f, bspStart, bspEnd, trace);
+    RecursiveHullCheck(nodes, headnode, headnode, 0.0f, 1.0f, bspStart, bspEnd, trace);
 
     if (trace.fraction >= 1.0f) {
         trace.endPos = end;
@@ -190,14 +274,18 @@ TraceResult BSPMap::TraceLine(const glm::vec3& start, const glm::vec3& end, int 
     best.fraction = 1.0f;
     best.endPos = end;
 
-    if (m_models.empty() || m_clipnodes.empty() || m_planes.empty()) {
+    if (hullIndex < 0 || hullIndex > 3) hullIndex = 1;
+    // Nokta hull'u kurulamadiysa (dugum/yaprak lump'i yoksa) en kucuk clipnode hull'una dusulur.
+    if (hullIndex == 0 && m_hull0Nodes.empty()) hullIndex = 1;
+
+    const std::vector<BSPClipNode_t>& nodes = (hullIndex == 0) ? m_hull0Nodes : m_clipnodes;
+    if (m_models.empty() || nodes.empty() || m_planes.empty()) {
         return best;
     }
-    if (hullIndex < 0 || hullIndex > 3) hullIndex = 1;
 
     {
         int headnode = m_models[0].headnode[hullIndex];
-        TraceResult t = TraceHull(headnode, start, end);
+        TraceResult t = TraceHull(nodes, headnode, start, end);
         if (t.fraction < best.fraction) best = t;
     }
 
@@ -223,7 +311,7 @@ TraceResult BSPMap::TraceLine(const glm::vec3& start, const glm::vec3& end, int 
         glm::vec3 localEnd = end - origin;
 
         int headnode = m_models[modelIndex].headnode[hullIndex];
-        TraceResult t = TraceHull(headnode, localStart, localEnd);
+        TraceResult t = TraceHull(nodes, headnode, localStart, localEnd);
 
         if (t.fraction < best.fraction) {
             t.endPos += origin;
@@ -298,13 +386,29 @@ glm::vec3 BSPMap::SlideMove(const glm::vec3& start, const glm::vec3& end, int hu
 }
 
 bool BSPMap::IsPointSolid(const glm::vec3& enginePos, int hullIndex) const {
-    if (m_models.empty() || m_clipnodes.empty() || m_planes.empty()) return false;
     if (hullIndex < 0 || hullIndex > 3) hullIndex = 1;
+    if (hullIndex == 0 && m_hull0Nodes.empty()) hullIndex = 1;
+
+    const std::vector<BSPClipNode_t>& nodes = (hullIndex == 0) ? m_hull0Nodes : m_clipnodes;
+    if (m_models.empty() || nodes.empty() || m_planes.empty()) return false;
 
     int headnode = m_models[0].headnode[hullIndex];
     glm::vec3 bspPos = ConvertToBSP(enginePos);
-    int contents = HullPointContents(headnode, bspPos);
+    int contents = HullPointContents(nodes, headnode, bspPos);
     return contents == CONTENTS_SOLID;
+}
+
+int BSPMap::GetLiquidAt(const glm::vec3& enginePos) const {
+    if (m_models.empty() || m_hull0Nodes.empty() || m_planes.empty()) return LIQUID_NONE;
+
+    const int headnode = m_models[0].headnode[0];
+    const int contents = HullPointContents(m_hull0Nodes, headnode, ConvertToBSP(enginePos));
+
+    if (contents == kContentsWater) return LIQUID_WATER;
+    if (contents == kContentsSlime) return LIQUID_SLIME;
+    if (contents == kContentsLava) return LIQUID_LAVA;
+    if (contents <= kContentsCurrentFirst && contents >= kContentsCurrentLast) return LIQUID_WATER;
+    return LIQUID_NONE;
 }
 
 template<typename T>
@@ -354,6 +458,10 @@ bool BSPMap::LoadFromMemory(const std::vector<uint8_t>& bspData) {
     m_models = ReadLumpFromMemory<BSPModel_t>(bspData, header.lumps[LUMP_MODELS]);
     m_planes = ReadLumpFromMemory<BSPPlane_t>(bspData, header.lumps[LUMP_PLANES]);
     m_clipnodes = ReadLumpFromMemory<BSPClipNode_t>(bspData, header.lumps[LUMP_CLIPNODES]);
+
+    const std::vector<DiskNode> nodes = ReadLumpFromMemory<DiskNode>(bspData, header.lumps[LUMP_INDEX_NODES]);
+    const std::vector<DiskLeaf> leafs = ReadLumpFromMemory<DiskLeaf>(bspData, header.lumps[LUMP_INDEX_LEAFS]);
+    m_hull0Nodes = MakeHull0(nodes, leafs);
 
     return true;
 }

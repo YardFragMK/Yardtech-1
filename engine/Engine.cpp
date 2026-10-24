@@ -37,6 +37,7 @@
 #include "LocalGame.h"
 #include "EntityRenderer.h"
 #include"yg_ygui.h"
+#include"renderer/DynamicLights.h"
 
 Renderer renderer;
 BSPMap g_Map;
@@ -349,6 +350,9 @@ void Engine::RenderFrame(float alpha, float deltaTime) {
 			renderer.GetProjectionMatrix() * renderer.GetViewMatrix()
 		);
 
+		// Mermi isiklari: sunucudan gelen entity'lerden her karede yeniden uretilir.
+		DynamicLights::Clear();
+		DynamicLights::CollectFromEntities(LocalGame_GetEntities());
 		g_MapRenderer.RenderWorld(frustum);
 		g_MapRenderer.RenderBrushEntities(g_Map.GetEntities(), frustum);
 		EntityRenderer_Render(LocalGame_GetEntities());

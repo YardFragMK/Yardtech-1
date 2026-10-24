@@ -1,7 +1,11 @@
 #include "BSPMapRenderer.h"
 #include "BSPReader.h"
+#include "renderer/ShaderLibrary.h"
+#include "renderer/ShaderProgram.h"
+#include "renderer/DynamicLights.h"
 #include <fstream>
 #include <sstream>
+#include <cctype>
 #include <cstring>
 #include <cfloat>
 #include <cmath>
@@ -25,6 +29,51 @@ static GLuint CreateGLLightmapTexture(const uint8_t* rgb, int width, int height)
     return tex;
 }
 
+namespace {
+    std::string ToUpperCopy(std::string text) {
+        for (char& c : text) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        return text;
+    }
+
+    // GoldSrc'ta sivi texture'lari '!' ile (Quake'te '*' ile) baslar.
+    FaceLiquid ClassifyLiquid(const std::string& name) {
+        if (name.empty() || (name[0] != '!' && name[0] != '*')) return FaceLiquid::None;
+
+        const std::string upper = ToUpperCopy(name);
+        if (upper.find("LAVA") != std::string::npos) return FaceLiquid::Lava;
+        if (upper.find("SLIME") != std::string::npos || upper.find("ACID") != std::string::npos ||
+            upper.find("TOXIC") != std::string::npos || upper.find("GOO") != std::string::npos) {
+            return FaceLiquid::Acid;
+        }
+        if (upper.find("BLOOD") != std::string::npos) return FaceLiquid::Blood;
+        return FaceLiquid::Water;
+    }
+
+    // Sivi turune gore dalga, kayma, saydamlik ve parlama degerleri.
+    struct LiquidParams {
+        float alpha;
+        float speed;       // dalga ve kayma hizi carpani
+        float warp;        // dalga genligi (doku koordinati biriminde)
+        float glow;        // nabiz atan ek parlaklik
+        float tint[3];
+        bool translucent;
+    };
+
+    const LiquidParams& GetLiquidParams(FaceLiquid type) {
+        static const LiquidParams water = { 0.72f, 1.00f, 0.025f, 0.00f, { 0.85f, 0.95f, 1.00f }, true };
+        static const LiquidParams acid = { 0.88f, 0.70f, 0.030f, 0.15f, { 0.90f, 1.00f, 0.70f }, true };
+        static const LiquidParams lava = { 1.00f, 0.35f, 0.045f, 0.35f, { 1.00f, 0.90f, 0.80f }, false };
+        static const LiquidParams blood = { 0.92f, 0.45f, 0.020f, 0.05f, { 1.00f, 0.85f, 0.85f }, true };
+
+        switch (type) {
+        case FaceLiquid::Acid:  return acid;
+        case FaceLiquid::Lava:  return lava;
+        case FaceLiquid::Blood: return blood;
+        default:                return water;
+        }
+    }
+}
+
 void BSPMapRenderer::Reset() {
     for (GLuint tex : m_textureIdByMiptex) {
         if (tex != 0) glDeleteTextures(1, &tex);
@@ -41,6 +90,8 @@ void BSPMapRenderer::Reset() {
     m_textureIdByMiptex.clear();
     m_textureSizeByMiptex.clear();
     m_isMaskedByMiptex.clear();
+    m_isSkyByMiptex.clear();
+    m_liquidByMiptex.clear();
     m_lightingData.clear();
     m_wads.clear();
     m_renderFacesByModel.clear();
@@ -181,6 +232,8 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
     m_textureIdByMiptex.assign(nummiptex, 0);
     m_textureSizeByMiptex.assign(nummiptex, glm::ivec2(1, 1));
     m_isMaskedByMiptex.assign(nummiptex, false);
+    m_isSkyByMiptex.assign(nummiptex, false);
+    m_liquidByMiptex.assign(nummiptex, FaceLiquid::None);
 
     const int32_t* offsets = reinterpret_cast<const int32_t*>(texLumpRaw.data() + sizeof(int32_t));
 
@@ -193,6 +246,11 @@ void BSPMapRenderer::BuildTextures(const std::vector<uint8_t>& texLumpRaw) {
         std::string name(mt.name);
 
         m_textureSizeByMiptex[i] = glm::ivec2(mt.width, mt.height);
+
+        // Sky ve sivi sinifi texture ADINDAN belirlenir. TEX_SPECIAL bayragi bazi
+        // BSP'lerde sky disindaki yuzeylere de (orn. sivilar) konuldugu icin guvenilmezdir.
+        m_isSkyByMiptex[i] = (ToUpperCopy(name) == "SKY");
+        m_liquidByMiptex[i] = ClassifyLiquid(name);
 
         if (mt.offsets[0] != 0) {
             const uint8_t* mip0 = miptexPtr + mt.offsets[0];
@@ -309,9 +367,30 @@ void BSPMapRenderer::BuildRenderFaces() {
             BSPRenderFace rf;
             rf.glTexture = glTex;
             rf.positions = rawPositions;
-            rf.isSky = (ti.flags & 1) != 0;
+            rf.isSky = m_isSkyByMiptex[ti.miptex];
+            rf.liquid = m_liquidByMiptex[ti.miptex];
             rf.isMasked = (ti.miptex < static_cast<int>(m_isMaskedByMiptex.size()))
                 && m_isMaskedByMiptex[ti.miptex];
+
+            // Merkez ve kapsayici yaricap: dinamik isigin hangi yuzeylere ulastigini hizlica bulmak icin.
+            glm::dvec3 center(0.0);
+            for (const auto& p : rf.positions) center += p;
+            center /= static_cast<double>(rf.positions.size());
+            rf.center = center;
+            for (const auto& p : rf.positions) {
+                rf.radius = std::max<>(rf.radius, glm::length(p - center));
+            }
+
+            // Yuzey normali: ardisik kose capraz carpimlarinin toplami (cokgen icin saglam).
+            // BSP on yuzleri saat yonunde siralidir; sag-el kurali bu yuzden yuzeyin
+            // ICINE dogru bir vektor verir, on yuz normali bunun tersidir.
+            glm::dvec3 sum(0.0);
+            for (size_t vi = 0; vi < rf.positions.size(); vi++) {
+                const glm::dvec3& a = rf.positions[vi];
+                const glm::dvec3& b = rf.positions[(vi + 1) % rf.positions.size()];
+                sum += glm::cross(a - center, b - center);
+            }
+            if (glm::length(sum) > 1e-9) rf.normal = -glm::normalize(sum);
 
             for (size_t vi = 0; vi < rawPositions.size(); vi++) {
                 rf.texcoords.push_back(glm::vec2(
@@ -320,7 +399,9 @@ void BSPMapRenderer::BuildRenderFaces() {
                 ));
             }
 
-            bool hasLight = lightingAvailable && glTex != 0 && face.styles[0] != 255 && face.lightofs >= 0;
+            // Sivi yuzeyler lightmap'siz (tam parlak) cizilir; lightmap olusturmaya gerek yok.
+            bool hasLight = lightingAvailable && glTex != 0 && face.styles[0] != 255 && face.lightofs >= 0
+                && rf.liquid == FaceLiquid::None;
             if (hasLight) {
                 int bminS = static_cast<int>(std::floor(minS / 16.0));
                 int bmaxS = static_cast<int>(std::ceil(maxS / 16.0));
@@ -348,14 +429,11 @@ void BSPMapRenderer::BuildRenderFaces() {
             }
 
             if (m == 0) {
-                glm::dvec3 faceCenter(0.0f);
-                for (const auto& p : rf.positions) faceCenter += p;
-                faceCenter /= static_cast<double>(rf.positions.size());
-
-                int cellIdx = GetOrCreateCell(glm::vec3(faceCenter), cellIndexMap);
-
                 glm::dvec3 faceMins, faceMaxs;
                 ComputeFaceAABB(rf, faceMins, faceMaxs);
+
+                int cellIdx = GetOrCreateCell(glm::vec3(rf.center), cellIndexMap);
+
                 glm::dvec3& cellMins = m_worldCells[cellIdx].mins;
                 glm::dvec3& cellMaxs = m_worldCells[cellIdx].maxs;
                 if (faceMins.x < cellMins.x) cellMins.x = faceMins.x;
@@ -374,99 +452,289 @@ void BSPMapRenderer::BuildRenderFaces() {
     }
 }
 
-static void DrawRenderFace(const BSPRenderFace& rf) {
-    if (rf.positions.size() < 3) return;
-    if (rf.isSky) return;
+//=========================================================
+// Cizim
+//=========================================================
+namespace {
+    constexpr int MAX_SHADER_LIGHTS = DynamicLights::MAX_SHADER_LIGHTS;
 
-    bool hasLightmap = (rf.glTexture != 0 && rf.glLightmap != 0 && glActiveTexture_ && glMultiTexCoord2f_);
+    // Dunya (opak) gecisinin dinamik isik durumu. Isik yoksa ya da shader yuklenmediyse
+    // shader == nullptr kalir ve cizim eski sabit-fonksiyonlu (FFP) yolla aynen surer.
+    struct WorldPassState {
+        ShaderProgram* shader = nullptr;
+        std::vector<DynamicLights::Light> lights; // dunya uzayinda
+        bool shaderBound = false;
+    };
 
-    if (glActiveTexture_) {
-        glActiveTexture_(GL_TEXTURE1);
-        if (hasLightmap) {
+    void EnsureShaders() {
+        static bool tried = false;
+        if (tried) return;
+        tried = true;
+
+        // "water" shader'i PostProcess::Init'te yuklenir; burada yalnizca dunya shader'i.
+        ShaderLibrary::Load("worldlit");
+    }
+
+    void BeginOpaquePass(WorldPassState& state, bool allowLights) {
+        state = WorldPassState();
+        if (!allowLights) return;
+
+        EnsureShaders();
+        if (!DynamicLights::IsEnabled()) return;
+
+        ShaderProgram* shader = ShaderLibrary::Get("worldlit");
+        if (shader == nullptr) return;
+
+        const glm::dmat4 view = renderer.GetViewMatrix();
+        const glm::vec3 eye = glm::vec3(glm::inverse(view)[3]);
+
+        state.lights = DynamicLights::GetNearest(eye);
+        if (state.lights.empty()) return;
+
+        // Isik konumlari goz uzayina cevrilir: boylece shader, brush entity
+        // donusumleri veya ters matris gerektirmeden dogrudan karsilastirma yapar.
+        float positions[MAX_SHADER_LIGHTS * 4] = {};
+        float colors[MAX_SHADER_LIGHTS * 4] = {};
+        const int count = static_cast<int>(state.lights.size());
+
+        for (int i = 0; i < count; i++) {
+            const DynamicLights::Light& light = state.lights[i];
+            const glm::dvec4 eyePos = view * glm::dvec4(glm::dvec3(light.position), 1.0);
+
+            positions[i * 4 + 0] = static_cast<float>(eyePos.x);
+            positions[i * 4 + 1] = static_cast<float>(eyePos.y);
+            positions[i * 4 + 2] = static_cast<float>(eyePos.z);
+            positions[i * 4 + 3] = light.radius;
+
+            colors[i * 4 + 0] = light.color.r;
+            colors[i * 4 + 1] = light.color.g;
+            colors[i * 4 + 2] = light.color.b;
+        }
+
+        shader->Bind();
+        shader->SetInt("uDiffuse", 0);
+        shader->SetInt("uLightmap", 1);
+        shader->SetInt("uLightCount", count);
+        shader->SetVec4Array("uLightPos", positions, MAX_SHADER_LIGHTS);
+        shader->SetVec4Array("uLightColor", colors, MAX_SHADER_LIGHTS);
+        ShaderProgram::Unbind();
+
+        state.shader = shader;
+    }
+
+    void EndOpaquePass(WorldPassState& state) {
+        if (state.shaderBound) {
+            ShaderProgram::Unbind();
+            state.shaderBound = false;
+        }
+    }
+
+    bool FaceTouchedByLights(const BSPRenderFace& rf, const WorldPassState& state) {
+        for (const DynamicLights::Light& light : state.lights) {
+            const glm::dvec3 d = rf.center - glm::dvec3(light.position);
+            const double reach = static_cast<double>(light.radius) + rf.radius;
+            if (glm::dot(d, d) < reach * reach) return true;
+        }
+        return false;
+    }
+
+    // Yuzeyin koselerini ucgen yelpazesi olarak gonderir.
+    void EmitFaceGeometry(const BSPRenderFace& rf, bool withLightmapCoords) {
+        glBegin(GL_TRIANGLE_FAN); // GL_POLYGON yerine GL_TRIANGLE_FAN
+        for (size_t i = 0; i < rf.positions.size(); i++) {
+            if (glMultiTexCoord2f_) {
+                glMultiTexCoord2f_(GL_TEXTURE0, static_cast<float>(rf.texcoords[i].x), static_cast<float>(rf.texcoords[i].y));
+                if (withLightmapCoords) {
+                    glMultiTexCoord2f_(GL_TEXTURE1, static_cast<float>(rf.lightUVs[i].x), static_cast<float>(rf.lightUVs[i].y));
+                }
+            }
+            else {
+                glTexCoord2d(rf.texcoords[i].x, rf.texcoords[i].y);
+            }
+            glVertex3d(rf.positions[i].x, rf.positions[i].y, rf.positions[i].z);
+        }
+        glEnd();
+    }
+
+    void DrawOpaqueFace(const BSPRenderFace& rf, WorldPassState& state) {
+        if (rf.positions.size() < 3) return;
+        if (rf.isSky) return;
+
+        // Dinamik isik: yalnizca bir isigin ulastigi yuzeyler shader ile cizilir,
+        // digerleri eskisi gibi FFP ile (gorunum ayni, maliyet yok).
+        const bool useShader = (state.shader != nullptr) && FaceTouchedByLights(rf, state);
+        if (useShader != state.shaderBound) {
+            if (useShader) state.shader->Bind();
+            else ShaderProgram::Unbind();
+            state.shaderBound = useShader;
+        }
+
+        bool hasLightmap = (rf.glTexture != 0 && rf.glLightmap != 0 && glActiveTexture_ && glMultiTexCoord2f_);
+
+        if (glActiveTexture_) {
+            glActiveTexture_(GL_TEXTURE1);
+            if (hasLightmap) {
+                glEnable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, rf.glLightmap);
+                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
+                glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, 2.0f);
+            }
+            else {
+                glDisable(GL_TEXTURE_2D);
+            }
+            glActiveTexture_(GL_TEXTURE0);
+        }
+
+        if (rf.glTexture != 0) {
             glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, rf.glLightmap);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-            glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
-            glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE, 2.0f);
+            glBindTexture(GL_TEXTURE_2D, rf.glTexture);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         }
         else {
             glDisable(GL_TEXTURE_2D);
+            glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
         }
-        glActiveTexture_(GL_TEXTURE0);
+
+        if (useShader) {
+            state.shader->SetInt("uHasLightmap", hasLightmap ? 1 : 0);
+            glNormal3d(rf.normal.x, rf.normal.y, rf.normal.z);
+        }
+
+        bool useAlphaTest = rf.isMasked && rf.glTexture != 0;
+        if (useAlphaTest) {
+            glEnable(GL_ALPHA_TEST);
+            glAlphaFunc(GL_GREATER, 0.5f);
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
+
+        EmitFaceGeometry(rf, hasLightmap);
+
+        if (useAlphaTest) {
+            glDisable(GL_ALPHA_TEST);
+            glDisable(GL_BLEND);
+        }
+
+        if (rf.glTexture == 0) {
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        }
     }
 
-    if (rf.glTexture != 0) {
+    // Sivi yuzeyler opak geometriden SONRA cizilir. water shader'i yoksa yuzeyler
+    // eskisi gibi duz (kaymasiz) cizilir.
+    void DrawLiquidBatch(const std::vector<const BSPRenderFace*>& faces) {
+        if (faces.empty()) return;
+
+        EnsureShaders();
+        ShaderProgram* water = ShaderLibrary::Get("water");
+        const float time = static_cast<float>(SDL_GetTicks()) * 0.001f;
+
+        if (glActiveTexture_) {
+            glActiveTexture_(GL_TEXTURE1);
+            glDisable(GL_TEXTURE_2D);
+            glActiveTexture_(GL_TEXTURE0);
+        }
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, rf.glTexture);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    }
-    else {
-        glDisable(GL_TEXTURE_2D);
-        glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
-    }
-
-    bool useAlphaTest = rf.isMasked && rf.glTexture != 0;
-    if (useAlphaTest) {
-        glEnable(GL_ALPHA_TEST);
-        glAlphaFunc(GL_GREATER, 0.5f);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
-
-    glBegin(GL_TRIANGLE_FAN); // GL_POLYGON yerine GL_TRIANGLE_FAN 
-    for (size_t i = 0; i < rf.positions.size(); i++) {
-        if (glMultiTexCoord2f_) {
-            glMultiTexCoord2f_(GL_TEXTURE0, static_cast<float>(rf.texcoords[i].x), static_cast<float>(rf.texcoords[i].y));
-            if (hasLightmap) {
-                glMultiTexCoord2f_(GL_TEXTURE1, static_cast<float>(rf.lightUVs[i].x), static_cast<float>(rf.lightUVs[i].y));
-            }
-        }
-        else {
-            glTexCoord2d(rf.texcoords[i].x, rf.texcoords[i].y);
-        }
-        glVertex3d(rf.positions[i].x, rf.positions[i].y, rf.positions[i].z);
-    }
-    glEnd();
-
-    if (useAlphaTest) {
-        glDisable(GL_ALPHA_TEST);
-        glDisable(GL_ALPHA_TEST);
-        glDisable(GL_BLEND);
-    }
-
-    if (rf.glTexture == 0) {
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-}
+        glDisable(GL_ALPHA_TEST);
 
-static void ResetLightmapUnit() {
-    if (glActiveTexture_) {
-        glActiveTexture_(GL_TEXTURE1);
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        glActiveTexture_(GL_TEXTURE0);
+        if (water != nullptr) {
+            water->Bind();
+            water->SetInt("uTexture", 0);
+            water->SetFloat("uTime", time);
+        }
+
+        FaceLiquid lastType = FaceLiquid::None;
+
+        for (const BSPRenderFace* rf : faces) {
+            if (rf->glTexture == 0 || rf->positions.size() < 3) continue;
+
+            if (water != nullptr && rf->liquid != lastType) {
+                const LiquidParams& params = GetLiquidParams(rf->liquid);
+
+                water->SetFloat("uAlpha", params.alpha);
+                water->SetFloat("uSpeed", params.speed);
+                water->SetFloat("uWarp", params.warp);
+                water->SetFloat("uGlow", params.glow);
+                water->SetVec3("uTint", params.tint[0], params.tint[1], params.tint[2]);
+
+                if (params.translucent) {
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    glDepthMask(GL_FALSE); // saydam sivi derinlige yazmaz; alttaki geometri gorunur
+                }
+                else {
+                    glDisable(GL_BLEND);
+                    glDepthMask(GL_TRUE);
+                }
+                lastType = rf->liquid;
+            }
+
+            glBindTexture(GL_TEXTURE_2D, rf->glTexture);
+            EmitFaceGeometry(*rf, false);
+        }
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+        if (water != nullptr) ShaderProgram::Unbind();
+    }
+
+    void ResetLightmapUnit() {
+        if (glActiveTexture_) {
+            glActiveTexture_(GL_TEXTURE1);
+            glDisable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glActiveTexture_(GL_TEXTURE0);
+        }
     }
 }
 
 void BSPMapRenderer::RenderWorld() const {
+    WorldPassState state;
+    BeginOpaquePass(state, true);
+
+    std::vector<const BSPRenderFace*> liquids;
+
     glEnable(GL_TEXTURE_2D);
     for (const auto& cell : m_worldCells) {
-        for (const auto& rf : cell.faces) DrawRenderFace(rf);
+        for (const auto& rf : cell.faces) {
+            if (rf.liquid != FaceLiquid::None) liquids.push_back(&rf);
+            else DrawOpaqueFace(rf, state);
+        }
     }
+    EndOpaquePass(state);
+
+    DrawLiquidBatch(liquids);
+
     glDisable(GL_TEXTURE_2D);
     ResetLightmapUnit();
 }
 
 void BSPMapRenderer::RenderWorld(const Frustum& frustum) const {
+    WorldPassState state;
+    BeginOpaquePass(state, true);
+
+    std::vector<const BSPRenderFace*> liquids;
+
     glEnable(GL_TEXTURE_2D);
     for (const auto& cell : m_worldCells) {
         if (!frustum.IntersectsAABB(glm::dvec3(cell.mins), glm::dvec3(cell.maxs))) continue;
-        for (const auto& rf : cell.faces) DrawRenderFace(rf);
+
+        for (const auto& rf : cell.faces) {
+            if (rf.liquid != FaceLiquid::None) liquids.push_back(&rf);
+            else DrawOpaqueFace(rf, state);
+        }
     }
+    EndOpaquePass(state);
+
+    DrawLiquidBatch(liquids);
+
     glDisable(GL_TEXTURE_2D);
     ResetLightmapUnit();
 }
@@ -475,8 +743,22 @@ void BSPMapRenderer::RenderModel(int modelIndex) const {
     auto it = m_renderFacesByModel.find(modelIndex);
     if (it == m_renderFacesByModel.end()) return;
 
+    // Brush entity yuzeyleri dinamik isik almaz (yerel koordinatlarda); sivilari ise
+    // (func_water gibi) dunya ile ayni shader'dan gecer.
+    WorldPassState state;
+    BeginOpaquePass(state, false);
+
+    std::vector<const BSPRenderFace*> liquids;
+
     glEnable(GL_TEXTURE_2D);
-    for (const auto& rf : it->second) DrawRenderFace(rf);
+    for (const auto& rf : it->second) {
+        if (rf.liquid != FaceLiquid::None) liquids.push_back(&rf);
+        else DrawOpaqueFace(rf, state);
+    }
+    EndOpaquePass(state);
+
+    DrawLiquidBatch(liquids);
+
     glDisable(GL_TEXTURE_2D);
     ResetLightmapUnit();
 }

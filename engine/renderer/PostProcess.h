@@ -18,9 +18,9 @@ public:
     bool Init(int width, int height);
     void Apply(const glm::dmat4& view, const glm::dmat4& projection, const ViewSetup& viewSetup);
 
-    // Oyuncunun su icinde olup olmadigini bildirir (otomatik su alti efekti).
-    // r_underwater cvar'i ise elle zorlamadir; ikisinden buyugu kullanilir.
-    void SetUnderwater(bool underwater) { m_underwaterTarget = underwater; }
+    // Dis kaynakli zorlama (orn. oyun mantigi). Dunya sivilarindan gelen otomatik
+    // tespitle birlestirilir (ikisinden biri yeterli).
+    void SetUnderwater(bool underwater) { m_underwaterExternal = underwater; }
 
 private:
     struct BlackHole {
@@ -54,6 +54,8 @@ private:
     bool m_underwaterTarget = false;
     float m_underwaterAuto = 0.0f;
     bool m_dreamWasActive = false;
+    bool m_underwaterExternal = false;
+    int m_liquidKind = 0; // en son icinde bulunulan sivi (LiquidKind); cikista solarak biten efekt rengini korur
 
     float m_time = 0.0f;
     uint32_t m_lastTicks = 0;

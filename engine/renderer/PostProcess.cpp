@@ -208,6 +208,10 @@ void PostProcess::Apply(const glm::dmat4& view, const glm::dmat4& projection, co
     const float dream = (m_dreamCvar != nullptr) ? ClampF(*m_dreamCvar, 0.0f, 1.0f) : 0.0f;
     const float manualUnderwater = (m_underwaterCvar != nullptr) ? ClampF(*m_underwaterCvar, 0.0f, 1.0f) : 0.0f;
 
+    // Oyuncunun gozu bir sivinin icinde mi? (worldspawn yaprak icerigi)
+    const int liquid = g_Map.GetLiquidAt(viewSetup.origin);
+    if (liquid != LIQUID_NONE) m_liquidKind = liquid;
+    m_underwaterTarget = m_underwaterExternal || (liquid != LIQUID_NONE);
     m_underwaterAuto += ((m_underwaterTarget ? 1.0f : 0.0f) - m_underwaterAuto) * MinF(1.0f, deltaTime * 6.0f);
     const float underwater = MaxF(manualUnderwater, m_underwaterAuto);
 
@@ -256,8 +260,22 @@ void PostProcess::Apply(const glm::dmat4& view, const glm::dmat4& projection, co
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     if (doUnderwater) {
+        // Renk ve yogunluk siviya gore: su mavi-yesil, asit (slime) yesil, lav turuncu-kirmizi.
+        float tint[3] = { 0.35f, 0.65f, 0.75f };
+        float density = 1.0f;
+        if (m_liquidKind == LIQUID_SLIME) {
+            tint[0] = 0.45f; tint[1] = 0.85f; tint[2] = 0.30f;
+            density = 1.4f;
+        }
+        else if (m_liquidKind == LIQUID_LAVA) {
+            tint[0] = 1.00f; tint[1] = 0.35f; tint[2] = 0.08f;
+            density = 2.2f;
+        }
+
         BeginPass(*underwaterShader);
         underwaterShader->SetFloat("uIntensity", underwater);
+        underwaterShader->SetVec3("uTint", tint[0], tint[1], tint[2]);
+        underwaterShader->SetFloat("uDensity", density);
         EndPass();
     }
 
