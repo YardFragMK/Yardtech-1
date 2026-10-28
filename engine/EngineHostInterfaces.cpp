@@ -11,6 +11,7 @@
 #include "ServerMenu.h"
 #include "console/Console.h"
 #include "console/CVar.h"
+#include "Engine.h"
 #include <cstring>
 #include <SDL.h>
 
@@ -42,6 +43,10 @@ public:
 
         const std::string* value = entities[entityIndex].Get(key);
         return value != nullptr ? value->c_str() : nullptr;
+    }
+
+    bool GetBrushModelBounds(int modelIndex, glm::vec3* outMins, glm::vec3* outMaxs) const override {
+        return g_Map.GetModelBounds(modelIndex, outMins, outMaxs);
     }
 };
 EXPOSE_SINGLE_INTERFACE(WorldQueryImpl, IWorldQuery, WORLD_QUERY_INTERFACE_VERSION);
@@ -116,6 +121,21 @@ public:
         SDL_Event quitEvent{};
         quitEvent.type = SDL_QUIT;
         SDL_PushEvent(&quitEvent);
+    }
+
+    int GetFileSize(const char* vfsPath) override {
+        if (vfsPath == nullptr) return -1;
+        return static_cast<int>(vfs.GetFileSize(vfsPath));
+    }
+
+    bool ReadFile(const char* vfsPath, void* buffer, int bufferSize) override {
+        if (vfsPath == nullptr || buffer == nullptr || bufferSize <= 0) return false;
+
+        const std::vector<uint8_t> data = vfs.ReadFile(vfsPath);
+        if (data.empty() || data.size() > static_cast<size_t>(bufferSize)) return false;
+
+        std::memcpy(buffer, data.data(), data.size());
+        return true;
     }
 };
 EXPOSE_SINGLE_INTERFACE(EngineClientImpl, IEngineClient, ENGINE_CLIENT_INTERFACE_VERSION);

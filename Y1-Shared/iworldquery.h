@@ -13,7 +13,7 @@ struct TraceResult {
     glm::vec3 planeNormal{ 0.0f, 1.0f, 0.0f };
 };
 
-#define WORLD_QUERY_INTERFACE_VERSION "WorldQuery001"
+#define WORLD_QUERY_INTERFACE_VERSION "WorldQuery002"
 
 // Yuklu haritaya collision ve entity sorgulari. Exe (ve dedicated exe) kendi
 // BSPMap'ini bu arayuzle sarip DLL'lere verir. Entity verisi std::map yerine
@@ -30,4 +30,11 @@ public:
     virtual int GetEntityCount() const = 0;
     // Anahtar yoksa nullptr doner.
     virtual const char* GetEntityKeyValue(int entityIndex, const char* key) const = 0;
+
+    // Bir brush modelinin (entity'lerin "*N" modelleri) motor uzayindaki sinir kutusu.
+    // Bilinmiyorsa false doner.
+    virtual bool GetBrushModelBounds(int modelIndex, glm::vec3* outMins, glm::vec3* outMaxs) const {
+        (void)modelIndex; (void)outMins; (void)outMaxs;
+        return false;
+    }
 };

@@ -62,8 +62,25 @@ void DynamicLights::CollectFromEntities(const std::vector<NetEntityState>& entit
             Add(entity.origin, glm::vec3(0.2f, 0.7f, 1.0f), 170.0f);
             break;
         case ENT_CLASS_LAST_BALL:
-            Add(entity.origin, glm::vec3(0.5f, 1.0f, 0.7f) * 2.2f, 700.0f);
+            Add(entity.origin, glm::vec3(0.4f, 1.0f, 0.6f) * 4.0f, 900.0f);
             break;
+        case ENT_CLASS_ACID_BOMB:
+            Add(entity.origin, glm::vec3(0.4f, 1.0f, 0.2f) * 1.3f, 200.0f);
+            break;
+        case ENT_CLASS_ACID_POOL:
+            Add(entity.origin + glm::vec3(0.0f, 36.0f, 0.0f), glm::vec3(0.4f, 1.0f, 0.2f) * 1.0f,
+                static_cast<float>(entity.flags) * 1.6f);
+            break;
+        case ENT_CLASS_BFG_EXPLOSION: {
+            // Dev yesil flas: omru boyunca sonuyor (yas santisaniye cinsinden).
+            const float age = static_cast<float>(entity.health) / 100.0f;
+            const float fade = 1.0f - age / BFG_EXPLOSION_LIFE;
+            if (fade > 0.0f) {
+                Add(entity.origin, glm::vec3(0.4f, 1.0f, 0.6f) * (6.0f * fade),
+                    static_cast<float>(entity.flags) * 1.8f);
+            }
+            break;
+        }
         case ENT_CLASS_LAVA_POOL:
             Add(entity.origin + glm::vec3(0.0f, 40.0f, 0.0f), glm::vec3(1.0f, 0.35f, 0.06f) * 1.1f,
                 static_cast<float>(entity.flags) * 1.6f);

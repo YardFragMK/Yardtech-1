@@ -17,24 +17,27 @@ enum EntityClassId : uint16_t {
     ENT_CLASS_SAWBLADE = 14,
     ENT_CLASS_STAPLE_BALL = 15,
     ENT_CLASS_LAST_BALL = 16,
+    ENT_CLASS_ACID_BOMB = 17,
 
     // Gecici gorsel etkiler ve alan tehlikeleri
     ENT_CLASS_BEAM = 20,         // raygun isini
     ENT_CLASS_EXPLOSION = 21,
     ENT_CLASS_FOG_CLOUD = 22,
-    ENT_CLASS_LAVA_POOL = 23
+    ENT_CLASS_LAVA_POOL = 23,
+    ENT_CLASS_ACID_POOL = 24,
+    ENT_CLASS_BFG_EXPLOSION = 25
 };
 
-// Gecici etkilerin omru (saniye): yalnizca isin ve patlama icin sabittir; sis ve lav
-// havuzunda omur NetEntityState::pitch alaninda tasinir.
-constexpr float BEAM_EFFECT_LIFE = 0.30f;
+// Gecici etkilerin omru (saniye). Sis ve havuzlarda omur NetEntityState::pitch alanindadir.
+constexpr float BEAM_EFFECT_LIFE = 0.90f;
 constexpr float EXPLOSION_EFFECT_LIFE = 0.50f;
+constexpr float BFG_EXPLOSION_LIFE = 1.20f;
 
 // Server'in client'a bildirdigi entity ozeti (replikasyon). Alan anlamlari sinifa gore:
 //  - mermiler: origin konum, yaw/pitch ucus yonu (derece); testerede flags = donus * 100
 //  - BEAM: origin baslangic, yaw/pitch yon, flags = uzunluk, health = yas (santisaniye)
-//  - EXPLOSION: flags = yaricap, health = yas (santisaniye)
-//  - FOG_CLOUD, LAVA_POOL: flags = yaricap, health = yas (santisaniye), pitch = toplam omur (sn)
+//  - EXPLOSION, BFG_EXPLOSION: flags = yaricap, health = yas (santisaniye)
+//  - FOG_CLOUD, LAVA_POOL, ACID_POOL: flags = yaricap, health = yas (santisaniye), pitch = toplam omur (sn)
 struct NetEntityState {
     int32_t id = 0;
     uint16_t classId = ENT_CLASS_NONE;

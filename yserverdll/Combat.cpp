@@ -11,53 +11,72 @@
 
 namespace {
     // ---------------------------------------------------------------
-    // Dengeleme tablosu (birim: dunya birimi, saniye, hasar puani)
+    // Dengeleme tablosu. Birimler: dunya birimi, saniye, hasar puani.
     // ---------------------------------------------------------------
-    constexpr float MAX_RANGE = 8192.0f;
-    constexpr float GRAVITY = 800.0f;
-    constexpr float BOUNCE_RESTITUTION = 0.45f;
-    constexpr float BOUNCE_TANGENT_KEEP = 0.75f;
 
-    constexpr float ROCKET_SPEED = 1000.0f;
-    constexpr float ROCKET_RADIUS = 180.0f;
-    constexpr int ROCKET_DAMAGE = 130;
-    constexpr float ROCKET_LIFE = 8.0f;
+    // --- Genel ---
+    constexpr float MAX_RANGE = 8192.0f;           // bir anlik atisin ulasabilecegi en uzak mesafe
+    constexpr float GRAVITY = 800.0f;              // bombalarin asagi ivmesi (birim/sn^2)
+    constexpr float BOUNCE_RESTITUTION = 0.45f;    // sekmede duvara dik hizin ne kadari korunur (0 = yapisir, 1 = kusursuz seker)
+    constexpr float BOUNCE_TANGENT_KEEP = 0.75f;   // sekmede duvar boyunca kayan hizin ne kadari korunur (surtunme)
 
-    constexpr float BOMB_SPEED = 720.0f;
-    constexpr float BOMB_LIFE = 6.0f;
-    constexpr float GRENADE_FUSE = 2.5f;
-    constexpr float GRENADE_RADIUS = 220.0f;
-    constexpr int GRENADE_DAMAGE = 150;
-    constexpr float FOG_FUSE = 1.6f;
-    constexpr float FOG_RADIUS = 240.0f;
-    constexpr float FOG_LIFE = 12.0f;
-    constexpr float LAVA_IMPACT_RADIUS = 130.0f;
-    constexpr int LAVA_IMPACT_DAMAGE = 35;
-    constexpr float LAVA_POOL_RADIUS = 150.0f;
-    constexpr float LAVA_POOL_LIFE = 7.0f;
-    constexpr float LAVA_TICK_INTERVAL = 0.5f;
-    constexpr int LAVA_TICK_DAMAGE = 8;
+    // --- Roket ---
+    constexpr float ROCKET_SPEED = 1000.0f;        // ucus hizi (birim/sn)
+    constexpr float ROCKET_RADIUS = 180.0f;        // patlama yaricapi: bu mesafede hasar sifira iner
+    constexpr int ROCKET_DAMAGE = 130;             // patlama merkezindeki azami hasar (mesafeyle dogrusal azalir)
+    constexpr float ROCKET_LIFE = 8.0f;            // hicbir sey vurmazsa kac saniye sonra yok olur
 
-    constexpr float SAW_RADIUS = 20.0f;
-    constexpr float SAW_LIFE = 4.0f;
-    constexpr float SAW_SPEED_MIN = 1100.0f; // donmemis testere
-    constexpr float SAW_SPEED_MAX = 1700.0f; // tam donmus testere
+    // --- Bombalar (el bombasi, sis, lav, asit) ---
+    constexpr float BOMB_SPEED = 720.0f;           // atis hizi (birim/sn)
+    constexpr float BOMB_LIFE = 6.0f;              // en uzun omur (sn)
+    constexpr float GRENADE_FUSE = 2.5f;           // el bombasinin patlama gecikmesi (sn)
+    constexpr float GRENADE_RADIUS = 220.0f;       // el bombasi patlama yaricapi
+    constexpr int GRENADE_DAMAGE = 150;            // el bombasi azami hasari
+    constexpr float FOG_FUSE = 1.6f;               // sis bombasinin bulut acma gecikmesi (sn); durursa daha erken acilir
+    constexpr float FOG_RADIUS = 240.0f;           // sis bulutunun yaricapi
+    constexpr float FOG_LIFE = 12.0f;              // sis bulutunun omru (sn)
+    constexpr float LAVA_IMPACT_RADIUS = 130.0f;   // lav bombasinin carpma patlamasi yaricapi
+    constexpr int LAVA_IMPACT_DAMAGE = 35;         // carpma patlamasi hasari
+    constexpr float LAVA_POOL_RADIUS = 150.0f;     // lav havuzunun yaricapi
+    constexpr float LAVA_POOL_LIFE = 7.0f;         // havuzun omru (sn)
+    constexpr float LAVA_TICK_INTERVAL = 0.5f;     // havuz icindekilere kac saniyede bir hasar verilir
+    constexpr int LAVA_TICK_DAMAGE = 8;            // her seferde verilen hasar
+    constexpr float ACID_IMPACT_RADIUS = 120.0f;   // asit bombasi carpma patlamasi yaricapi
+    constexpr int ACID_IMPACT_DAMAGE = 25;
+    constexpr float ACID_POOL_RADIUS = 140.0f;
+    constexpr float ACID_POOL_LIFE = 8.0f;
+    constexpr float ACID_TICK_INTERVAL = 0.4f;     // asit lavdan sik ama hafif vurur
+    constexpr int ACID_TICK_DAMAGE = 6;
 
-    constexpr float STAPLE_SPEED = 1200.0f;
-    constexpr float STAPLE_RADIUS = 6.0f;
-    constexpr int STAPLE_DAMAGE = 18;
-    constexpr float STAPLE_LIFE = 3.0f;
+    // --- Testere ---
+    constexpr float SAW_RADIUS = 20.0f;            // hedefe temas yaricapi (hitbox'a eklenir)
+    constexpr float SAW_LIFE = 4.0f;               // en uzun omur (sn)
+    constexpr float SAW_SPEED_MIN = 1100.0f;       // hic donmemis testerenin hizi (birim/sn)
+    constexpr float SAW_SPEED_MAX = 1700.0f;       // tam donmus testerenin hizi (donus arttikca hizlanir)
 
-    constexpr float LAST_SPEED = 520.0f;
-    constexpr float LAST_RADIUS = 40.0f;
-    constexpr float LAST_EXPLOSION_RADIUS = 480.0f;
-    constexpr int LAST_DAMAGE = 450;
-    constexpr float LAST_LIFE = 8.0f;
+    // --- Staplegun ---
+    constexpr float STAPLE_SPEED = 1200.0f;        // top hizi (birim/sn)
+    constexpr float STAPLE_RADIUS = 6.0f;          // temas yaricapi
+    constexpr int STAPLE_DAMAGE = 18;              // topun tek vurus hasari (bir salvo 5 top)
+    constexpr float STAPLE_LIFE = 3.0f;            // en uzun omur (sn)
 
-    constexpr size_t MAX_PROJECTILES = 128;
-    constexpr size_t MAX_EFFECTS = 64;
-    constexpr size_t MAX_HAZARDS = 16;
-    constexpr int FIRST_ENTITY_ID = 1000000; // bot kimlikleriyle (1'den baslar) cakismasin
+    // --- Lastgun ---
+    constexpr float LAST_SPEED = 520.0f;           // top hizi (birim/sn): yavas ama devasa
+    constexpr float LAST_RADIUS = 40.0f;           // temas yaricapi
+    constexpr float LAST_EXPLOSION_RADIUS = 480.0f;// patlama yaricapi
+    constexpr int LAST_DAMAGE = 450;               // patlama merkezi hasari
+    constexpr float LAST_LIFE = 8.0f;              // en uzun omur (sn)
+
+    // --- Raygun gorsel isin namlusu (gozun gore) ---
+    constexpr float RAY_MUZZLE_FORWARD = 30.0f;    // namlu gozun ne kadar onunde
+    constexpr float RAY_MUZZLE_RIGHT = 14.0f;      // namlu gozun ne kadar sagindadir
+    constexpr float RAY_MUZZLE_DOWN = 12.0f;       // namlu gozun ne kadar altindadir (isin capraz gorunur)
+
+    // --- Sinirlar ---
+    constexpr size_t MAX_PROJECTILES = 128;        // ayni anda en fazla mermi
+    constexpr size_t MAX_EFFECTS = 64;             // ayni anda en fazla gorsel etki (patlama, isin)
+    constexpr size_t MAX_HAZARDS = 16;             // ayni anda en fazla sis bulutu / havuz
+    constexpr int FIRST_ENTITY_ID = 1000000;       // bot kimlikleriyle (1'den baslar) cakismasin
 
     // windows.h'in min/max makrolariyla cakismamak icin yerel yardimcilar.
     float MinF(float a, float b) { return a < b ? a : b; }
@@ -252,9 +271,11 @@ namespace {
 
     // Alan hasari: hedef kutusuna en yakin mesafeye gore dogrusal azalir. Patlama ile hedef
     // arasinda duvar varsa hasar verilmez; sahibi kendi patlamasindan yariya yakin hasar alir.
-    void Explode(int owner, const glm::vec3& pos, float radius, int maxDamage) {
-        AddEffect(ENT_CLASS_EXPLOSION, pos, 0.0f, 0.0f, EXPLOSION_EFFECT_LIFE, static_cast<uint16_t>(radius));
-
+    void Explode(int owner, const glm::vec3& pos, float radius, int maxDamage,
+        uint16_t effectClass = ENT_CLASS_EXPLOSION, float effectLife = EXPLOSION_EFFECT_LIFE) {
+        if (effectClass != ENT_CLASS_NONE) {
+            AddEffect(effectClass, pos, 0.0f, 0.0f, effectLife, static_cast<uint16_t>(radius));
+        }
         IWorldQuery* world = Ctx().world;
         for (const Target& target : GatherTargets()) {
             const float distance = DistancePointAABB(pos, target.center - target.half, target.center + target.half);
@@ -271,9 +292,18 @@ namespace {
         }
     }
 
+    // Lav ve asit bombasi: kucuk alan hasari + zeminde havuz.
     void LavaImpact(Projectile& projectile, const glm::vec3& point) {
-        Explode(projectile.owner, point, LAVA_IMPACT_RADIUS, LAVA_IMPACT_DAMAGE);
-        SpawnHazard(ENT_CLASS_LAVA_POOL, projectile.owner, GroundPoint(point), LAVA_POOL_RADIUS, LAVA_POOL_LIFE);
+        const bool acid = (projectile.classId == ENT_CLASS_ACID_BOMB);
+
+        Explode(projectile.owner, point,
+            acid ? ACID_IMPACT_RADIUS : LAVA_IMPACT_RADIUS,
+            acid ? ACID_IMPACT_DAMAGE : LAVA_IMPACT_DAMAGE,
+            ENT_CLASS_NONE);
+
+        SpawnHazard(acid ? ENT_CLASS_ACID_POOL : ENT_CLASS_LAVA_POOL, projectile.owner, GroundPoint(point),
+            acid ? ACID_POOL_RADIUS : LAVA_POOL_RADIUS,
+            acid ? ACID_POOL_LIFE : LAVA_POOL_LIFE);
         projectile.dead = true;
     }
 
@@ -331,7 +361,7 @@ namespace {
             p.dead = true;
             break;
         case ENT_CLASS_LAST_BALL:
-            Explode(p.owner, hitPoint, LAST_EXPLOSION_RADIUS, LAST_DAMAGE);
+            Explode(p.owner, hitPoint, LAST_EXPLOSION_RADIUS, LAST_DAMAGE, ENT_CLASS_BFG_EXPLOSION, BFG_EXPLOSION_LIFE);
             p.dead = true;
             break;
         case ENT_CLASS_STAPLE_BALL:
@@ -349,6 +379,7 @@ namespace {
                 p.dead = true;
             }
             break;
+        case ENT_CLASS_ACID_BOMB:
         case ENT_CLASS_LAVA_BOMB:
             LavaImpact(p, hitPoint);
             break;
@@ -368,13 +399,14 @@ namespace {
             p.dead = true;
             break;
         case ENT_CLASS_LAST_BALL:
-            Explode(p.owner, trace.endPos + normal * 20.0f, LAST_EXPLOSION_RADIUS, LAST_DAMAGE);
+            Explode(p.owner, trace.endPos + normal * 20.0f, LAST_EXPLOSION_RADIUS, LAST_DAMAGE, ENT_CLASS_BFG_EXPLOSION, BFG_EXPLOSION_LIFE);
             p.dead = true;
             break;
         case ENT_CLASS_STAPLE_BALL:
         case ENT_CLASS_SAWBLADE:
             p.dead = true;
             break;
+        case ENT_CLASS_ACID_BOMB:
         case ENT_CLASS_LAVA_BOMB:
             LavaImpact(p, trace.endPos + normal * 2.0f);
             break;
@@ -481,11 +513,14 @@ void Combat::Update(float deltaTime) {
     for (Hazard& hazard : s_hazards) {
         hazard.age += deltaTime;
 
-        if (hazard.classId != ENT_CLASS_LAVA_POOL) continue;
+        const bool isLava = (hazard.classId == ENT_CLASS_LAVA_POOL);
+        const bool isAcid = (hazard.classId == ENT_CLASS_ACID_POOL);
+        if (!isLava && !isAcid) continue;
 
+        const float tickInterval = isLava ? LAVA_TICK_INTERVAL : ACID_TICK_INTERVAL;
         hazard.tick += deltaTime;
-        if (hazard.tick < LAVA_TICK_INTERVAL) continue;
-        hazard.tick -= LAVA_TICK_INTERVAL;
+        if (hazard.tick < tickInterval) continue;
+        hazard.tick -= tickInterval;
 
         if (!gathered) {
             hazardTargets = GatherTargets();
@@ -615,25 +650,39 @@ void Combat::FireBullets(int owner, const glm::vec3& eye, const glm::vec3& forwa
 void Combat::FireRay(int owner, const glm::vec3& eye, const glm::vec3& forward, int damage) {
     IWorldQuery* world = Ctx().world;
 
+    // Isin ilk duvara ya da azami menzile kadar gider.
     float wallDistance = MAX_RANGE;
     if (world != nullptr) {
         const TraceResult trace = world->TraceLine(eye, eye + forward * MAX_RANGE, 0);
         wallDistance = trace.fraction * MAX_RANGE;
     }
 
+    // Hasar, nisan dogrusu boyunca verilir: yoldaki herkes etkilenir.
     for (const Target& target : GatherTargets()) {
         if (target.slot == owner) continue;
 
         float tHit = 0.0f;
         if (RayAABB(eye, forward, target.center - target.half, target.center + target.half, wallDistance, tHit)) {
-            DamageTarget(target, damage); // isin delip gecer: yoldaki herkes etkilenir
+            DamageTarget(target, damage);
         }
     }
 
-    // Gorsel isin: namlu yaklasik olarak gozun biraz onunde ve altindadir.
-    const glm::vec3 start = eye + forward * 20.0f - glm::vec3(0.0f, 8.0f, 0.0f);
-    AddEffect(ENT_CLASS_BEAM, start, YawOf(forward), PitchOf(forward), BEAM_EFFECT_LIFE,
-        static_cast<uint16_t>(ClampF(wallDistance, 0.0f, 8191.0f)));
+    // Gorsel isin: namlu gozun sag-alt onundedir, isin nisan noktasina ulasir. Boylece
+    // oyuncu isini ONDEN degil capraz gorur; gozle ayni dogrultuda cikan isin tek cizgiye
+    // dusup gorunmezdi.
+    glm::vec3 right = glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f));
+    right = (glm::length(right) > 0.001f) ? glm::normalize(right) : glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 up = glm::cross(right, forward);
+
+    const glm::vec3 muzzle = eye + forward * RAY_MUZZLE_FORWARD + right * RAY_MUZZLE_RIGHT - up * RAY_MUZZLE_DOWN;
+    const glm::vec3 impact = eye + forward * wallDistance;
+
+    const glm::vec3 beamVector = impact - muzzle;
+    const float beamLength = glm::length(beamVector);
+    const glm::vec3 beamDirection = (beamLength > 1.0f) ? beamVector / beamLength : forward;
+
+    AddEffect(ENT_CLASS_BEAM, muzzle, YawOf(beamDirection), PitchOf(beamDirection), BEAM_EFFECT_LIFE,
+        static_cast<uint16_t>(ClampF(beamLength, 0.0f, 8191.0f)));   // uzunluk 16 bit alana sigmali
 }
 
 void Combat::SpawnRocket(int owner, const glm::vec3& position, const glm::vec3& direction) {
@@ -646,6 +695,7 @@ void Combat::SpawnBomb(int owner, const glm::vec3& position, const glm::vec3& di
     uint16_t classId = ENT_CLASS_GRENADE;
     if (bombKind == BOMB_FOG) classId = ENT_CLASS_FOG_BOMB;
     else if (bombKind == BOMB_LAVA) classId = ENT_CLASS_LAVA_BOMB;
+    else if (bombKind == BOMB_ACID) classId = ENT_CLASS_ACID_BOMB;
 
     if (Projectile* p = AddProjectile(classId, owner, position, direction, BOMB_SPEED)) {
         p->life = BOMB_LIFE;

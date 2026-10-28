@@ -10,6 +10,7 @@
 #include "ienginesound.h"
 #include "buttoncodes.h"
 #include "ClientCamera.h"
+#include "MapSounds.h"
 
 namespace {
     // BSP "origin" metnini ("x y z") motor uzayina (Y-up) cevirir; BSP'nin
@@ -90,6 +91,7 @@ public:
 
     void Shutdown() override {
         Log("client.dll: Shutdown");
+        MapSounds::Shutdown();
         m_world = nullptr;
         m_engine = nullptr;
         m_console = nullptr;
@@ -130,12 +132,15 @@ public:
 
         m_state.position = spawn;
         m_camera.Reset(spawn, spawnYaw);
+        // Haritadaki tum ses entity'lerini (ambient_generic, env_sound, speaker, cdaudio, tetikleyiciler) baslat.
+        MapSounds::Init(m_engine, m_sound, m_console);
 
         Log((std::string("client.dll: LevelInit ") + (mapName ? mapName : "") +
             (foundStart ? " (player_start bulundu)" : " (player_start bulunamadi, varsayilan konum)")).c_str());
     }
 
     void LevelShutdown() override {
+        MapSounds::Shutdown();
         if (m_sound != nullptr) m_sound->StopAll();
         m_world = nullptr;
         m_entities.clear();
@@ -157,7 +162,6 @@ public:
 
         switch (buttonCode) {
         case BUTTON_MOUSE_LEFT:  m_pendingActions.attack1Count++;
-            m_sound->Play2D("sound/test_fire.wav", 1.0f, SOUND_CHANNEL_SFX, false);
             break;
         case BUTTON_MOUSE_RIGHT: m_pendingActions.attack2Count++; break;
         case 'R': m_pendingActions.reloadCount++; break;
@@ -252,12 +256,15 @@ public:
         m_camera.UpdateViewBob(frameTime, horizontalSpeed, m_state.onGround, *m_bobStyle);
     }
 
-    void Update(float) override {
+    void Update(float frameTime) override {
         if (m_sound == nullptr) return;
 
         const glm::vec3 eye = m_camera.GetEyePosition();
         const glm::vec3 forward = m_camera.Forward();
         m_sound->SetListener(eye.x, eye.y, eye.z, forward.x, forward.y, forward.z);
+
+        // m_state.position: oyuncunun fizik merkezi (uyelerinin adi farkliysa uyarla).
+        MapSounds::Update(frameTime, m_state.position, eye);
     }
 
     void GetView(ViewSetup* outView) override {

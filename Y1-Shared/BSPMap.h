@@ -38,6 +38,9 @@ public:
 
     static glm::vec3 ParseOriginToEngineSpace(const std::string& originStr);
 
+    // Brush modelinin motor uzayindaki sinir kutusu (tetikleyici hacimleri icin).
+    bool GetModelBounds(int index, glm::vec3* outMins, glm::vec3* outMaxs) const;
+
 private:
     std::vector<BSPModel_t> m_models;
     std::vector<Entity> m_entities;

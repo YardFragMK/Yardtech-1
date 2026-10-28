@@ -2,118 +2,157 @@
 // Motor FGD - temel entity seti
 //=========================================================
 
-@SolidClass = worldspawn : "Dunya (harita geneli)"
+@BaseClass = Targetname
 [
-	message(string) : "Harita Adi / Aciklama"
-	wad(string) : "Wad Dosyalari"
-	skyname(string) : "Skybox Adi (gfx/env/<isim><rt/lf/up/dn/bk/ft>.tga)"
+    targetname(target_source) : "Isim"
+]
+
+@SolidClass = worldspawn : "Dunya (harita geneli)" 
+[
+    message(string) : "Harita Adi / Aciklama"
+    wad(string) : "Wad Dosyalari"
+    skyname(string) : "Skybox Adi (gfx/env/<isim><rt/lf/up/dn/bk/ft>.tga)"
 ]
 
 @PointClass size(-16 -16 -36, 16 16 36) color(0 255 0) = player_start : "Oyuncu Baslangic Noktasi (Singleplayer)"
 [
-	angle(integer) : "Bakis Acisi (Yaw)" : 0
+    angle(integer) : "Bakis Acisi (Yaw)" : 0
 ]
 
-// PLANLANAN: cok oyunculu spawn noktasi. Su an motor bunu okumuyor,
-// singleplayer'da oldugu gibi tek bir player_start kullaniliyor -- coklu
-// spawn secimi (rastgele/round-robin) eklenince bu entity devreye girecek.
 @PointClass size(-16 -16 -36, 16 16 36) color(0 128 255) = player_deathmatch : "Oyuncu Baslangic Noktasi (Multiplayer) [PLANLANAN]"
 [
-	angle(integer) : "Bakis Acisi (Yaw)" : 0
+    angle(integer) : "Bakis Acisi (Yaw)" : 0
 ]
 
 @PointClass size(-8 -8 -8, 8 8 8) color(255 255 0) = light : "Isik Kaynagi"
 [
-	_light(color255) : "Parlaklik (R G B Yogunluk)" : "255 255 255 200"
-	style(choices) : "Davranis" : 0 =
-	[
-		0 : "Sabit"
-		1 : "Titrek (hizli)"
-		2 : "Yavas, guclu nabiz"
-	]
+    _light(color255) : "Parlaklik (R G B Yogunluk)" : "255 255 255 200"
+    style(choices) : "Davranis" : 0 =
+    [
+        0 : "Sabit"
+        1 : "Titrek (hizli)"
+        2 : "Yavas, guclu nabiz"
+    ]
 ]
 
 @SolidClass = poly_breakable : "Kirilabilir Geometri"
 [
-	material(choices) : "Malzeme Tipi" : 0 =
-	[
-		0 : "Cam"
-		1 : "Ahsap"
-		2 : "Metal"
-		3 : "Et"
-		4 : "Beton Blok"
-		5 : "Tavan Paneli"
-		6 : "Bilgisayar"
-		7 : "Kirilmaz Cam"
-		8 : "Tas"
-	]
-	health(integer) : "Dayaniklilik" : 15
-	gibmodel(string) : "Ozel Parca Modeli"
-	explosion(choices) : "Patlama?" : 0 =
-	[
-		0 : "Yok"
-		1 : "Kucuk"
-	]
+    material(choices) : "Malzeme Tipi" : 0 =
+    [
+        0 : "Cam"
+        1 : "Ahsap"
+        2 : "Metal"
+        3 : "Et"
+        4 : "Beton Blok"
+        5 : "Tavan Paneli"
+        6 : "Bilgisayar"
+        7 : "Kirilmaz Cam"
+        8 : "Tas"
+    ]
+    health(integer) : "Dayaniklilik" : 15
+    gibmodel(string) : "Ozel Parca Modeli"
+    explosion(choices) : "Patlama?" : 0 =
+    [
+        0 : "Yok"
+        1 : "Kucuk"
+    ]
 ]
 
 @SolidClass = poly_door : "Hareketli Kapi"
 [
-	speed(integer) : "Hiz" : 100
-	wait(integer) : "Kapanmadan Once Bekleme (sn)" : 4
-	lip(integer) : "Lip (acildiginda kalan pay)" : 0
-	targetname(target_source) : "Isim"
-	health(integer) : "Dayaniklilik (vurulabilir icin)" : 0
+    speed(integer) : "Hiz" : 100
+    wait(integer) : "Kapanmadan Once Bekleme (sn)" : 4
+    lip(integer) : "Lip (acildiginda kalan pay)" : 0
+    targetname(target_source) : "Isim"
+    health(integer) : "Dayaniklilik (vurulabilir icin)" : 0
 ]
 
 @SolidClass = poly_wall : "Statik Duvar/Blok (hareketsiz brush entity)"
 [
-	targetname(target_source) : "Isim"
+    targetname(target_source) : "Isim"
 ]
 
-// Motor, collision testlerinde (BSPMap::TraceLine) classname'i "func_illusionary"
-// olan brush entity'leri otomatik olarak solid-disi sayiyor -- yani bu entity
-// zaten TANINIYOR ve dogru davraniyor, gorsel olarak var ama icinden gecilebiliyor.
 @SolidClass = func_illusionary : "Gorunur ama Gecirgen Brush (collision'siz)"
 [
-	targetname(target_source) : "Isim"
+    targetname(target_source) : "Isim"
 ]
 
-// Motor, classname'i "trigger_" ile baslayan HERHANGI bir brush entity'yi
-// collision testlerinde otomatik atliyor (TraceLine icinde ozel olarak
-// kontrol ediliyor). Gercek tetikleme mantigi (dokununca calisan bir olay)
-// HENUZ YAZILMADI -- su an sadece "collision'a girmez" davranisi var.
 @SolidClass = trigger_multiple : "Tetikleyici Brush (collision'siz) [MANTIK PLANLANAN]"
 [
-	targetname(target_source) : "Isim"
+    targetname(target_source) : "Isim"
 ]
 
-// Bot/dusman spawn noktasi. Model, glTF/GLB formatinda yuklenir (bkz. GLBModel).
-// difficulty, Health/Damage tablosundan hangi zorluk satirinin secilecegini
-// belirler: 0=kolay(70hp/15dmg) 1=orta-kolay(90hp/25dmg) 2=orta(100hp/40dmg) 3=zor(150hp/50dmg)
-@PointClass size(-16 -16 -36, 16 16 36) color(150 20 20)  model({ "path": "nvs1/models/stilar.glb" }) = bot_stilar : "Stilar"
+@PointClass size(-16 -16 -36, 16 16 36) color(150 20 20) model({ "path": "nvs1/models/stilar.glb" }) = bot_stilar : "Stilar"
 [
-	difficulty(choices) : "Zorluk Seviyesi" : 1 =
-	[
-		0 : "Kolay (70 HP / 15 DMG)"
-		1 : "Orta-Kolay (90 HP / 25 DMG)"
-		2 : "Orta (100 HP / 40 DMG)"
-		3 : "Zor (150 HP / 50 DMG)"
-	]
+    difficulty(choices) : "Zorluk Seviyesi" : 1 =
+    [
+        0 : "Kolay (70 HP / 15 DMG)"
+        1 : "Orta-Kolay (90 HP / 25 DMG)"
+        2 : "Orta (100 HP / 40 DMG)"
+        3 : "Zor (150 HP / 50 DMG)"
+    ]
 ]
 
-// PLANLANAN: ortam sesi (ambient_generic benzeri). Ses motoru henuz entegre
-// edilmedi, bu entity su an motor tarafindan okunmuyor.
-@PointClass size(-8 -8 -8, 8 8 8) color(0 200 200) = ambient_generic : "Ortam Sesi [PLANLANAN, ses motoru yok]"
-[
-	message(string) : "Ses Dosyasi Yolu"
-	volume(integer) : "Ses Seviyesi (0-10)" : 10
-]
-
-// Kara delik: isigi buker. Ekran uzayi efektidir;
-// gorus hatti duvarla kesilince yumusakca kaybolur. Haritada en fazla 16, ayni anda
-// ekranda en buyuk gorunen 4 tanesi cizilir.
 @PointClass size(-16 -16 -16, 16 16 16) color(20 20 20) = fx_blackhole : "Kara Delik (isigi bukerek ekrani carpitir)"
 [
-	radius(integer) : "Olay ufku yaricapi (birim)" : 64
-	strength(string) : "Bukme siddeti (0.1 - 4.0)" : "1.0"
+    radius(integer) : "Olay ufku yaricapi (birim)" : 64
+    strength(string) : "Bukme siddeti (0.1 - 4.0)" : "1.0"
+]
+
+@PointClass base(Targetname) = ambient_generic : "Ortam sesi"
+[
+    message(sound) : "Ses dosyasi (sound/ icinde, orn. ambience/wind.wav) ya da !cumle"
+    health(integer) : "Ses seviyesi (0-10)" : 10
+    pitch(integer) : "Perde (100 = normal)" : 100
+    radius(integer) : "Duyulma yaricapi (birim, 0 = bayraga gore)" : 0
+    fadein(integer) : "Acilma hizi (0 = ani, 100 = 1 sn)" : 0
+    fadeout(integer) : "Kapanma hizi (0 = ani, 100 = 1 sn)" : 0
+    lfotype(choices) : "LFO turu" : 0 =
+    [
+        0 : "Yok"
+        1 : "Kare"
+        2 : "Ucgen"
+        3 : "Rastgele"
+    ]
+    lforate(integer) : "LFO hizi (0-1000 = 0-10 Hz)" : 0
+    lfomodpitch(integer) : "LFO perde etkisi (0-100)" : 0
+    lfomodvol(integer) : "LFO ses etkisi (0-100)" : 0
+    spawnflags(flags) =
+    [
+        1 : "Her yerde calar"
+        2 : "Kucuk yaricap (500)"
+        4 : "Orta yaricap (800)"
+        8 : "Buyuk yaricap (1250)"
+        16 : "Sessiz basla (tetikleyici gerekir)"
+        32 : "Dongulu degil"
+    ]
+]
+
+@PointClass base(Targetname) = speaker : "Anons hoparloru"
+[
+    message(string) : "Cumle/grup adi (!ILE_BASLAR) ya da ses dosyasi"
+    health(integer) : "Ses seviyesi (0-10)" : 10
+    delaymin(integer) : "En az bekleme (sn)" : 15
+    delaymax(integer) : "En cok bekleme (sn)" : 135
+    spawnflags(flags) =
+    [
+        1 : "Sessiz basla (yalnizca tetiklenince)"
+    ]
+]
+
+@PointClass = env_sound : "Oda efekti bolgesi (boguk/yankili ses)"
+[
+    radius(integer) : "Yaricap (birim)" : 128
+    roomtype(choices) : "Oda tipi (0-28)" : 0
+]
+
+@PointClass base(Targetname) = target_cdaudio : "Muzik parcasi"
+[
+    health(integer) : "Parca numarasi (media/trackNN.mp3; 0-1 = durdur)" : 2
+    radius(integer) : "Oyuncu bu yaricapa girince calar (0 = yalnizca tetiklenince)" : 0
+]
+
+@SolidClass = trigger_cdaudio : "Girilince muzik parcasi calar"
+[
+    health(integer) : "Parca numarasi" : 2
 ]

@@ -7,8 +7,7 @@
 // patlamalar, sis bulutu ve lav havuzu. Hasar botlara ve (cok oyunculuda) diger
 // oyunculara uygulanir.
 namespace Combat {
-    enum BombKind { BOMB_GRENADE = 0, BOMB_FOG = 1, BOMB_LAVA = 2, BOMB_KIND_COUNT = 3 };
-
+    enum BombKind { BOMB_GRENADE = 0, BOMB_FOG = 1, BOMB_LAVA = 2, BOMB_ACID = 3, BOMB_KIND_COUNT = 4 };
     void Reset();
     void Update(float deltaTime);
 

@@ -465,3 +465,15 @@ bool BSPMap::LoadFromMemory(const std::vector<uint8_t>& bspData) {
 
     return true;
 }
+
+bool BSPMap::GetModelBounds(int index, glm::vec3* outMins, glm::vec3* outMaxs) const {
+    if (index < 0 || index >= static_cast<int>(m_models.size()) || outMins == nullptr || outMaxs == nullptr) {
+        return false;
+    }
+
+    // BSP uzayindan (Z yukari) motor uzayina (Y yukari) cevrilirken kutunun min/max'i yer degistirir.
+    const BSPModel_t& model = m_models[index];
+    *outMins = glm::vec3(model.mins[0], model.mins[2], -model.maxs[1]);
+    *outMaxs = glm::vec3(model.maxs[0], model.maxs[2], -model.mins[1]);
+    return true;
+}

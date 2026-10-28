@@ -1,256 +1,211 @@
 #include "WeaponEffects.h"
+#include "WeaponModels.h"
+#include "Engine.h"
+#include "ConVarRegistry.h"
+#include "console/Console.h"
+#include "effects/FxEmitters.h"
+#include "effects/FxTuning.h"
+#include "renderer/ParticleSystem.h"
+#include "renderer/ShaderLibrary.h"
+#include "renderer/ShaderProgram.h"
+#include "renderer/SpriteSystem.h"
 #include <SDL.h>
 #include <windows.h>
 #include <GL/gl.h>
-#include <cmath>
-#include <glm/glm.hpp>
+#include <unordered_map>
+#include <unordered_set>
 
+// The director of the weapon visual effects. Each frame it
+//   1. gives every replicated entity a chance to emit particles,
+//   2. steps the particle simulation,
+//   3. draws models, glowing geometry and finally the particles.
+// What each effect looks like lives in effects/Fx*.cpp; its numbers in FxTuning.h.
+// Everything is loaded from files: a missing sprite, model or shader simply means
+// that part of the effect is not drawn.
 namespace {
-    constexpr float PI_F = 3.14159265f;
 
-    float ClampF(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
-    float MinF2(float a, float b) { return a < b ? a : b; }
+    constexpr float kMaxFrameTime = 0.05f;
+    constexpr float kDefaultFrameTime = 0.016f;
+    constexpr float kNewEffectMaxAge = 0.2f;   // one-shot bursts only fire for freshly created entities
 
-    // Yerel +X eksenini (yaw, pitch) yonune cevirir (sunucudaki yon kuraliyla ayni).
-    void ApplyDirection(float yaw, float pitch) {
-        glRotatef(-yaw, 0.0f, 1.0f, 0.0f);
-        glRotatef(pitch, 0.0f, 0.0f, 1.0f);
+    std::unordered_map<int, Fx::EmitterState> g_emitterStates;   // by entity id
+    std::unordered_set<int> g_knownEntityIds;                    // ids seen last frame
+    uint32_t g_lastTicks = 0;
+
+    //--------------------------------------------------------------------------
+    // Setup and diagnostics
+    //--------------------------------------------------------------------------
+    void LogFxStatus() {
+        SpriteSystem::LogStatus();
+
+        Console::Log(std::string("shader orb: ") + (ShaderLibrary::Get("orb") != nullptr ? "var" : "YOK"));
+        Console::Log(std::string("shader pool: ") + (ShaderLibrary::Get("pool") != nullptr ? "var" : "YOK"));
+
+        WeaponModels::LogStatus();
     }
 
-    void DrawBox(float hx, float hy, float hz) {
-        glBegin(GL_QUADS);
-        glVertex3f(hx, -hy, -hz); glVertex3f(hx, -hy, hz); glVertex3f(hx, hy, hz); glVertex3f(hx, hy, -hz);
-        glVertex3f(-hx, -hy, hz); glVertex3f(-hx, -hy, -hz); glVertex3f(-hx, hy, -hz); glVertex3f(-hx, hy, hz);
-        glVertex3f(-hx, hy, -hz); glVertex3f(hx, hy, -hz); glVertex3f(hx, hy, hz); glVertex3f(-hx, hy, hz);
-        glVertex3f(-hx, -hy, hz); glVertex3f(hx, -hy, hz); glVertex3f(hx, -hy, -hz); glVertex3f(-hx, -hy, -hz);
-        glVertex3f(-hx, -hy, hz); glVertex3f(-hx, hy, hz); glVertex3f(hx, hy, hz); glVertex3f(hx, -hy, hz);
-        glVertex3f(hx, -hy, -hz); glVertex3f(hx, hy, -hz); glVertex3f(-hx, hy, -hz); glVertex3f(-hx, -hy, -hz);
-        glEnd();
+    void InitializeOnce() {
+        static bool initialized = false;
+        if (initialized) return;
+        initialized = true;
+
+        Fx::RegisterCvars();
+        ShaderLibrary::Load("orb", "fullscreen");
+        ShaderLibrary::Load("pool", "fullscreen");
+
+        ConVarRegistry::RegisterCommand("fx_status",
+            [](int, const char* const*) { LogFxStatus(); },
+            "Lists which weapon effect files (sprites, shaders, models) were found", CVAR_NONE);
     }
 
-    void DrawSphere(float radius, int slices, int stacks) {
-        for (int i = 0; i < stacks; i++) {
-            const float lat0 = PI_F * (-0.5f + static_cast<float>(i) / static_cast<float>(stacks));
-            const float lat1 = PI_F * (-0.5f + static_cast<float>(i + 1) / static_cast<float>(stacks));
-            const float y0 = std::sin(lat0), r0 = std::cos(lat0);
-            const float y1 = std::sin(lat1), r1 = std::cos(lat1);
+    //--------------------------------------------------------------------------
+    // Frame helpers
+    //--------------------------------------------------------------------------
+    float ElapsedSeconds() {
+        const uint32_t now = SDL_GetTicks();
+        const float elapsed = (g_lastTicks == 0) ? kDefaultFrameTime : static_cast<float>(now - g_lastTicks) * 0.001f;
+        g_lastTicks = now;
+        return Fx::Clamp(elapsed, 0.0f, kMaxFrameTime);
+    }
 
-            glBegin(GL_QUAD_STRIP);
-            for (int j = 0; j <= slices; j++) {
-                const float lng = 2.0f * PI_F * static_cast<float>(j) / static_cast<float>(slices);
-                const float x = std::cos(lng);
-                const float z = std::sin(lng);
-                glVertex3f(radius * x * r0, radius * y0, radius * z * r0);
-                glVertex3f(radius * x * r1, radius * y1, radius * z * r1);
-            }
-            glEnd();
+    Fx::CameraBasis CameraFromViewMatrix() {
+        const glm::dmat4 view = renderer.GetViewMatrix();
+
+        Fx::CameraBasis camera;
+        camera.right = glm::vec3(static_cast<float>(view[0][0]), static_cast<float>(view[1][0]), static_cast<float>(view[2][0]));
+        camera.up = glm::vec3(static_cast<float>(view[0][1]), static_cast<float>(view[1][1]), static_cast<float>(view[2][1]));
+        camera.position = glm::vec3(glm::inverse(view)[3]);
+        return camera;
+    }
+
+    bool IsWeaponEffectEntity(uint16_t classId) {
+        return classId == ENT_CLASS_PROJECTILE || classId >= ENT_CLASS_ROCKET;
+    }
+
+    float SeedFor(const NetEntityState& entity, int modulus) {
+        if (modulus <= 0) return 0.5f;
+        return static_cast<float>(entity.id % modulus) / static_cast<float>(modulus);
+    }
+
+    //--------------------------------------------------------------------------
+    // Step 1: emit particles
+    //--------------------------------------------------------------------------
+    void EmitForEntity(const NetEntityState& entity, Fx::EmitterState& state, float deltaTime, bool justAppeared) {
+        const bool freshlyCreated = justAppeared && Fx::AgeSeconds(entity) < kNewEffectMaxAge;
+
+        switch (entity.classId) {
+        case ENT_CLASS_EXPLOSION:
+            if (freshlyCreated) Fx::SpawnExplosion(entity.origin, Fx::RadiusOf(entity));
+            break;
+        case ENT_CLASS_BFG_EXPLOSION:
+            if (freshlyCreated) Fx::SpawnBfgExplosion(entity.origin, Fx::RadiusOf(entity));
+            break;
+        case ENT_CLASS_BEAM:
+            if (freshlyCreated) Fx::SpawnRayBeamFlashes(entity);
+            break;
+        case ENT_CLASS_FOG_CLOUD:
+            Fx::EmitFog(entity, state, deltaTime, justAppeared);
+            break;
+        case ENT_CLASS_LAVA_POOL:
+            Fx::EmitPool(entity, state, deltaTime, justAppeared, false);
+            break;
+        case ENT_CLASS_ACID_POOL:
+            Fx::EmitPool(entity, state, deltaTime, justAppeared, true);
+            break;
+        default:
+            Fx::EmitProjectileTrail(entity, state, deltaTime);
+            break;
         }
     }
 
-    // XZ duzleminde disli cark (testere): dis ve cukur yaricaplari dönüşümlü.
-    void DrawGear(float outer, float inner, int teeth) {
-        const int points = teeth * 2;
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex3f(0.0f, 0.0f, 0.0f);
-        for (int i = 0; i <= points; i++) {
-            const float a = 2.0f * PI_F * static_cast<float>(i) / static_cast<float>(points);
-            const float r = (i % 2 == 0) ? outer : inner;
-            glVertex3f(std::cos(a) * r, 0.0f, std::sin(a) * r);
+    void EmitParticles(const std::vector<NetEntityState>& entities, float deltaTime) {
+        std::unordered_set<int> currentIds;
+
+        for (const NetEntityState& entity : entities) {
+            if (!IsWeaponEffectEntity(entity.classId)) continue;
+
+            currentIds.insert(entity.id);
+            const bool justAppeared = g_knownEntityIds.find(entity.id) == g_knownEntityIds.end();
+            EmitForEntity(entity, g_emitterStates[entity.id], deltaTime, justAppeared);
         }
-        glEnd();
+
+        // Forget the state of entities that disappeared.
+        for (auto it = g_emitterStates.begin(); it != g_emitterStates.end();) {
+            if (currentIds.find(it->first) == currentIds.end()) it = g_emitterStates.erase(it);
+            else ++it;
+        }
+        g_knownEntityIds.swap(currentIds);
     }
 
-    void DrawDisc(float radius, int segments) {
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex3f(0.0f, 0.0f, 0.0f);
-        for (int i = 0; i <= segments; i++) {
-            const float a = 2.0f * PI_F * static_cast<float>(i) / static_cast<float>(segments);
-            glVertex3f(std::cos(a) * radius, 0.0f, std::sin(a) * radius);
-        }
-        glEnd();
-    }
-
-    // Saydam olmayan govdeler.
-    void RenderSolid(const NetEntityState& e, float time) {
-        switch (e.classId) {
+    //--------------------------------------------------------------------------
+    // Step 3a: solid models (only when the GLB file exists)
+    //--------------------------------------------------------------------------
+    void DrawModel(const NetEntityState& entity, float timeSeconds) {
+        switch (entity.classId) {
         case ENT_CLASS_ROCKET:
             glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            ApplyDirection(e.yaw, e.pitch);
-            glColor4f(0.55f, 0.57f, 0.62f, 1.0f);
-            DrawBox(16.0f, 4.0f, 4.0f);
-            glColor4f(0.9f, 0.25f, 0.1f, 1.0f);
-            glTranslatef(16.0f, 0.0f, 0.0f);
-            DrawBox(4.0f, 3.0f, 3.0f);
+            glTranslatef(entity.origin.x, entity.origin.y, entity.origin.z);
+            Fx::ApplyDirectionTransform(entity.yaw, entity.pitch);
+            WeaponModels::Draw(entity.classId, timeSeconds, 0.0f);
             glPopMatrix();
             break;
 
         case ENT_CLASS_GRENADE:
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.2f, 0.35f, 0.15f, 1.0f);
-            DrawBox(5.0f, 5.0f, 5.0f);
-            glPopMatrix();
-            break;
-
         case ENT_CLASS_FOG_BOMB:
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.6f, 0.62f, 0.66f, 1.0f);
-            DrawSphere(6.0f, 12, 8);
-            glPopMatrix();
-            break;
-
         case ENT_CLASS_LAVA_BOMB:
+        case ENT_CLASS_ACID_BOMB:
             glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(1.0f, 0.4f, 0.05f, 1.0f);
-            DrawSphere(8.0f, 12, 8);
+            glTranslatef(entity.origin.x, entity.origin.y, entity.origin.z);
+            WeaponModels::Draw(entity.classId, timeSeconds, 0.0f);
             glPopMatrix();
             break;
 
         case ENT_CLASS_SAWBLADE: {
-            const float spin = static_cast<float>(e.flags) / 100.0f;
-            const float angle = std::fmod(time * (720.0f + 1440.0f * spin), 360.0f);
-
+            const float spin01 = static_cast<float>(entity.flags) / 100.0f;   // the spin is stored x100 in flags
             glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glRotatef(angle, 0.0f, 1.0f, 0.0f);
-            glColor4f(0.78f, 0.8f, 0.82f, 1.0f);
-            DrawGear(24.0f, 17.0f, 12);
+            glTranslatef(entity.origin.x, entity.origin.y, entity.origin.z);
+            WeaponModels::Draw(entity.classId, timeSeconds, spin01);
             glPopMatrix();
             break;
         }
-
-        case ENT_CLASS_STAPLE_BALL:
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.45f, 0.9f, 1.0f, 1.0f);
-            DrawSphere(6.0f, 10, 6);
-            glPopMatrix();
-            break;
-
-        case ENT_CLASS_LAST_BALL:
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.7f, 1.0f, 0.8f, 1.0f);
-            DrawSphere(36.0f, 20, 14);
-            glPopMatrix();
-            break;
 
         default:
             break;
         }
     }
 
-    // Saydam ve parlayan etkiler (derinlige yazmaz).
-    void RenderTranslucent(const NetEntityState& e, float time) {
-        const float age = static_cast<float>(e.health) / 100.0f;
+    //--------------------------------------------------------------------------
+    // Step 3b: glowing and translucent geometry
+    //--------------------------------------------------------------------------
+    void DrawGlowingGeometry(const NetEntityState& entity, float timeSeconds, const Fx::CameraBasis& camera) {
+        namespace Orb = FxTuning::Orb;
 
-        switch (e.classId) {
+        switch (entity.classId) {
         case ENT_CLASS_STAPLE_BALL:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.3f, 0.8f, 1.0f, 0.35f);
-            DrawSphere(13.0f, 10, 6);
-            glPopMatrix();
+            Fx::DrawEnergyOrb(entity.origin, Orb::kStapleBall.size, Orb::kStapleBall.color,
+                SeedFor(entity, Orb::kStapleBall.seedModulus), Orb::kStapleBall.spikes, timeSeconds, camera);
+            break;
+
+        case ENT_CLASS_PROJECTILE:
+            Fx::DrawEnergyOrb(entity.origin, Orb::kBotBall.size, Orb::kBotBall.color,
+                SeedFor(entity, Orb::kBotBall.seedModulus), Orb::kBotBall.spikes, timeSeconds, camera);
             break;
 
         case ENT_CLASS_LAST_BALL:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.4f, 1.0f, 0.7f, 0.30f);
-            DrawSphere(56.0f, 20, 14);
-            glColor4f(0.5f, 1.0f, 0.8f, 0.22f);
-            DrawSphere(78.0f * (0.92f + 0.08f * std::sin(time * 14.0f)), 20, 14);
-            glPopMatrix();
+            Fx::DrawEnergyOrb(entity.origin, Orb::kLastBall.size, Orb::kLastBall.color,
+                SeedFor(entity, Orb::kLastBall.seedModulus), Orb::kLastBall.spikes, timeSeconds, camera);
             break;
 
-        case ENT_CLASS_LAVA_BOMB:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(1.0f, 0.45f, 0.1f, 0.35f);
-            DrawSphere(15.0f, 10, 6);
-            glPopMatrix();
+        case ENT_CLASS_BEAM:
+            Fx::DrawRayBeam(entity, camera);
             break;
 
-        case ENT_CLASS_EXPLOSION: {
-            const float t = ClampF(age / EXPLOSION_EFFECT_LIFE, 0.0f, 1.0f);
-            const float radius = static_cast<float>(e.flags) * (0.25f + 0.75f * std::sqrt(t));
-            const float alpha = 1.0f - t;
-
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(1.0f, 0.65f - 0.3f * t, 0.2f, 0.55f * alpha);
-            DrawSphere(radius, 20, 14);
-            glColor4f(1.0f, 0.95f, 0.7f, 0.8f * alpha);
-            DrawSphere(radius * 0.55f, 16, 10);
-            glPopMatrix();
-            break;
-        }
-
-        case ENT_CLASS_BEAM: {
-            const float t = ClampF(age / BEAM_EFFECT_LIFE, 0.0f, 1.0f);
-            const float alpha = 1.0f - t;
-            const float length = static_cast<float>(e.flags);
-            const float width = 5.0f * (1.0f - 0.5f * t);
-
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            ApplyDirection(e.yaw, e.pitch);
-
-            // Iki capraz seritle her acidan gorunur; icte daha ince ve parlak cekirdek.
-            for (int pass = 0; pass < 2; pass++) {
-                const float w = (pass == 0) ? width : width * 0.35f;
-                if (pass == 0) glColor4f(0.3f, 0.9f, 1.0f, 0.55f * alpha);
-                else glColor4f(0.9f, 1.0f, 1.0f, 0.95f * alpha);
-
-                glBegin(GL_QUADS);
-                glVertex3f(0.0f, -w, 0.0f); glVertex3f(length, -w, 0.0f);
-                glVertex3f(length, w, 0.0f); glVertex3f(0.0f, w, 0.0f);
-                glVertex3f(0.0f, 0.0f, -w); glVertex3f(length, 0.0f, -w);
-                glVertex3f(length, 0.0f, w); glVertex3f(0.0f, 0.0f, w);
-                glEnd();
+        case ENT_CLASS_LAVA_POOL:
+        case ENT_CLASS_ACID_POOL: {
+            auto state = g_emitterStates.find(entity.id);
+            if (state != g_emitterStates.end()) {
+                Fx::DrawLiquidPool(entity, state->second, entity.classId == ENT_CLASS_ACID_POOL, timeSeconds);
             }
-            glPopMatrix();
-            break;
-        }
-
-        case ENT_CLASS_FOG_CLOUD: {
-            // Omrun basinda ve sonunda yumusakca belirir/kaybolur.
-            const float life = e.pitch;
-            const float fade = ClampF(MinF2(age / 0.6f, (life - age) / 2.0f), 0.0f, 1.0f);
-
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y, e.origin.z);
-            glColor4f(0.72f, 0.74f, 0.78f, 0.38f * fade);
-            DrawSphere(static_cast<float>(e.flags), 24, 16); // iki yuzlu: icerden de gorunur
-            glPopMatrix();
-            break;
-        }
-
-        case ENT_CLASS_LAVA_POOL: {
-            const float life = e.pitch;
-            const float fade = ClampF(MinF2(age / 0.4f, (life - age) / 1.5f), 0.0f, 1.0f);
-            const float pulse = 0.5f + 0.5f * std::sin(time * 4.0f);
-
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glPushMatrix();
-            glTranslatef(e.origin.x, e.origin.y + 1.0f, e.origin.z);
-            glColor4f(1.0f, 0.3f + 0.2f * pulse, 0.05f, 0.85f * fade);
-            DrawDisc(static_cast<float>(e.flags), 28);
-
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glColor4f(1.0f, 0.5f, 0.1f, 0.25f * fade);
-            glTranslatef(0.0f, 1.0f, 0.0f);
-            DrawDisc(static_cast<float>(e.flags) * 1.08f, 28);
-            glPopMatrix();
             break;
         }
 
@@ -258,18 +213,32 @@ namespace {
             break;
         }
     }
-}
+
+    bool AnyEffectToDraw(const std::vector<NetEntityState>& entities) {
+        if (!ParticleSystem::Empty()) return true;
+
+        for (const NetEntityState& entity : entities) {
+            if (IsWeaponEffectEntity(entity.classId)) return true;
+        }
+        return false;
+    }
+
+}  // namespace
 
 void WeaponEffects_Render(const std::vector<NetEntityState>& entities) {
-    bool any = false;
-    for (const NetEntityState& e : entities) {
-        if (e.classId >= ENT_CLASS_ROCKET) { any = true; break; }
-    }
-    if (!any) return;
+    InitializeOnce();
 
-    const float time = static_cast<float>(SDL_GetTicks()) * 0.001f;
+    const float deltaTime = ElapsedSeconds();
+    const float timeSeconds = static_cast<float>(SDL_GetTicks()) * 0.001f;
 
-    glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT);
+    EmitParticles(entities, deltaTime);
+    ParticleSystem::Update(deltaTime);
+
+    if (!AnyEffectToDraw(entities)) return;
+
+    const Fx::CameraBasis camera = CameraFromViewMatrix();
+
+    glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT | GL_POLYGON_BIT);
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
@@ -277,11 +246,18 @@ void WeaponEffects_Render(const std::vector<NetEntityState>& entities) {
     glDisable(GL_ALPHA_TEST);
     glDisable(GL_BLEND);
 
-    for (const NetEntityState& e : entities) RenderSolid(e, time);
+    for (const NetEntityState& entity : entities) {
+        DrawModel(entity, timeSeconds);
+    }
 
     glEnable(GL_BLEND);
     glDepthMask(GL_FALSE);
-    for (const NetEntityState& e : entities) RenderTranslucent(e, time);
+    for (const NetEntityState& entity : entities) {
+        DrawGlowingGeometry(entity, timeSeconds, camera);
+    }
 
     glPopAttrib();
+
+    // Particles last: they are sorted and blended on top of everything above.
+    ParticleSystem::Render(camera.position, camera.right, camera.up);
 }

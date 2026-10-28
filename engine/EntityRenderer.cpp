@@ -58,7 +58,10 @@ namespace {
 }
 
 void EntityRenderer_Render(const std::vector<NetEntityState>& entities) {
-	if (entities.empty()) return;
+	if (entities.empty()) {
+		WeaponEffects_Render(entities); // kalan parcaciklar bitene kadar cizilir
+		return;
+	}
 
 	// Model GL kaynagi olusturdugu icin yukleme, GL context'i hazir olduktan
 	// sonra, ilk cizimde bir kez denenir.
@@ -70,7 +73,6 @@ void EntityRenderer_Render(const std::vector<NetEntityState>& entities) {
 	for (const NetEntityState& entity : entities) {
 		switch (entity.classId) {
 		case ENT_CLASS_BOT_STILAR: DrawStilar(entity); break;
-		case ENT_CLASS_PROJECTILE: DrawProjectile(entity); break;
 		default: break;
 		}
 	}

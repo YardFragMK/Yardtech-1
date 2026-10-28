@@ -10,7 +10,7 @@
 // Arayuz degistiginde versiyon artirilir; eski ve yeni modullerin yanlis
 // eslesmesi GetInterface'in nullptr donmesiyle yakalanir.
 #define CLIENT_DLL_INTERFACE_VERSION "ClientDLL002"
-#define ENGINE_CLIENT_INTERFACE_VERSION "EngineClient002"
+#define ENGINE_CLIENT_INTERFACE_VERSION "EngineClient003"
 
 // client.dll'in engine'den kullandigi hizmetler (exe uygular).
 class IEngineClient {
@@ -38,6 +38,11 @@ public:
     virtual void Disconnect() = 0;
     virtual void ClientCmd(const char* command) = 0;
     virtual void Quit() = 0;
+
+    // Dosya okuma (VFS): client.dll disk ya da paket bilmez. GetFileSize dosya yoksa -1 doner;
+    // ReadFile, tamponu doldurur (tampon dosyadan kucukse false).
+    virtual int GetFileSize(const char* vfsPath) = 0;
+    virtual bool ReadFile(const char* vfsPath, void* buffer, int bufferSize) = 0;
 };
 
 // Engine'in client.dll'den bekledigi giris noktalari (client.dll uygular).

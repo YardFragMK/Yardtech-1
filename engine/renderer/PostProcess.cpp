@@ -5,6 +5,7 @@
 #include "../ConVarRegistry.h"
 #include "../Level.h"
 #include "../console/Console.h"
+#include "../SoundSystem.h"
 #include "BSPMap.h"
 #include "EntityParser.h"
 #include <SDL.h>
@@ -212,6 +213,7 @@ void PostProcess::Apply(const glm::dmat4& view, const glm::dmat4& projection, co
     const int liquid = g_Map.GetLiquidAt(viewSetup.origin);
     if (liquid != LIQUID_NONE) m_liquidKind = liquid;
     m_underwaterTarget = m_underwaterExternal || (liquid != LIQUID_NONE);
+    SoundSystem_SetUnderwater(m_underwaterTarget);   // gozun sivi icinde olmasi sesi de boguklastirir
     m_underwaterAuto += ((m_underwaterTarget ? 1.0f : 0.0f) - m_underwaterAuto) * MinF(1.0f, deltaTime * 6.0f);
     const float underwater = MaxF(manualUnderwater, m_underwaterAuto);
 

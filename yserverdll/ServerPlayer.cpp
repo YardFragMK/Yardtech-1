@@ -10,54 +10,63 @@ namespace {
     int MinI(int a, int b) { return a < b ? a : b; }
 
     // ---------------------------------------------------------------
-    // Dengeleme tablosu: ates araligi (sn), hasar, dagilim (derece)
-    // ---------------------------------------------------------------
-    constexpr float SWITCH_DELAY = 0.35f;
+// Dengeleme tablosu. Ates araligi = iki atis arasi en az sure (sn).
+// Dagilim = saçmanin ya da merminin acisal sapmasi (derece).
+// ---------------------------------------------------------------
+    constexpr float SWITCH_DELAY = 0.35f;          // silah degistirdikten sonra ates etmek icin beklenen sure (sn)
 
-    constexpr float PISTOL_INTERVAL = 0.30f;
-    constexpr int PISTOL_DAMAGE = 12;
-    constexpr float PISTOL_SPREAD = 0.7f;
+    // --- Pistol ---
+    constexpr float PISTOL_INTERVAL = 0.30f;       // atis araligi (sn)
+    constexpr int PISTOL_DAMAGE = 12;              // vurus basina hasar
+    constexpr float PISTOL_SPREAD = 0.7f;          // dagilim (derece)
 
+    // --- Deagle ---
     constexpr float DEAGLE_INTERVAL = 0.55f;
     constexpr int DEAGLE_DAMAGE = 45;
-    constexpr float DEAGLE_HEADSHOT = 3.0f;
-    constexpr float DEAGLE_SPREAD = 0.3f;
+    constexpr float DEAGLE_HEADSHOT = 3.0f;        // kafaya vurusta hasar carpani (45 x 3 = 135)
+    constexpr float DEAGLE_SPREAD = 0.3f;          // cok isabetli
 
-    constexpr int SHOTGUN_PELLETS = 8;
-    constexpr int SHOTGUN_PELLET_DAMAGE = 9;
-    constexpr float SHOTGUN_SPREAD = 4.5f;
-    constexpr float SHOTGUN_ALT_SPREAD = 7.0f;
-    constexpr float SHOTGUN_INTERVAL = 0.85f;
-    constexpr float SHOTGUN_ALT_INTERVAL = 1.1f;
+    // --- Shotgun ---
+    constexpr int SHOTGUN_PELLETS = 8;             // bir kovandaki saçma sayisi
+    constexpr int SHOTGUN_PELLET_DAMAGE = 9;       // saçma basina hasar
+    constexpr float SHOTGUN_SPREAD = 4.5f;         // sol tik dagilimi (derece)
+    constexpr float SHOTGUN_ALT_SPREAD = 7.0f;     // sag tik (iki kovan) daha genis dagilir
+    constexpr float SHOTGUN_INTERVAL = 0.85f;      // sol tik sonrasi bekleme (sn): pompa
+    constexpr float SHOTGUN_ALT_INTERVAL = 1.1f;   // sag tik sonrasi bekleme (sn)
 
-    constexpr int DOUBLE_PELLETS = 10;
+    // --- Double barrel ---
+    constexpr int DOUBLE_PELLETS = 10;             // bir namludaki saçma sayisi
     constexpr int DOUBLE_PELLET_DAMAGE = 10;
-    constexpr float DOUBLE_SPREAD = 5.0f;
-    constexpr float DOUBLE_ALT_SPREAD = 7.0f;
-    constexpr float DOUBLE_INTERVAL = 0.35f;
-    constexpr float DOUBLE_ALT_INTERVAL = 0.7f;
+    constexpr float DOUBLE_SPREAD = 5.0f;          // tek namlu dagilimi (derece)
+    constexpr float DOUBLE_ALT_SPREAD = 7.0f;      // iki namlu birden
+    constexpr float DOUBLE_INTERVAL = 0.35f;       // tek namlu sonrasi bekleme (sn)
+    constexpr float DOUBLE_ALT_INTERVAL = 0.7f;    // iki namlu sonrasi bekleme (sn)
 
-    constexpr float SAW_SPIN_UP_TIME = 3.0f;    // sag tik basili: tam donus suresi
-    constexpr float SAW_SPIN_DECAY_TIME = 6.0f; // birakilinca donus sonme suresi
-    constexpr float SAW_MIN_DAMAGE = 30.0f;
-    constexpr float SAW_MAX_DAMAGE = 220.0f;
-    constexpr float SAW_INTERVAL = 0.8f;
+    // --- Testere ---
+    constexpr float SAW_SPIN_UP_TIME = 3.0f;       // sag tik basili: bos donustan tam donuse sure (sn)
+    constexpr float SAW_SPIN_DECAY_TIME = 6.0f;    // birakilinca tam donustan durmaya sure (sn): yavas soner
+    constexpr float SAW_MIN_DAMAGE = 30.0f;        // hic donmemis testerenin hasari
+    constexpr float SAW_MAX_DAMAGE = 220.0f;       // tam donmus testerenin hasari
+    constexpr float SAW_INTERVAL = 0.8f;           // atis araligi (sn)
 
+    // --- Bomba atar ve roket ---
     constexpr float BOMB_INTERVAL = 0.9f;
     constexpr float ROCKET_INTERVAL = 0.8f;
 
+    // --- Staplegun ---
     constexpr float STAPLE_INTERVAL = 0.45f;
-    constexpr int STAPLE_COUNT = 5;
-    constexpr float STAPLE_SPACING = 26.0f; // toplar arasi yatay mesafe
+    constexpr int STAPLE_COUNT = 5;                // bir salvodaki top sayisi (tek sayi olmali: ortada bir top)
+    constexpr float STAPLE_SPACING = 26.0f;        // yan yana toplar arasi yatay mesafe (birim)
 
-    constexpr float RAY_INTERVAL = 1.4f;
-    constexpr int RAY_DAMAGE = 150;
+    // --- Raygun ---
+    constexpr float RAY_INTERVAL = 1.4f;           // atis araligi (sn): yavas, guclu
+    constexpr int RAY_DAMAGE = 150;                // yoldaki her hedefe verilen hasar
 
-    constexpr float LASTGUN_CHARGE_TIME = 2.0f;
-    constexpr float LASTGUN_FOV_BOOST = 40.0f;
-    constexpr float LASTGUN_INTERVAL = 1.6f;
-    constexpr float FOV_RISE_RATE = 450.0f;  // derece/sn: "cok ani"
-    constexpr float FOV_FALL_RATE = 700.0f;
+    // --- Lastgun ---
+    constexpr float LASTGUN_CHARGE_TIME = 2.0f;    // sarj suresi (sn); bitince otomatik atar
+    constexpr float LASTGUN_FOV_BOOST = 40.0f;     // tam sarjda gorus acisina eklenen derece (sarjla dogru orantili)
+    constexpr float LASTGUN_INTERVAL = 1.6f;       // atistan sonra bekleme (sn)
+    constexpr float FOV_FALL_RATE = 700.0f;        // atis/iptalde gorus acisinin geri donus hizi (derece/sn)
 
     // Nisan acilarindan ileri/sag/yukari vektorleri (Camera ile ayni kural).
     void ComputeAim(float yawDegrees, float pitchDegrees, glm::vec3& forward, glm::vec3& right, glm::vec3& up) {
@@ -344,10 +353,14 @@ void ServerPlayer::Think(float deltaTime, int ownerIndex, const glm::vec3& eye) 
     ComputeAim(m_input.aimYaw, m_input.aimPitch, forward, right, up);
     UpdateWeapon(deltaTime, ownerIndex, eye, forward, right, up);
 
-    // Lastgun sarjinda gorus acisi aniden genisler, bitince hizla geri doner.
-    const float fovTarget = m_charging ? LASTGUN_FOV_BOOST : 0.0f;
-    m_fovBoost = Approach(m_fovBoost, fovTarget, (m_charging ? FOV_RISE_RATE : FOV_FALL_RATE) * deltaTime);
-
+    // Lastgun sarjinda gorus acisi, sarj suresiyle DOGRU ORANTILI genisler (0 -> +40 derece);
+    // atista ya da iptalde hizla geri doner.
+    if (m_charging) {
+        m_fovBoost = LASTGUN_FOV_BOOST * m_charge;
+    }
+    else {
+        m_fovBoost = Approach(m_fovBoost, 0.0f, FOV_FALL_RATE * deltaTime);
+    }
     // Sayaclar bu tick'te tuketildi.
     m_input.attack1Count = 0;
     m_input.attack2Count = 0;
