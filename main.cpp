@@ -4,7 +4,7 @@
 int main(int argc, char* argv[]){
 
     Engine engine;
-    if (!engine.initSystems()) {
+    if (!engine.initSystems(argc, argv)) {
         return -1;
     }
     engine.gameLoop();

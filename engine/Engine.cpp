@@ -61,7 +61,21 @@ Engine::~Engine() {
 //=========================================================
 //Engine 
 //=========================================================
-bool Engine::initSystems() {
+bool Engine::initSystems(int argc, char* argv[]) {
+	//=========================================================
+	// startup options
+	//=========================================================
+	for (int i = 1; i < argc; ++i) {
+		std::string arg = argv[i];
+
+		if (arg == "--developer" || arg == "-d") {
+
+		}
+		else if (arg == "+map" || arg == "-m") {
+			m_overrideMap = argv[++i]; // Bir sonraki argümanı harita adı olarak al
+		}
+	}
+
 	// Check the data files
 	std::filesystem::path dataFolder = "nvs1/gbpak.ypak";
 	if (!std::filesystem::exists(dataFolder)) {
@@ -225,6 +239,18 @@ bool Engine::initSystems() {
 
 	lastCounter = SDL_GetPerformanceCounter();
 	Logger::info("Engine initalize edildi.");
+
+	//=========================================================
+	// applying startup options
+	//=========================================================
+	if (!m_overrideMap.empty()) {
+		if (LoadLevel(m_overrideMap)) {
+			EnterPlaying();
+		}
+		else {
+			
+		}
+	}
 
 	return true;
 
