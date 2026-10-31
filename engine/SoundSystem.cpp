@@ -6,6 +6,7 @@
 #include "Engine.h"
 #include "console/CVar.h"
 #include "console/Console.h"
+#include "ConVarRegistry.h"
 #include <SDL.h>
 #include <cmath>
 #include <cstdlib>
@@ -14,6 +15,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <cstdio>
 
 // miniaudio uzerine kurulu ses hizmeti. Ses cihazi ilk kullanimda acilir; hic ses
 // calinmayan oturumlarda cihaz acilmaz. Kodlanmis ses verisi bellekte tutulur ve miniaudio'nun
@@ -130,8 +132,64 @@ namespace {
     float g_appliedCutoff = 20000.0f;         // filtreye en son uygulanan kesme frekansi
     uint32_t g_lastEnvironmentTicks = 0;
 
+    bool g_environmentActive = false;     // true: SFX grubu filtre + yanki zincirinden geciyor
+    int* g_environmentCvar = nullptr;     // "snd_environment" degiskeni (1 acik, 0 kapali)
+    bool g_diagnosticsRegistered = false;
+    float g_listenerPosition[3] = {};     // son bildirilen dinleyici konumu (snd_status icin)
+    float g_listenerForward[3] = {};      // son bildirilen bakis yonu
+
+    // Oda efekti belirgin degilse zincir devre disi birakilir. Esikler:
+    constexpr float kChainBypassCutoffHz = 19500.0f;  // bunun uzerinde alcak geciren filtre fark edilmez
+    constexpr float kChainBypassWet = 0.002f;         // bunun altinda yanki fark edilmez (0..1 olcegi)
+
     float Clamp(float value, float low, float high) {
         return value < low ? low : (value > high ? high : value);
+    }
+
+    // "snd_status": ses sisteminin ozetini konsola yazar.
+    void PrintStatus() {
+        char line[220];
+
+        if (!g_initialized) {
+            Console::Log(g_unavailable
+                ? "ses: cihaz KULLANILAMIYOR (baslatilamadi ya da kapatildi)"
+                : "ses: cihaz henuz acilmadi (hic ses calinmadi)");
+            return;
+        }
+
+        std::snprintf(line, sizeof(line), "ses: cihaz acik, %u Hz, %u kanal; aktif ses %d/%d; yuklu dosya %d; basarisiz dosya %d",
+            ma_engine_get_sample_rate(&g_engine), ma_engine_get_channels(&g_engine),
+            static_cast<int>(g_active.size()), kMaxActiveSounds,
+            static_cast<int>(g_encoded.size()), static_cast<int>(g_failedPaths.size()));
+        Console::Log(line);
+
+        std::snprintf(line, sizeof(line), "ses: seviyeler ana %.2f, muzik %.2f; oda efekti: dugumler %s, zincir %s, oda tipi %d, su alti %s",
+            g_CVar.nvs_mastervolume, g_CVar.nvs_musicvolume,
+            g_environmentReady ? "hazir" : "KURULAMADI", g_environmentActive ? "ACIK" : "kapali",
+            g_roomType, g_underwater ? "evet" : "hayir");
+        Console::Log(line);
+
+        std::snprintf(line, sizeof(line), "ses: dinleyici (%.0f %.0f %.0f) bakis (%.2f %.2f %.2f)",
+            g_listenerPosition[0], g_listenerPosition[1], g_listenerPosition[2],
+            g_listenerForward[0], g_listenerForward[1], g_listenerForward[2]);
+        Console::Log(line);
+
+        int listed = 0;
+        for (const std::string& path : g_failedPaths) {
+            if (listed++ >= 8) break;   // konsol dolmasin: en cok 8 dosya
+            Console::Log("ses: yuklenemeyen dosya: " + path);
+        }
+    }
+
+    void RegisterDiagnosticsOnce() {
+        if (g_diagnosticsRegistered) return;
+        g_diagnosticsRegistered = true;
+
+        g_environmentCvar = ConVarRegistry::RegisterInt("snd_environment", 1,
+            "1: oda efekti ve su alti ses filtresi acik, 0: kapali", CVAR_NONE);
+        ConVarRegistry::RegisterCommand("snd_status",
+            [](int, const char* const*) { PrintStatus(); },
+            "Ses sisteminin durumunu yazar", CVAR_NONE);
     }
 
     void ApplyVolumes() {
@@ -154,6 +212,7 @@ namespace {
             ma_delay_node_uninit(&g_echoNode, nullptr);
             ma_lpf_node_uninit(&g_lowPassNode, nullptr);
             g_environmentReady = false;
+            g_environmentActive = false;
         }
 
         ma_engine_uninit(&g_engine);
@@ -190,9 +249,11 @@ namespace {
         ma_delay_node_set_dry(&g_echoNode, 1.0f);   // orijinal ses her zaman tam duyulur
         ma_delay_node_set_wet(&g_echoNode, 0.0f);
 
-        ma_node_attach_output_bus(&g_groups[SOUND_CHANNEL_SFX], 0, &g_lowPassNode, 0);
+        // Filtre -> yanki baglantisi kalicidir. SFX grubu ve yankinin cikisi, oda efekti
+        // gerekene kadar BAGLANMAZ (SetEnvironmentRouting): efekt yokken ses yolu dogrudandir.
         ma_node_attach_output_bus(&g_lowPassNode, 0, &g_echoNode, 0);
-        ma_node_attach_output_bus(&g_echoNode, 0, ma_engine_get_endpoint(&g_engine), 0);
+        g_environmentReady = true;
+        g_environmentActive = false;
 
         g_environmentReady = true;
     }
@@ -282,6 +343,7 @@ namespace {
     }
 
     ActiveSound* CreateSound(const std::string& path, const SoundParams& params) {
+        RegisterDiagnosticsOnce();
         ReclaimFinished();
         if (g_active.size() >= static_cast<size_t>(kMaxActiveSounds)) return nullptr;
         if (!EnsureInit() || !EnsureLoaded(path)) return nullptr;
@@ -320,6 +382,22 @@ namespace {
     //--------------------------------------------------------------------------
     // Oda efekti guncellemesi (her karede)
     //--------------------------------------------------------------------------
+   // SFX grubunun cikisini ya dogrudan motorun cikisina ya da filtre + yanki zincirine baglar.
+    void SetEnvironmentRouting(bool throughChain) {
+        if (!g_environmentReady || throughChain == g_environmentActive) return;
+
+        ma_node* endpoint = ma_engine_get_endpoint(&g_engine);
+        if (throughChain) {
+            ma_node_attach_output_bus(&g_echoNode, 0, endpoint, 0);
+            ma_node_attach_output_bus(&g_groups[SOUND_CHANNEL_SFX], 0, &g_lowPassNode, 0);
+        }
+        else {
+            ma_node_attach_output_bus(&g_groups[SOUND_CHANNEL_SFX], 0, endpoint, 0);
+            ma_node_detach_output_bus(&g_echoNode, 0);
+        }
+        g_environmentActive = throughChain;
+    }
+
     void UpdateEnvironment() {
         if (!g_environmentReady) return;
 
@@ -329,7 +407,9 @@ namespace {
         deltaTime = Clamp(deltaTime, 0.0f, 0.1f);
 
         // Su altindaysa her zaman su oda tipi; degilse haritanin env_sound bolgesi.
-        int room = g_underwater ? kUnderwaterRoomType : g_roomType;
+        // "snd_environment 0" oda efektini tamamen kapatir.
+        const bool enabled = (g_environmentCvar == nullptr) || (*g_environmentCvar != 0);
+        int room = enabled ? (g_underwater ? kUnderwaterRoomType : g_roomType) : 0;
         if (room < 0 || room >= kRoomTypeCount) room = 0;
         const RoomPreset& target = kRoomPresets[room];
 
@@ -338,6 +418,11 @@ namespace {
         g_currentCutoff += (target.cutoffHz - g_currentCutoff) * blend;
         g_currentWet += (target.wet - g_currentWet) * blend;
         g_currentDecay += (target.decay - g_currentDecay) * blend;
+
+        // Oda yoksa ve filtre/yanki etkisizse zincir hic kullanilmaz.
+        const bool chainNeeded = (room != 0) || (g_currentWet > kChainBypassWet) || (g_currentCutoff < kChainBypassCutoffHz);
+        SetEnvironmentRouting(chainNeeded);
+        if (!g_environmentActive) return;
 
         ma_delay_node_set_wet(&g_echoNode, g_currentWet);
         ma_delay_node_set_decay(&g_echoNode, g_currentDecay);
@@ -360,6 +445,7 @@ void SoundSystem_SetUnderwater(bool underwater) {
 class EngineSoundImpl : public IEngineSound {
 public:
     bool Precache(const char* vfsPath) override {
+        RegisterDiagnosticsOnce();
         if (vfsPath == nullptr || !EnsureInit()) return false;
         return EnsureLoaded(vfsPath);
     }
@@ -437,6 +523,9 @@ public:
     }
 
     void SetListener(float x, float y, float z, float forwardX, float forwardY, float forwardZ) override {
+        RegisterDiagnosticsOnce();
+        g_listenerPosition[0] = x; g_listenerPosition[1] = y; g_listenerPosition[2] = z;
+        g_listenerForward[0] = forwardX; g_listenerForward[1] = forwardY; g_listenerForward[2] = forwardZ;
         // Hic ses calinmadiysa cihaz acik degildir; yapilacak is yok.
         if (!g_initialized) return;
 
