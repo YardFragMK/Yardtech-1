@@ -79,6 +79,9 @@ namespace {
     IEngineConsole* g_console = nullptr;
     IWorldQuery* g_world = nullptr;
     float g_time = 0.0f;               // haritanin yuklendiginden beri gecen sure (sn)
+    glm::vec3 g_lastEye{ 0.0f };            // son karedeki goz konumu (snd_map icin)
+    int g_updateCount = 0;                  // MapSounds::Update kac kez cagrildi
+    bool g_commandRegistered = false;
 
     //==========================================================================
     // YARDIMCILAR
@@ -659,6 +662,37 @@ namespace {
         }
     }
 
+    // "snd_map": haritadaki ambient seslerin anlik durumunu listeler.
+    void CmdSoundMap(int, const char* const*) {
+        if (g_console == nullptr) return;
+
+        char line[260];
+        std::snprintf(line, sizeof(line), "snd_map: ses hizmeti %s, dunya %s, Update cagrisi %d, goz (%.0f %.0f %.0f)",
+            g_sound != nullptr ? "var" : "YOK", g_world != nullptr ? "var" : "YOK", g_updateCount,
+            g_lastEye.x, g_lastEye.y, g_lastEye.z);
+        g_console->Print(line);
+
+        std::snprintf(line, sizeof(line), "snd_map: ambient %d, speaker %d, env_sound %d, cdaudio %d, tetikleyici %d",
+            static_cast<int>(g_ambients.size()), static_cast<int>(g_speakers.size()),
+            static_cast<int>(g_environmentZones.size()), static_cast<int>(g_musicZones.size()),
+            static_cast<int>(g_triggers.size()));
+        g_console->Print(line);
+
+        int shown = 0;
+        for (const AmbientSound& ambient : g_ambients) {
+            if (shown >= 30) break;   // konsol dolmasin: en cok 30 satir
+
+            const std::string label = ambient.sentenceName.empty() ? ambient.soundPath : ("!" + ambient.sentenceName);
+            const float distance = ambient.playEverywhere ? 0.0f : glm::length(g_lastEye - ambient.position);
+
+            std::snprintf(line, sizeof(line), "ambient[%d] %s mesafe %.0f / yaricap %.0f, dongulu %d, istenen %d, kazanc %.2f, ses %u%s",
+                shown, label.c_str(), distance, ambient.maxDistance, ambient.looped ? 1 : 0, ambient.wanted ? 1 : 0,
+                ambient.gain, static_cast<unsigned>(ambient.handle), ambient.loadFailed ? "  [DOSYA YUKLENEMEDI]" : "");
+            g_console->Print(line);
+            ++shown;
+        }
+    }
+
     void ClearAll() {
         g_ambients.clear();
         g_speakers.clear();
@@ -684,12 +718,24 @@ void MapSounds::Init(IEngineClient* engine, IEngineSound* sound, IEngineConsole*
     g_world = (engine != nullptr) ? engine->GetWorld() : nullptr;
 
     SentenceBank::Init(engine, sound);
-    if (g_world == nullptr || g_sound == nullptr) return;
+    if (g_console != nullptr && !g_commandRegistered) {
+        g_commandRegistered = true;
+        g_console->RegisterCommand("snd_map", CmdSoundMap, "Harita ses entity'lerinin durumunu listeler", CVAR_NONE);
+    }
+
+    if (g_world == nullptr || g_sound == nullptr) {
+        // Sessizlik sebebi acikca gorunsun.
+        if (g_console != nullptr) {
+            g_console->Print(g_sound == nullptr
+                ? "client.dll: harita sesleri KAPALI: ses hizmeti yok"
+                : "client.dll: harita sesleri KAPALI: dunya sorgusu yok");
+        }
+        return;
+    }
 
     ScanEntities();
 
-    if (g_console != nullptr && (!g_ambients.empty() || !g_speakers.empty() || !g_environmentZones.empty()
-        || !g_musicZones.empty() || !g_triggers.empty())) {
+    if (g_console != nullptr) {
         const std::string summary = "client.dll: harita sesleri: ambient " + std::to_string(g_ambients.size())
             + ", speaker " + std::to_string(g_speakers.size())
             + ", env_sound " + std::to_string(g_environmentZones.size())
@@ -701,6 +747,8 @@ void MapSounds::Init(IEngineClient* engine, IEngineSound* sound, IEngineConsole*
 }
 
 void MapSounds::Update(float deltaTime, const glm::vec3& playerOrigin, const glm::vec3& eye) {
+    ++g_updateCount;
+    g_lastEye = eye;
     if (g_world == nullptr || g_sound == nullptr) return;
 
     g_time += deltaTime;
