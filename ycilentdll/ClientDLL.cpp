@@ -27,7 +27,11 @@ namespace {
 
     // snd_play <yol>: konumsuz (2B) ses calar. Ornek: snd_play sound/test.wav
     void CmdSoundPlay(int argc, const char* const* argv) {
-        if (s_sound == nullptr || s_commandConsole == nullptr) return;
+        if (s_commandConsole == nullptr) return;
+        if (s_sound == nullptr) {
+            s_commandConsole->Print("Ses hizmeti yok (IEngineSound alinamadi).");
+            return;
+        }
         if (argc < 2) {
             s_commandConsole->Print("Usage: snd_play <ses dosyasi yolu>");
             return;
@@ -39,7 +43,12 @@ namespace {
 
     // snd_play3d <yol>: sesi oyuncunun 300 birim sagina koyar; panlama ve sonumleme test edilir.
     void CmdSoundPlay3D(int argc, const char* const* argv) {
-        if (s_sound == nullptr || s_commandConsole == nullptr || s_commandCamera == nullptr) return;
+        if (s_commandConsole == nullptr) return;
+        if (s_sound == nullptr) {
+            s_commandConsole->Print("Ses hizmeti yok (IEngineSound alinamadi).");
+            return;
+        }
+        if (s_commandCamera == nullptr) return;
         if (argc < 2) {
             s_commandConsole->Print("Usage: snd_play3d <ses dosyasi yolu>");
             return;
@@ -69,6 +78,11 @@ public:
 
         // Ses hizmeti isteğe bağlıdır; yoksa oyun sessiz çalışmaya devam eder.
         m_sound = GetInterface<IEngineSound>(engineFactory, ENGINE_SOUND_INTERFACE_VERSION);
+        if (m_sound == nullptr) {
+            // Ses hizmeti yoksa oyun sessiz calisir; sebebi hemen anlasilsin diye acikca bildirilir.
+            m_console->Print("client.dll: UYARI: ses hizmeti alinamadi, SES KAPALI. Beklenen arayuz: "
+                ENGINE_SOUND_INTERFACE_VERSION ". exe ve client.dll ayni arayuz surumuyle derlenmeli (Rebuild All).");
+        }
         s_sound = m_sound;
         s_commandConsole = m_console;
         s_commandCamera = &m_camera;
